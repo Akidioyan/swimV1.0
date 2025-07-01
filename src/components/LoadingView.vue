@@ -97,7 +97,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100vh;
-  background: #a4d0f5 url('/media/graphics/games/intro.png') center center no-repeat;
+  background: #a4d0f5 url('/intro.png') center center no-repeat;
   background-size: auto 100vh;
   overflow: hidden;
 }

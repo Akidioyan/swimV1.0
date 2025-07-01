@@ -1,25 +1,27 @@
 <template>
   <div id="app">
     <!-- 加载页面 -->
-    <LoadingView v-if="gameStore.currentView === 'loading'" />
+    <LoadingView v-if="gameStateStore.currentView === 'loading'" />
     
     <!-- 介绍页面 -->
-    <IntroView v-else-if="gameStore.currentView === 'intro'" />
+    <IntroView v-else-if="gameStateStore.currentView === 'intro'" />
     
     <!-- 过场视频页面 -->
-    <VideoView v-else-if="gameStore.currentView === 'video'" />
+    <VideoView v-else-if="gameStateStore.currentView === 'video'" />
     
     <!-- 游戏页面 -->
-    <GameView v-else-if="gameStore.currentView === 'game'" />
+    <GameView v-else-if="gameStateStore.currentView === 'game'" />
     
     <!-- 结果页面 -->
-    <ResultView v-else-if="gameStore.currentView === 'result'" />
+    <ResultView v-else-if="gameStateStore.currentView === 'result'" />
   </div>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useGameStore } from './stores/gameStore'
+import { useGameStateStore } from './stores/gamestore/gameState'
+import { usePlayerControlStore } from './stores/gamestore/playerControl'
 import LoadingView from './components/LoadingView.vue'
 import IntroView from './components/IntroView.vue'
 import VideoView from './components/VideoView.vue'
@@ -27,6 +29,8 @@ import GameView from './components/GameView.vue'
 import ResultView from './components/ResultView.vue'
 
 const gameStore = useGameStore()
+const gameStateStore = useGameStateStore()
+const playerControlStore = usePlayerControlStore()
 
 onMounted(() => {
   // 启用全屏模式
@@ -34,7 +38,7 @@ onMounted(() => {
   
   // 模拟加载过程
   setTimeout(() => {
-    gameStore.setCurrentView('intro')
+    gameStateStore.setCurrentView('intro')
   }, 2000)
   
   // 添加全局键盘事件监听
@@ -66,29 +70,14 @@ const enableFullscreen = () => {
   // 全屏逻辑
 }
 
+// 处理键盘按下事件
 const handleKeyDown = (event) => {
-  // 只在游戏进行时处理键盘事件
-  if (gameStore.currentView === 'game' && gameStore.gameState === 'playing') {
-    switch(event.key) {
-      case 'ArrowLeft':
-        event.preventDefault()
-        gameStore.switchLane(-1) // 向左切换泳道
-        break
-      case 'ArrowRight':
-        event.preventDefault()
-        gameStore.switchLane(1)  // 向右切换泳道
-        break
-      case ' ': // 空格键暂停
-        event.preventDefault()
-        gameStore.togglePause()
-        break
-    }
-  }
+  playerControlStore.handleKeyDown(event.key)
 }
 
+// 处理键盘释放事件
 const handleKeyUp = (event) => {
-  // 键盘释放处理逻辑（如果需要的话）
-  event.preventDefault()
+  playerControlStore.handleKeyUp(event.key)
 }
 
 const handleResize = () => {
@@ -104,16 +93,14 @@ const preventZoom = (event) => {
 }
 </script>
 
-<style>
-#app {
+<style scoped>
+.app {
   width: 100vw;
   height: 100vh;
-  position: relative;
+  background: url('/bg-menu.png') center/cover no-repeat;
   overflow: hidden;
-  background: url('/media/graphics/games/bg-menu.png') center/cover no-repeat;
-  /* 移除游戏容器类，直接应用样式 */
+  position: relative;
 }
-
 
 /* 禁用移动端的缩放和滚动 */
 html, body {

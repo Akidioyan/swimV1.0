@@ -4,7 +4,7 @@
       <div class="action-button-container">
         <!-- 开始游戏按钮 -->
         <img 
-          src="/media/graphics/games/start.png" 
+          src="/start.png" 
           alt="开始游戏" 
           @click="handleStartGame" 
           class="start-button-image"
@@ -14,9 +14,9 @@
     
     <!-- 规则按钮容器 -->
     <div class="rule-button-container" @click="handleShowRuleModal">
-      <img src="/media/graphics/games/rule.png" alt="游戏规则" class="rule-button-image">
+      <img src="/rule.png" alt="游戏规则" class="rule-button-image">
       <!-- 添加占位符图片 -->
-      <img src="/media/graphics/games/placeholder.png" alt="排行榜" class="rule-button-image">
+      <img src="/placeholder.png" alt="排行榜" class="rule-button-image">
     </div>
 
     <!-- 规则说明浮层 -->
@@ -27,14 +27,12 @@
           <h2>🏊 游戏规则</h2>
           <div class="rules-text-container">
             <ul class="rules-list">
-              <li>点击屏幕或按空格键切换泳道</li>
-              <li>避开岩石、海草和水母等障碍物</li>
-              <li>收集呼吸管 🤿 提升游泳速度</li>
-              <li>收集护盾 🛡️ 获得临时保护</li>
+              <li>点击屏幕切换泳道，长按加速</li>
+              <li>珍惜你的三次机会，避开游泳圈、海草和水母等障碍物</li>
+              <li>收集呼吸管 🤿 无敌冲刺</li>
               <li>游泳距离越远，分数越高</li>
               <li>随着游戏进行，难度会逐渐增加</li>
-              <li>碰到障碍物游戏结束</li>
-              <li>支持键盘快捷键：ESC暂停，R重开，M音乐，S音效</li>
+              <li>支持暂停功能</li>
             </ul>
           </div>
         </div>
@@ -46,12 +44,14 @@
 <script setup>
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { useGameStateStore } from '../stores/gamestore/gameState'
 
 const gameStore = useGameStore()
+const gameStateStore = useGameStateStore()
 const isRuleModalVisible = ref(false)
 
 const handleStartGame = () => {
-  gameStore.startGame()
+  gameStateStore.startGame()
 }
 
 const handleShowRuleModal = () => {
@@ -70,7 +70,7 @@ const handleCloseRuleModal = () => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  background-image: url('/media/graphics/games/intro.png');
+  background-image: url('/intro.png');
   background-size: auto 100%;
   background-position: center center;
   background-repeat: no-repeat;
@@ -81,7 +81,7 @@ const handleCloseRuleModal = () => {
 
 .intro-content {
   text-align: center;
-  margin-bottom: 5vh;
+  margin-bottom: 7vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -95,7 +95,7 @@ const handleCloseRuleModal = () => {
 }
 
 .start-button-image {
-  height: 10vh;
+  height: 8vh;
   cursor: pointer;
   transition: transform 0.2s ease-out;
   display: block;
@@ -151,22 +151,17 @@ const handleCloseRuleModal = () => {
   transform: translateY(-50%);
   z-index: 10;
   cursor: pointer;
-  /* 添加容器尺寸 */
-  width: 120px;
-  height: 240px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end; /* 改为右对齐，让图片贴右边 */
+  align-items: flex-end;
   justify-content: flex-start;
-  /* 添加2%屏幕宽度的间距 */
   gap: 2vw;
 }
 
 .rule-button-image {
   display: block;
   transition: transform 0.2s ease-out;
-  /* 调整图片高度以适应容器 */
-  height: 110px;
+  height: 11vh;
   width: auto;
 }
 
@@ -174,45 +169,8 @@ const handleCloseRuleModal = () => {
   transform: scale(1.05);
 }
 
-/* 响应式设计更新 */
-@media (max-width: 1024px) {
-  .rule-button-container {
-    width: 80px;
-    height: 160px;
-    gap: 1.5vw; /* 在小屏幕上稍微减少间距 */
-    align-items: flex-end; /* 保持右对齐 */
-  }
-  
-  .rule-button-image {
-    height: 75px;
-  }
-}
-
-@media (max-width: 768px) {
-  .rule-button-container {
-    width: 70px;
-    height: 140px;
-    gap: 1vw; /* 在更小屏幕上进一步减少间距 */
-    align-items: flex-end; /* 保持右对齐 */
-  }
-  
-  .rule-button-image {
-    height: 65px;
-  }
-}
-
-@media (max-width: 480px) {
-  .rule-button-container {
-    width: 60px;
-    height: 120px;
-    gap: 0.8vw; /* 在最小屏幕上最小间距 */
-    align-items: flex-end; /* 保持右对齐 */
-  }
-  
-  .rule-button-image {
-    height: 55px;
-  }
-}
+/* 删除所有响应式设计的 @media 查询 */
+/* 不再需要 @media (max-width: 1024px)、@media (max-width: 768px)、@media (max-width: 480px) 等响应式规则 */
 
 /* 透明背景板，用于点击关闭 */
 .transparent-modal-backdrop {
@@ -344,28 +302,17 @@ const handleCloseRuleModal = () => {
 }
 
 /* 响应式设计 */
-@media (max-width: 1024px) {
+/* @media (max-width: 1024px) {
   .start-button-image {
-    height: 8vh;
-  }
-  
-  .rule-button-image {
-    height: 12vh;
+    height: 7vh;
   }
 }
 
 @media (max-width: 768px) {
   .intro-content {
-    margin-bottom: 3vh;
+    margin-bottom: 7vh;
   }
   
-  .start-button-image {
-    height: 7vh;
-  }
-  
-  .rule-button-image {
-    height: 10vh;
-  }
   
   .settings-buttons {
     top: 15px;
@@ -377,15 +324,15 @@ const handleCloseRuleModal = () => {
     padding: 10px 12px;
     min-width: 60px;
   }
-}
+} */
 
 @media (max-width: 480px) {
   .start-button-image {
-    height: 6vh;
+    height: 8vh;
   }
   
   .rule-button-image {
-    height: 8vh;
+    height: 10vh;
   }
   
   .rule-modal-content {

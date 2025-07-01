@@ -12,7 +12,9 @@ export const OBSTACLE_TYPES = {
     height: 'dynamic',
     color: '#696969',
     probability: 0.25,
-    damage: 1
+    damage: 1,
+    // 静止障碍物，无特殊属性
+    isStatic: true
   },
   obs2: {
     name: 'obs2',
@@ -21,10 +23,8 @@ export const OBSTACLE_TYPES = {
     color: '#696969',
     probability: 0.25,
     damage: 1,
-    isAnimated: true,
-    // 添加碰撞帧范围
-    collisionFrameStart: 8,  // 第8帧开始有碰撞
-    collisionFrameEnd: 15    // 第15帧结束碰撞
+    // 静止障碍物，删除动画和碰撞帧范围
+    isStatic: true
   },
   obs3: {
     name: 'obs3',
@@ -33,7 +33,7 @@ export const OBSTACLE_TYPES = {
     color: '#696969',
     probability: 0.25,
     damage: 1,
-    // 添加跨泳道移动属性
+    // 移动障碍物 - 跨泳道移动属性
     canMoveBetweenLanes: true,
     laneChangeSpeed: 0.02,    // 泳道切换速度
     laneChangeInterval: 2000  // 泳道切换间隔(毫秒)
@@ -45,7 +45,7 @@ export const OBSTACLE_TYPES = {
     color: '#696969',
     probability: 0.25,
     damage: 1,
-    // 添加跨泳道移动属性
+    // 移动障碍物 - 跨泳道移动属性
     canMoveBetweenLanes: true,
     laneChangeSpeed: 0.03,    // 更快的泳道切换速度
     laneChangeInterval: 1500  // 更短的泳道切换间隔

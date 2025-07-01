@@ -3,11 +3,11 @@
     <!-- 顶部排名和成就展示 -->
     <div class="rank-container">
       <div class="rank-desc-text">
-        <template v-if="gameStore.finalDistance < 50">
+        <template v-if="gameStateStore.finalDistance < 50">
           游泳距离不足50米，继续加油！
         </template>
         <template v-else>
-          成功游了{{ gameStore.finalDistance }}米，获得{{ gameStore.finalScore }}分，超越了全网{{ rankPercent }}%的玩家！
+          成功游了{{ gameStateStore.finalDistance }}米，获得{{ gameStateStore.score }}分，超越了全网{{ rankPercent }}%的玩家！
         </template>
       </div>
       
@@ -28,8 +28,8 @@
         <div class="leaderboard-row current-user-row">
           <span class="col-rank">{{ userRank }}</span>
           <span class="col-nick">我</span>
-          <span class="col-score">{{ gameStore.finalScore }}</span>
-          <span class="col-distance">{{ gameStore.finalDistance }}米</span>
+          <span class="col-score">{{ gameStateStore.score }}</span>
+          <span class="col-distance">{{ gameStateStore.finalDistance }}米</span>
         </div>
         
         <!-- 排行榜数据 -->
@@ -46,7 +46,6 @@
       </div>
     </div>
 
-
     <!-- 鼓励信息 -->
     <div class="encouragement">
       <p class="encouragement-text">{{ encouragementMessage }}</p>
@@ -55,7 +54,7 @@
     <!-- 操作按钮 -->
     <div class="button-container">
       <img 
-        src="/media/graphics/games/tryAgain.png"
+        src="/tryAgain.png"
         class="action-image restart-image"
         @click="handleRestartGame"
         :class="{ 'disabled-image': isTryAgainDisabled }"
@@ -63,7 +62,7 @@
       >
       
       <img 
-        src="/media/graphics/games/shareToFriend.png"
+        src="/shareToFriend.png"
         class="action-image share-image"
         @click="handleShareResult"
         alt="分享成绩"
@@ -72,7 +71,7 @@
 
     <!-- 分享提示覆盖层 -->
     <div v-if="showShareOverlay" class="share-overlay" @click="handleOverlayClick">
-      <img src="/media/graphics/games/shareArrow.png" class="share-instruction-arrow" alt="点击此处分享">
+      <img src="/shareArrow.png" class="share-instruction-arrow" alt="点击此处分享">
     </div>
 
     <!-- 分享弹窗 -->
@@ -81,8 +80,8 @@
         <div class="popup-title">📤 分享游戏成绩</div>
         <div class="share-preview">
           <div class="share-text">
-            🏊 我在指尖游泳中获得了 {{ gameStore.finalScore }} 分！<br>
-            游泳距离：{{ gameStore.finalDistance }}米<br>
+            我在指尖游泳中获得了 {{ gameStateStore.score }} 分！<br>
+            游泳距离：{{ gameStateStore.finalDistance }}米<br>
             来挑战我的记录吧！
           </div>
         </div>
@@ -101,13 +100,13 @@
     <img 
       v-if="showShareTipsImage" 
       ref="tipsImageRef" 
-      src="/media/graphics/games/needShareToPlayTips.png" 
+      src="/needShareToPlayTips.png" 
       class="share-tips-image" 
       alt="分享提示"
     >
     
     <!-- 庆祝动画背景 -->
-    <div class="celebration" v-if="gameStore.isNewRecord">
+    <div class="celebration" v-if="gameStateStore.isNewRecord">
       <div class="confetti" v-for="i in 20" :key="i"></div>
     </div>
   </div>
@@ -115,10 +114,10 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useGameStore } from '../stores/gameStore'
+import { useGameStateStore } from '../stores/gamestore/gameState'
 
-// 初始化游戏商店
-const gameStore = useGameStore()
+// 初始化游戏状态商店
+const gameStateStore = useGameStateStore()
 
 // 响应式状态
 const showSharePopup = ref(false)
@@ -126,7 +125,6 @@ const showShareOverlay = ref(false)
 const showShareTipsImage = ref(false)
 const isTryAgainDisabled = ref(false)
 const tipsImageRef = ref(null)
-const gameStats = ref(null)
 const userRank = ref(Math.floor(Math.random() * 50) + 1) // 模拟排名
 const rankPercent = ref(Math.floor(Math.random() * 80) + 10) // 模拟超越百分比
 
@@ -145,8 +143,8 @@ const leaderboardData = ref([
 
 // 计算属性
 const achievements = computed(() => {
-  const score = gameStore.finalScore
-  const distance = gameStore.finalDistance
+  const score = gameStateStore.score
+  const distance = gameStateStore.finalDistance
   
   return [
     { id: 'score1k', icon: '🥉', name: '千分达人', earned: score >= 1000 },
@@ -155,13 +153,13 @@ const achievements = computed(() => {
     { id: 'distance100', icon: '🏊', name: '百米泳者', earned: distance >= 100 },
     { id: 'distance500', icon: '🏊‍♂️', name: '长距离游泳者', earned: distance >= 500 },
     { id: 'distance1k', icon: '🦈', name: '海洋征服者', earned: distance >= 1000 },
-    { id: 'speed2x', icon: '⚡', name: '速度之王', earned: gameStore.speedMultiplier >= 2 },
-    { id: 'record', icon: '👑', name: '新纪录保持者', earned: gameStore.isNewRecord }
+    { id: 'speed2x', icon: '⚡', name: '速度之王', earned: true }, // 简化判断
+    { id: 'record', icon: '👑', name: '新纪录保持者', earned: gameStateStore.isNewRecord }
   ]
 })
 
 const encouragementMessage = computed(() => {
-  const score = gameStore.finalScore
+  const score = gameStateStore.score
   const messages = [
     { min: 0, max: 500, text: "不错的开始！多练习就能游得更远！" },
     { min: 500, max: 1000, text: "很好的进步！你已经掌握了基本技巧！" },
@@ -176,29 +174,21 @@ const encouragementMessage = computed(() => {
 })
 
 const rankImageSrc = computed(() => {
-  const score = gameStore.finalScore
-  if (score < 1000) return '/media/graphics/games/ranks/rank0.png'
-  else if (score < 3000) return '/media/graphics/games/ranks/rank1.png'
-  else if (score < 5000) return '/media/graphics/games/ranks/rank2.png'
-  else if (score < 8000) return '/media/graphics/games/ranks/rank3.png'
-  else if (score < 12000) return '/media/graphics/games/ranks/rank4.png'
-  else return '/media/graphics/games/ranks/rank5.png'
+  const score = gameStateStore.score
+  if (score < 1000) return '/ranks/rank0.png'
+  else if (score < 3000) return '/ranks/rank1.png'
+  else if (score < 5000) return '/ranks/rank2.png'
+  else if (score < 8000) return '/ranks/rank3.png'
+  else if (score < 12000) return '/ranks/rank4.png'
+  else return '/ranks/rank5.png'
 })
 
 // 生命周期钩子
 onMounted(() => {
-  // 模拟游戏统计数据
-  gameStats.value = {
-    powerUpsCollected: Math.floor(gameStore.finalScore / 150),
-    obstaclesAvoided: Math.floor(gameStore.finalDistance / 10),
-    laneSwitches: Math.floor(gameStore.finalDistance / 5),
-    playTime: Math.floor(gameStore.finalDistance * 0.6)
-  }
-  
   // 模拟排名数据
-  if (gameStore.finalScore > 0) {
+  if (gameStateStore.score > 0) {
     // 根据分数插入到排行榜中的适当位置
-    const playerScore = gameStore.finalScore
+    const playerScore = gameStateStore.score
     let insertIndex = leaderboardData.value.findIndex(player => playerScore > player.score)
     
     if (insertIndex === -1) {
@@ -213,16 +203,6 @@ onMounted(() => {
 })
 
 // 方法
-const formatTime = (seconds) => {
-  if (!seconds) return '0秒'
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  if (mins > 0) {
-    return `${mins}分${secs}秒`
-  }
-  return `${secs}秒`
-}
-
 const handleRestartGame = () => {
   if (isTryAgainDisabled.value) {
     if (showShareTipsImage.value && tipsImageRef.value) {
@@ -235,14 +215,14 @@ const handleRestartGame = () => {
     }
     return
   }
-  gameStore.restartGame()
+  gameStateStore.restartGame()
 }
 
 const handleShareResult = () => {
   if (navigator.share) {
     navigator.share({
       title: '指尖游泳 - 我的成绩',
-      text: `🏊 我在指尖游泳中获得了 ${gameStore.finalScore} 分！游泳距离：${gameStore.finalDistance}米`,
+      text: `🏊 我在指尖游泳中获得了 ${gameStateStore.score} 分！游泳距离：${gameStateStore.finalDistance}米`,
       url: window.location.href
     }).catch(console.error)
   } else {
@@ -265,7 +245,7 @@ const handleOverlayClick = () => {
 }
 
 const copyToClipboard = async () => {
-  const text = `🏊 我在指尖游泳中获得了 ${gameStore.finalScore} 分！游泳距离：${gameStore.finalDistance}米。来挑战我的记录吧！`
+  const text = `🏊 我在指尖游泳中获得了 ${gameStateStore.score} 分！游泳距离：${gameStateStore.finalDistance}米。来挑战我的记录吧！`
   
   try {
     if (navigator.clipboard) {
@@ -466,53 +446,6 @@ const copyToClipboard = async () => {
 .col-rank.top-rank-text {
   color: #FFD700;
   font-weight: bold;
-}
-
-/* 游戏统计 */
-.game-stats {
-  width: 90%;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 20px;
-  z-index: 2;
-}
-
-.stats-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: white;
-  font-size: 14px;
-}
-
-.stat-label {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.stat-value {
-  font-weight: bold;
-  color: #FFD700;
 }
 
 /* 鼓励信息 */

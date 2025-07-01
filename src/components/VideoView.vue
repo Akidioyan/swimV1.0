@@ -32,15 +32,14 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useGameStore } from '../stores/gameStore'
-
-const gameStore = useGameStore()
+import { useGameStateStore } from '../stores/gamestore/gameState'
+const gameStateStore = useGameStateStore()
 const videoElement = ref(null)
 const isLoading = ref(true)
 const showSkipButton = ref(false)
 const skipCountdown = ref(3)
 
-const videoSrc = '/media/video/OpeningVideo.mp4'
+const videoSrc = '/OpeningVideo.mp4'
 
 let skipTimer = null
 let countdownTimer = null
@@ -56,12 +55,12 @@ const handleVideoLoaded = () => {
 
 const handleVideoEnd = () => {
   // 视频播放完毕，开始游戏
-  gameStore.startGameFromVideo()
+  gameStateStore.startGameFromVideo()
 }
 
 const handleVideoError = () => {
   console.error('视频加载失败，直接开始游戏')
-  gameStore.startGameFromVideo()
+  gameStateStore.startGameFromVideo()
 }
 
 const skipVideo = () => {
@@ -69,7 +68,7 @@ const skipVideo = () => {
   if (videoElement.value) {
     videoElement.value.pause()
   }
-  gameStore.startGameFromVideo()
+  gameStateStore.startGameFromVideo()
 }
 
 const startCountdown = () => {
