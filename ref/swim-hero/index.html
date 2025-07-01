@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swimming Hero - 游泳英雄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #4682B4 50%, #1e3c72 100%);
+            border: 3px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #gameCanvas {
+            display: block;
+            cursor: pointer;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .speed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        .start-screen, .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            pointer-events: all;
+        }
+
+        .start-screen h1, .game-over-screen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .start-screen p, .game-over-screen p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 850px) {
+            .game-container {
+                width: 95vw;
+                height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="score">分数: <span id="scoreValue">0</span></div>
+            <div class="speed">速度: <span id="speedValue">1.0</span>x</div>
+        </div>
+
+        <div class="start-screen" id="startScreen">
+            <h1>🏊‍♂️ Swimming Hero</h1>
+            <p>点击切换泳道，收集呼吸管提升速度，收集护盾获得保护，避开障碍物，游得越远分数越高！</p>
+            <button class="btn" onclick="startGame()">开始游戏</button>
+            <div class="instructions">
+                点击屏幕或按空格键切换泳道
+            </div>
+        </div>
+
+        <div class="game-over-screen hidden" id="gameOverScreen">
+            <h1>游戏结束</h1>
+            <p>最终分数: <span id="finalScore">0</span></p>
+            <p>你游了 <span id="finalDistance">0</span> 米</p>
+            <button class="btn" onclick="restartGame()">重新开始</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

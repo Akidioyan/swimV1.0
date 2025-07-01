@@ -1,0 +1,21 @@
+{
+  "name": "vue-swimming-game",
+  "version": "1.0.0",
+  "description": "基于Vue 3的游泳小游戏",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.0",
+    "pinia": "^2.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.0",
+    "vite": "^4.3.0"
+  },
+  "author": "Vue Swimming Game",
+  "license": "MIT"
+} 

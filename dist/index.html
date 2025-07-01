@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>指尖游泳 - Fingertip swimming</title>
+  <meta name="description" content="基于Vue 3的游泳小游戏，支持桌面端和移动端">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(45deg, #87CEEB, #4682B4);
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #87CEEB, #4682B4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-76c63379.js"></script>
+  <link rel="stylesheet" href="./assets/index-ef907a40.css">
+</head>
+<body>
+  <div id="app">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+    </div>
+  </div>
+  
+</body>
+</html> 
