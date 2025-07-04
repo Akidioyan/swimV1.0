@@ -39,7 +39,7 @@ export const useGameStateStore = defineStore('gameState', {
     // 主动冲刺系统
     isActiveSprinting: false, // 主动冲刺状态
     activeSprintTime: 0, // 主动冲刺时间
-    sprintEnergyDrainRate: 2, // 冲刺能量消耗速率（每帧）
+    sprintEnergyDrainRate: 1.8, // 冲刺能量消耗速率（每帧）
     sprintEnergyRecoverRate: 0.5, // 冲刺能量恢复速率（每帧）
     isSprintKeyHeld: false, // 空格键是否被按住
     

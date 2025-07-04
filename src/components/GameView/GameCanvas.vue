@@ -27,16 +27,6 @@ export default {
     const gameCanvas = ref(null)
     const hasInteracted = ref(false)
     
-    // 手势控制相关变量
-    const touchStartY = ref(0)
-    const isSwiping = ref(false)
-    const swipeThreshold = 50 // 滑动阈值（像素）
-    
-    // 添加长按冲刺相关变量
-    const isTouchingPlayer = ref(false)
-    const touchHoldTimer = ref(null)
-    const holdThreshold = 50 // 长按阈值（毫秒）
-    
     let animationId = null
     let lastTime = 0
     let swimmerAnimation = null
@@ -517,67 +507,36 @@ export default {
       playerControlStore.handleKeyUp(event.key)
     }
     
-    // 计算点击位置对应的最近泳道，并返回更多信息
-    const calculateNearestLane = (touchX) => {
-      const lanes = [0, 1, 2, 3]
-      let nearestLane = 0
-      let minDistance = Infinity
-      let distances = {} // 记录到每个泳道的距离
-      
-      // 确保gameLayoutStore已经初始化
-      if (!gameLayoutStore.canvas) {
-        return {
-          lane: 1,
-          distances: {},
-          minDistance: Infinity
-        }
-      }
-      
-      lanes.forEach(lane => {
-        const laneX = gameLayoutStore.getLaneX(lane)
-        const distance = Math.abs(touchX - laneX)
-        distances[lane] = distance
-        
-        if (distance < minDistance) {
-          minDistance = distance
-          nearestLane = lane
-        }
-      })
-      
-      // 确保返回值在有效范围内
-      nearestLane = Math.max(0, Math.min(3, nearestLane))
-      
-      return {
-        lane: nearestLane,
-        distances,
-        minDistance
-      }
-    }
-    
-    // 修改鼠标点击处理
+    // 鼠标点击处理
     const handleCanvasClick = (event) => {
       hasInteracted.value = true
       
-      // 如果是等待状态，点击启动游戏
+      const rect = gameCanvas.value.getBoundingClientRect()
+      const clickX = event.clientX - rect.left
+      const screenWidth = rect.width
+      
+      // 如果是等待状态，点击任意位置启动游戏
       if (gameStateStore.gameState === 'waiting') {
-        const rect = gameCanvas.value.getBoundingClientRect()
-        const clickX = event.clientX - rect.left
-        
-        // 根据左右半屏决定移动方向
-        const screenWidth = rect.width
-        const direction = clickX < screenWidth / 2 ? -1 : 1 // 左半屏向左，右半屏向右
-        playerControlStore.switchLane(direction)
+        // 判断点击位置是左半屏还是右半屏
+        if (clickX < screenWidth / 2) {
+          // 点击左半屏，向左移动一个泳道
+          playerControlStore.switchLane(-1)
+        } else {
+          // 点击右半屏，向右移动一个泳道
+          playerControlStore.switchLane(1)
+        }
         return
       }
       
       if (gameStateStore.gameState === 'playing') {
-        const rect = gameCanvas.value.getBoundingClientRect()
-        const clickX = event.clientX - rect.left
-        
-        // 根据左右半屏决定移动方向
-        const screenWidth = rect.width
-        const direction = clickX < screenWidth / 2 ? -1 : 1 // 左半屏向左，右半屏向右
-        playerControlStore.switchLane(direction)
+        // 判断点击位置是左半屏还是右半屏
+        if (clickX < screenWidth / 2) {
+          // 点击左半屏，向左移动一个泳道
+          playerControlStore.switchLane(-1)
+        } else {
+          // 点击右半屏，向右移动一个泳道
+          playerControlStore.switchLane(1)
+        }
       }
     }
     
@@ -589,123 +548,40 @@ export default {
       const rect = gameCanvas.value.getBoundingClientRect()
       const touchX = touch.clientX - rect.left
       const touchY = touch.clientY - rect.top
-      
-      touchStartY.value = touchY
-      isSwiping.value = false
+      const screenWidth = rect.width
       
       // 如果是等待状态，触摸任意位置都启动游戏
       if (gameStateStore.gameState === 'waiting') {
-        const result = calculateNearestLane(touchX)
-        playerControlStore.switchToLane(result.lane)
+        // 判断触摸位置是左半屏还是右半屏
+        if (touchX < screenWidth / 2) {
+          // 点击左半屏，向左移动一个泳道
+          playerControlStore.switchLane(-1)
+        } else {
+          // 点击右半屏，向右移动一个泳道
+          playerControlStore.switchLane(1)
+        }
         return
       }
       
-      // 检查是否触摸到玩家角色区域
+      // 如果是游戏进行状态
       if (gameStateStore.gameState === 'playing') {
-        const player = gameLayoutStore.player
-        
-        // 计算触摸点到各泳道的距离
-        const result = calculateNearestLane(touchX)
-        
-        // 只要触摸点最接近玩家当前泳道，就允许冲刺
-        if (result.lane === player.currentLane && 
-            result.distances[player.currentLane] === result.minDistance) {
-          // 触摸到当前泳道，开始长按检测
-          isTouchingPlayer.value = true
-          
-          // 设置长按计时器
-          touchHoldTimer.value = setTimeout(() => {
-            if (isTouchingPlayer.value && !isSwiping.value) {
-              // 长按生效，开始主动冲刺
-              gameStateStore.startActiveSprint()
-            }
-          }, holdThreshold)
+        // 判断触摸位置是左半屏还是右半屏
+        if (touchX < screenWidth / 2) {
+          // 点击左半屏，向左移动一个泳道
+          playerControlStore.switchLane(-1)
         } else {
-          // 如果不是当前泳道，直接切换泳道
-          playerControlStore.switchToLane(result.lane)
+          // 点击右半屏，向右移动一个泳道
+          playerControlStore.switchLane(1)
         }
       }
     }
     
     const handleTouchMove = (event) => {
       event.preventDefault()
-      
-      const touch = event.touches[0]
-      const rect = gameCanvas.value.getBoundingClientRect()
-      const touchX = touch.clientX - rect.left
-      const touchCurrentY = touch.clientY
-      const deltaY = Math.abs(touchStartY.value - touchCurrentY)
-      
-      // 如果移动距离超过阈值，取消长按检测
-      if (deltaY > 20) {
-        isTouchingPlayer.value = false
-        if (touchHoldTimer.value) {
-          clearTimeout(touchHoldTimer.value)
-          touchHoldTimer.value = null
-        }
-        
-        // 如果移动距离足够大，标记为滑动
-        if (deltaY > swipeThreshold) {
-          isSwiping.value = true
-        }
-      } else {
-        // 检查水平移动是否离开了当前泳道
-        const result = calculateNearestLane(touchX)
-        if (result.lane !== gameLayoutStore.player.currentLane) {
-          // 如果移动到了其他泳道，取消冲刺
-          isTouchingPlayer.value = false
-          if (touchHoldTimer.value) {
-            clearTimeout(touchHoldTimer.value)
-            touchHoldTimer.value = null
-          }
-          // 切换到新泳道
-          playerControlStore.switchToLane(result.lane)
-        }
-      }
     }
     
     const handleTouchEnd = (event) => {
       event.preventDefault()
-      
-      const touch = event.changedTouches[0]
-      const rect = gameCanvas.value.getBoundingClientRect()
-      const touchX = touch.clientX - rect.left
-      const touchEndY = touch.clientY
-      const deltaY = touchStartY.value - touchEndY
-      
-      // 清除长按计时器
-      if (touchHoldTimer.value) {
-        clearTimeout(touchHoldTimer.value)
-        touchHoldTimer.value = null
-      }
-      
-      // 如果是触摸玩家角色后松开，停止主动冲刺
-      if (isTouchingPlayer.value) {
-        gameStateStore.stopActiveSprint()
-        isTouchingPlayer.value = false
-        return
-      }
-      
-      // 检查是否为有效滑动
-      if (Math.abs(deltaY) > swipeThreshold && gameStateStore.gameState === 'playing') {
-        isSwiping.value = true
-        
-        if (deltaY > 0) {
-          // 向上滑动 - 加速冲刺（道具冲刺）
-          playerControlStore.startSprint()
-        } else {
-          // 向下滑动 - 减速
-          playerControlStore.startSlowdown()
-        }
-      } else if (!isSwiping.value && gameStateStore.gameState === 'playing') {
-        // 如果不是滑动，则处理泳道切换
-        const result = calculateNearestLane(touchX)
-        playerControlStore.switchToLane(result.lane)
-      }
-      
-      // 重置所有状态
-      isSwiping.value = false
-      isTouchingPlayer.value = false
     }
     
     return {
@@ -715,7 +591,6 @@ export default {
       gameLayoutStore,
       playerControlStore,
       hasInteracted,
-      isTouchingPlayer,
       handleCanvasClick,
       handleTouchStart,
       handleTouchMove,

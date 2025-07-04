@@ -97,24 +97,15 @@ export const useGameLayoutStore = defineStore('gameLayout', {
       }
     },
     
-    // 修改getLaneY方法，让玩家距离底部屏幕20%，再往上移20vh
-    getLaneY(isActiveSprinting = false) {
+    // 修改getLaneY方法，让玩家距离底部屏幕40%
+    getLaneY() {
       if (!this.canvas) return 0
-      
-      // 计算20vh对应的像素值（假设100vh = canvas.height）
-      const vh20 = this.canvas.height * 0.2
-      
-      // 如果正在主动冲刺，玩家位置向前移动（Y坐标减少）
-      if (isActiveSprinting) {
-        return this.canvas.height * 0.65 - vh20 // 冲刺时移动到屏幕65%位置，再往上移20vh
-      }
-      
-      return this.canvas.height * 0.8 - vh20 // 正常位置：距离底部20%，再往上移20vh（Y坐标为屏幕高度的60%）
+      return this.canvas.height * 0.6 // 距离底部40%（Y坐标为屏幕高度的60%）
     },
     
     // 获取当前玩家Y坐标（考虑冲刺状态）
     getCurrentPlayerY(isActiveSprinting = false) {
-      return this.getLaneY(isActiveSprinting)
+      return this.getLaneY()
     },
     
     // 初始化Canvas
@@ -200,7 +191,7 @@ export const useGameLayoutStore = defineStore('gameLayout', {
       }
       
       // 确保Y坐标始终固定，但考虑冲刺状态
-      this.player.y = this.getLaneY(isActiveSprinting)
+      this.player.y = this.getLaneY()
       this.player.targetY = this.player.y
       
       // 更新全局玩家位置
@@ -256,33 +247,6 @@ export const useGameLayoutStore = defineStore('gameLayout', {
     // 窗口大小改变时重新计算布局
     handleResize() {
       this.calculateGameLayout()
-    },
-    
-    // 获取指定泳道的X坐标（泳道中线）
-    getLaneX(laneIndex) {
-      if (!this.canvas) return 0 // 添加空值检查
-      
-      const screenWidth = this.canvas.width
-      
-      // 根据泳道索引返回对应的中线X坐标
-      switch(laneIndex) {
-        case 0: // 第一泳道中线
-          return screenWidth * 0.275
-        case 1: // 第二泳道中线
-          return screenWidth * 0.425
-        case 2: // 第三泳道中线
-          return screenWidth * 0.575
-        case 3: // 第四泳道中线
-          return screenWidth * 0.725
-        default:
-          return screenWidth * 0.275
-      }
-    },
-    
-    // 修改getLaneY方法，让玩家距离底部屏幕20%
-    getLaneY() {
-      if (!this.canvas) return 0
-      return this.canvas.height * 0.8 // 距离底部20%（Y坐标为屏幕高度的80%）
     }
   }
 })

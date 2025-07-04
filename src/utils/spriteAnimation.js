@@ -64,9 +64,9 @@ export class SwimmerAnimation {
   constructor() {
     this.animations = {}
     this.currentAnimation = 'swim'
-    this.lastTime = 0
+    this.isLoaded = false
     
-    // 加载游泳动画
+    // 初始化动画
     this.loadSwimAnimation()
   }
   
@@ -77,13 +77,15 @@ export class SwimmerAnimation {
     // 播放顺序：先从左到右，再从上到下
     
     this.animations.swim = new SpriteAnimation(
-      '/media/graphics/games/swimer.png',
+      '/swimer.png',
       200,         // 每帧宽度 (1000/5)
       200,         // 每帧高度 (1600/8) 
       40,          // 总帧数 (5×8)
       12,          // 帧率 (每秒12帧)
       5            // 列数
     )
+    
+    this.isLoaded = true
   }
   
   update(deltaTime) {
@@ -113,15 +115,39 @@ export class ObstacleAssets {
   constructor() {
     this.images = {}
     this.animations = {}
+    this.isLoaded = false
+    
+    // 静态障碍物图片
+    this.staticImages = [
+      { name: 'obs1', src: '/obs/obs1/obs1.png' }, // 静止障碍物
+      { name: 'obs3', src: '/obs/obs3/obs3.png' }, // 水下障碍物
+      { name: 'obs4', src: '/obs/obs4/obs4.png' }  // 电动水母障碍物
+    ]
+    
+    // 动画障碍物帧序列
+    this.animationSequences = {
+      obs2: {
+        basePath: '/obs/obs2/obs2.png',
+        frameCount: 1,
+        frameDelay: 200
+      }
+    }
+    
+    this.loadAssets()
+  }
+  
+  // 添加缺失的 loadAssets 方法
+  loadAssets() {
     this.loadObstacleImages()
     this.loadObstacleAnimations()
+    this.isLoaded = true
   }
   
   loadObstacleImages() {
     const obstacles = [
-      { name: 'rock1', src: '/media/graphics/games/obs/rock1/obs1.png' }, // 静止障碍物
-      { name: 'rock3', src: '/media/graphics/games/obs/rock3/obs3.png' }, // 水下障碍物
-      { name: 'rock4', src: '/media/graphics/games/obs/rock4/obs4.png' }  // 电动水母障碍物
+      { name: 'obs1', src: '/obs/obs1.png' }, // 静止障碍物
+      { name: 'obs3', src: '/obs/obs3.png' }, // 水下障碍物
+      { name: 'obs4', src: '/obs/obs4.png' }  // 电动水母障碍物
     ]
     
     obstacles.forEach(obstacle => {
@@ -135,24 +161,14 @@ export class ObstacleAssets {
   
   loadObstacleAnimations() {
     // obs2.png 作为雪碧图动画：300*500像素，3列*5行（共15帧）
-    // rock2是移动障碍物，使用动画
-    this.animations.rock2 = new SpriteAnimation(
-      '/media/graphics/games/obs/rock2/obs2.png',
+    // obs2是移动障碍物，使用动画
+    this.animations.obs2 = new SpriteAnimation(
+      '/obs/obs2.png',
       100,         // 每帧宽度 (300/3)
       100,         // 每帧高度 (500/5)
       15,          // 总帧数 (3×5)
       8,           // 帧率 (每秒8帧，适合障碍物动画)
       3            // 列数
-    )
-    
-    // rock4电动水母也可以有特殊动画效果
-    this.animations.rock4 = new SpriteAnimation(
-      '/media/graphics/games/obs/rock4/obs4.png',
-      100,         // 假设obs4.png也是动画帧
-      100,         
-      1,           // 如果是单帧，设为1
-      6,           // 较慢的动画速度
-      1            
     )
   }
   
@@ -192,22 +208,34 @@ export class ObstacleAssets {
 export class PowerUpAssets {
   constructor() {
     this.images = {}
-    this.loadPowerUpImages()
-  }
-  
-  loadPowerUpImages() {
-    const powerUps = [
-      { name: 'snorkel', src: '/media/graphics/games/Props/snorkel/snorkel.png' },
-      { name: 'snorkel-glow', src: '/media/graphics/games/Props/snorkel/snorkel-glow.png' },
-      { name: 'star', src: '/media/graphics/games/Props/star/star.png' },
-      { name: 'star-glow', src: '/media/graphics/games/Props/star/star-glow.png' }
+    this.isLoaded = false
+    
+    // 道具图片列表
+    this.powerUpImages = [
+      { name: 'snorkel', src: '/Props/snorkel/snorkel.png' },
+      { name: 'snorkel-glow', src: '/Props/snorkel/snorkel-glow.png' },
+      { name: 'star', src: '/Props/star/star.png' },
+      { name: 'star-glow', src: '/Props/star/star-glow.png' },
+      { name: 'bubble', src: '/Props/bubble/bubble.png' } // 添加bubble图片
     ]
     
-    powerUps.forEach(powerUp => {
+    this.loadAssets()
+  }
+  
+  // 添加缺失的 loadAssets 方法
+  loadAssets() {
+    this.powerUpImages.forEach(powerUp => {
       const img = new Image()
       img.src = powerUp.src
       img.onload = () => {
         this.images[powerUp.name] = img
+        // 检查是否所有图片都已加载
+        if (Object.keys(this.images).length === this.powerUpImages.length) {
+          this.isLoaded = true
+        }
+      }
+      img.onerror = () => {
+        console.warn(`Failed to load power-up image: ${powerUp.src}`)
       }
     })
   }

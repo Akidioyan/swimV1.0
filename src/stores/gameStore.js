@@ -88,8 +88,8 @@ export const useGameStore = defineStore('game', {
       const gameStateStore = useGameStateStore()
       const playerControlStore = usePlayerControlStore()
       
-      // 冲刺期间获得的道具无效
-      if (gameStateStore.rushActive) return
+      // 只有snorkel道具在已有冲刺状态时无效，其他道具正常收集
+      if (gameStateStore.rushActive && powerUp.type === 'snorkel') return
       
       if (powerUp.type === 'snorkel') {
         // snorkel改为3秒无敌加速冲刺
