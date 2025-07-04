@@ -14,7 +14,7 @@
         class="rush-indicator"
       >
         <div class="rush-icon">🚀</div>
-        <div class="rush-time">{{ Math.ceil(playerControlStore.rushTime / 1000) }}s</div>
+        <div class="rush-time">{{ Math.ceil(playerControlStore.rushTime / 60) }}s</div>
       </div>
       
       <!-- 无敌状态指示器 -->
@@ -81,6 +81,13 @@
         <img src="/ui/play.png" alt="继续游戏" class="pause-play-icon" />
       </div>
     </div>
+    
+    <!-- 开发者调试面板 -->
+    <DeveloperDebugPanel 
+      :visible="showDebugPanel"
+      @close="handleCloseDebugPanel"
+      @jumpToLevel="handleJumpToLevel"
+    />
   </div>
 </template>
 
@@ -88,6 +95,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import GameCanvas from './GameView/GameCanvas.vue'
 import UITop from './GameView/UI-top.vue'
+import DeveloperDebugPanel from './DeveloperDebugPanel.vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../stores/gamestore/gameLayout'
@@ -98,7 +106,8 @@ export default {
   name: 'GameView',
   components: {
     GameCanvas,
-    UITop
+    UITop,
+    DeveloperDebugPanel
   },
   setup() {
     const gameStore = useGameStore()
@@ -108,6 +117,9 @@ export default {
     
     // 能量条防误触定时器
     const energyBarHoldTimer = ref(null)
+    
+    // 开发者调试面板状态
+    const showDebugPanel = ref(false)
     
     onMounted(() => {
       // 在组件挂载时初始化音频 - 使用音频管理器
@@ -132,6 +144,18 @@ export default {
     
     // 全局键盘事件处理
     const handleGlobalKeyDown = (event) => {
+      // 开发者调试面板快捷键
+      if (event.key === 'l' || event.key === 'L') {
+        event.preventDefault()
+        toggleDebugPanel()
+        return
+      }
+      
+      // 如果调试面板已打开，阻止其他按键操作
+      if (showDebugPanel.value) {
+        return
+      }
+      
       // 防止页面滚动等默认行为
       if (['ArrowLeft', 'ArrowRight', ' ', 'Escape'].includes(event.key)) {
         event.preventDefault()
@@ -147,7 +171,40 @@ export default {
     }
     
     const handleGlobalKeyUp = (event) => {
+      // 如果调试面板已打开，阻止其他按键操作
+      if (showDebugPanel.value) {
+        return
+      }
+      
       playerControlStore.handleKeyUp(event.key)
+    }
+    
+    // 开发者调试面板相关函数
+    const toggleDebugPanel = () => {
+      showDebugPanel.value = !showDebugPanel.value
+      console.log('🛠️ 开发者调试面板:', showDebugPanel.value ? '打开' : '关闭')
+    }
+    
+    const handleCloseDebugPanel = () => {
+      showDebugPanel.value = false
+    }
+    
+    const handleJumpToLevel = (jumpData) => {
+      try {
+        // 重置相关状态
+        gameStore.resetGameState()
+        
+        // 强制刷新难度系统
+        gameStore.forceNextSpawn = true
+        gameStore.currentDifficultyLevel = jumpData.level
+        
+        console.log(`🚀 开发者跳跃成功: 等级${jumpData.level}, 距离${Math.round(jumpData.distance)}m (${Math.round(jumpData.distanceVw)}vw)`)
+        
+        // 关闭调试面板
+        showDebugPanel.value = false
+      } catch (error) {
+        console.error('❌ 开发者跳跃失败:', error)
+      }
     }
     
     // 处理点击暂停图标恢复游戏
@@ -234,6 +291,10 @@ export default {
       gameStateStore,
       gameLayoutStore,
       playerControlStore,
+      showDebugPanel,
+      toggleDebugPanel,
+      handleCloseDebugPanel,
+      handleJumpToLevel,
       handleResumeGame,
       handleEnergyBarMouseDown,
       handleEnergyBarMouseUp,
@@ -279,7 +340,7 @@ export default {
   position: absolute;
   top: 15vh;
   left: 50%;
-  transform: translateX(-50%, -50%);
+  transform: translate(-50%, -50%);
   background: rgba(255, 215, 0, 0.9);
   color: #000;
   padding: 10px 20px;

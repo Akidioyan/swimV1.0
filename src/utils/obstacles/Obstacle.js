@@ -3,11 +3,11 @@
  * 封装障碍物的属性和行为
  */
 
-import { getObstacleConfig } from './obstacleConfig.js'
+import { getGameObjectConfig } from './obstacleConfig.js'
 
 export class Obstacle {
   constructor(type, lane, gameLayoutStore) {
-    this.config = getObstacleConfig(type)
+    this.config = getGameObjectConfig(type)
     if (!this.config) {
       throw new Error(`未知的障碍物类型: ${type}`)
     }
@@ -16,6 +16,9 @@ export class Obstacle {
     this.lane = lane
     this.currentLane = lane
     this.targetLane = lane
+    
+    // 在创建时就固定选择一张图片变体
+    this.imageVariantIndex = Math.floor(Math.random() * this.getVariantCount(type))
     
     // 获取画布宽度计算尺寸
     const canvasWidth = gameLayoutStore.canvas.width
@@ -60,47 +63,23 @@ export class Obstacle {
    * 初始化移动属性
    */
   initMovementProperties() {
-    this.baseSpeed = 0
     this.moveSpeed = 0
-    this.speedMultiplier = 1.0
     
     if (this.config.type === 'moving' && this.config.movement) {
       const movement = this.config.movement
       
       if (movement.type === 'horizontal') {
-        // 使用配置中的基础移动速度
-        this.baseSpeed = movement.baseSpeed || movement.speed || 1.5
-        // 随机化移动方向
+        // 使用配置中的移动速度，随机化移动方向
+        const baseSpeed = movement.speed || 1.5
         this.moveDirection = Math.random() > 0.5 ? 1 : -1
-        this.moveSpeed = this.baseSpeed * this.moveDirection
+        this.moveSpeed = baseSpeed * this.moveDirection
         this.bounceOnBoundary = movement.bounceOnBoundary || false
       }
-    } else if (this.config.type === 'custom' && this.config.custom) {
-      // 自定义障碍物的基础速度
-      this.baseSpeed = this.config.custom.baseSpeed || 1.0
-      this.moveSpeed = this.baseSpeed
     }
     
     // 跨泳道移动属性（为obs3预留）
     this.laneChangeTimer = 0
     this.nextLaneChangeTime = 0
-  }
-  
-  /**
-   * 应用速度倍数
-   * @param {number} multiplier - 速度倍数
-   */
-  applySpeedMultiplier(multiplier) {
-    this.speedMultiplier = multiplier
-    
-    if (this.config.type === 'moving') {
-      // 对移动障碍物应用速度倍数，保持移动方向
-      const direction = this.moveSpeed >= 0 ? 1 : -1
-      this.moveSpeed = this.baseSpeed * this.speedMultiplier * direction
-    } else if (this.config.type === 'custom') {
-      // 对自定义障碍物应用速度倍数
-      this.moveSpeed = this.baseSpeed * this.speedMultiplier
-    }
   }
   
   /**
@@ -112,7 +91,7 @@ export class Obstacle {
       this.customBehavior = this.config.custom.behavior || 'default'
       this.specialEffect = this.config.custom.specialEffect || false
       
-      // 添加更多自定义属性
+      // 添加自定义属性
       this.customPhase = 0
       this.customAmplitude = 2.0
     }
@@ -123,38 +102,50 @@ export class Obstacle {
    * @param {number} gameSpeed - 游戏速度
    * @param {Object} gameLayoutStore - 游戏布局store
    * @param {number} currentTime - 当前时间（可选，用于性能优化）
+   * @param {Array} powerUps - 道具数组（用于碰撞检测）
    */
-  update(gameSpeed, gameLayoutStore, currentTime = Date.now()) {
-    // 性能优化：控制更新频率
+  update(gameSpeed, gameLayoutStore, currentTime = Date.now(), powerUps = []) {
+    // 基础移动：向下移动（每帧只更新一次）
+    this.y += gameSpeed
+    
+    // 调用复杂逻辑更新
+    this.updateComplexLogic(gameLayoutStore, currentTime, powerUps)
+  }
+  
+  /**
+   * 更新复杂逻辑（可分批处理的逻辑）
+   * @param {Object} gameLayoutStore - 游戏布局store
+   * @param {number} currentTime - 当前时间
+   * @param {Array} powerUps - 道具数组（用于碰撞检测）
+   */
+  updateComplexLogic(gameLayoutStore, currentTime = Date.now(), powerUps = []) {
+    // 性能优化：控制复杂逻辑的更新频率
     if (currentTime - this.lastUpdateTime < this.updateInterval) {
-      // 只更新基础位置，跳过复杂的移动逻辑
-      this.y += gameSpeed
+      // 跳过复杂的移动逻辑
       return
     }
     
     this.lastUpdateTime = currentTime
     
-    // 基础移动：向下移动
-    this.y += gameSpeed
-    
     // 更新动画帧
     this.animationFrame++
     
-    // 根据类型执行特定的移动逻辑
-    this.updateMovement(gameLayoutStore)
+    // 根据类型执行特定的移动逻辑，传递powerUps引用
+    this.updateMovement(gameLayoutStore, powerUps)
   }
   
   /**
    * 更新移动逻辑
    * @param {Object} gameLayoutStore - 游戏布局store
+   * @param {Array} powerUps - 道具数组（用于碰撞检测）
    */
-  updateMovement(gameLayoutStore) {
+  updateMovement(gameLayoutStore, powerUps) {
     switch (this.config.type) {
       case 'static':
         this.updateStaticMovement(gameLayoutStore)
         break
       case 'moving':
-        this.updateHorizontalMovement(gameLayoutStore)
+        this.updateHorizontalMovement(gameLayoutStore, powerUps)
         break
       case 'custom':
         this.updateCustomMovement(gameLayoutStore)
@@ -167,38 +158,91 @@ export class Obstacle {
    * @param {Object} gameLayoutStore - 游戏布局store
    */
   updateStaticMovement(gameLayoutStore) {
-    // 确保静止障碍物始终在泳道中央
-    this.x = gameLayoutStore.getLaneX(this.lane) - this.width / 2
+    // 静止障碍物的X坐标在创建时已确定，不需要每帧重新计算
+    // 这里可以添加其他静止障碍物的逻辑，但不修改X坐标
   }
   
   /**
    * 更新水平移动障碍物
    * @param {Object} gameLayoutStore - 游戏布局store
+   * @param {Array} powerUps - 道具数组（用于碰撞检测）
    */
-  updateHorizontalMovement(gameLayoutStore) {
-    // 水平移动（已应用速度倍数）
+  updateHorizontalMovement(gameLayoutStore, powerUps) {
+    // 保存当前位置，用于碰撞检测后的回退
+    const oldX = this.x
+    const oldLane = this.lane
+    
+    // 水平移动
     this.x += this.moveSpeed
     
-    if (this.bounceOnBoundary) {
-      // 边界检查，保持在泳道内
-      const laneLeft = gameLayoutStore.getLaneX(this.lane) - gameLayoutStore.laneWidth / 2
-      const laneRight = gameLayoutStore.getLaneX(this.lane) + gameLayoutStore.laneWidth / 2
-      
-      if (this.x <= laneLeft || this.x + this.width >= laneRight) {
-        this.moveSpeed *= -1 // 反向移动
+    // 更新当前所在泳道（允许穿越泳道）
+    if (this.type === 'obs2') {
+      // 计算当前位置对应的泳道
+      const currentLane = gameLayoutStore.getClosestLane(this.x + this.width / 2)
+      if (currentLane !== undefined && currentLane >= 0) {
+        this.lane = currentLane
       }
+    }
+    
+    let shouldReverse = false
+    
+    if (this.bounceOnBoundary) {
+      // 边界检查，检查是否碰到游戏区域边界
+      const gameAreaLeft = gameLayoutStore.gameAreaX
+      const gameAreaRight = gameLayoutStore.gameAreaX + gameLayoutStore.gameAreaWidth
+      
+      if (this.x <= gameAreaLeft || this.x + this.width >= gameAreaRight) {
+        shouldReverse = true
+      }
+    }
+    
+    // 检测与其他障碍物和道具的碰撞（仅对obs2类型）
+    if (this.type === 'obs2' && !shouldReverse) {
+      const obstacleManager = gameLayoutStore.obstacleManager
+      
+      // 检测与其他障碍物的碰撞
+      if (obstacleManager && obstacleManager.obstacles) {
+        for (const otherObstacle of obstacleManager.obstacles) {
+          // 跳过自己
+          if (otherObstacle === this) continue
+          
+          // 检测碰撞
+          if (this.checkCollision(otherObstacle)) {
+            shouldReverse = true
+            break
+          }
+        }
+      }
+      
+      // 检测与道具的碰撞
+      if (!shouldReverse && powerUps) {
+        for (const powerUp of powerUps) {
+          // 检测碰撞
+          if (this.checkCollision(powerUp)) {
+            shouldReverse = true
+            break
+          }
+        }
+      }
+    }
+    
+    // 如果需要掉头，回退位置并反向移动速度
+    if (shouldReverse) {
+      this.x = oldX // 回退到移动前的位置
+      this.lane = oldLane // 回退泳道
+      this.moveSpeed *= -1 // 反向移动
     }
   }
   
   /**
-   * 更新自定义障碍物（obs3）- 增强版
+   * 更新自定义障碍物（obs3）
    * @param {Object} gameLayoutStore - 游戏布局store
    */
   updateCustomMovement(gameLayoutStore) {
     const baseLaneX = gameLayoutStore.getLaneX(this.lane) - this.width / 2
     
     // 更新自定义相位
-    this.customPhase += 0.08 * this.speedMultiplier
+    this.customPhase += 0.08
     
     // 根据自定义行为模式移动
     switch (this.customBehavior) {
@@ -208,28 +252,8 @@ export class Obstacle {
         break
         
       case 'wave':
-        // 波浪移动（受速度倍数影响）
-        this.x = baseLaneX + Math.sin(this.customPhase) * this.customAmplitude * this.speedMultiplier
-        break
-        
-      case 'circle':
-        // 圆形移动
-        const radius = 15 * this.speedMultiplier
-        this.x = baseLaneX + Math.cos(this.customPhase) * radius
-        break
-        
-      case 'zigzag':
-        // 之字形移动
-        const zigzagSpeed = this.moveSpeed * this.speedMultiplier
-        this.x += zigzagSpeed
-        
-        // 边界反弹
-        const laneLeft = gameLayoutStore.getLaneX(this.lane) - gameLayoutStore.laneWidth / 2
-        const laneRight = gameLayoutStore.getLaneX(this.lane) + gameLayoutStore.laneWidth / 2
-        
-        if (this.x <= laneLeft || this.x + this.width >= laneRight) {
-          this.moveSpeed *= -1
-        }
+        // 波浪移动
+        this.x = baseLaneX + Math.sin(this.customPhase) * this.customAmplitude
         break
         
       default:
@@ -263,37 +287,32 @@ export class Obstacle {
   }
   
   /**
-   * 碰撞检测
+   * 碰撞检测 - 使用圆形碰撞检测
    * @param {Object} other - 另一个对象
    * @returns {boolean} 是否发生碰撞
    */
   checkCollision(other) {
-    const myBox = this.getCollisionBox()
+    // 获取自己的碰撞圆信息
+    const myCollisionWidth = this.collisionWidth || this.width
+    const myCollisionHeight = this.collisionHeight || this.height
+    const myRadius = Math.min(myCollisionWidth, myCollisionHeight) / 2
+    const myCenterX = this.x + this.width / 2
+    const myCenterY = this.y + this.height / 2
     
-    // 获取对方的碰撞盒
-    let otherBox
-    if (other.getCollisionBox) {
-      otherBox = other.getCollisionBox()
-    } else {
-      // 兼容旧格式
-      const otherCollisionWidth = other.collisionWidth || other.width
-      const otherCollisionHeight = other.collisionHeight || other.height
-      const otherOffsetX = (other.width - otherCollisionWidth) / 2
-      const otherOffsetY = (other.height - otherCollisionHeight) / 2
-      
-      otherBox = {
-        x: other.x + otherOffsetX,
-        y: other.y + otherOffsetY,
-        width: otherCollisionWidth,
-        height: otherCollisionHeight
-      }
-    }
+    // 获取对方的碰撞圆信息
+    const otherCollisionWidth = other.collisionWidth || other.width
+    const otherCollisionHeight = other.collisionHeight || other.height
+    const otherRadius = Math.min(otherCollisionWidth, otherCollisionHeight) / 2
+    const otherCenterX = other.x + other.width / 2
+    const otherCenterY = other.y + other.height / 2
     
-    // AABB碰撞检测
-    return myBox.x < otherBox.x + otherBox.width &&
-           myBox.x + myBox.width > otherBox.x &&
-           myBox.y < otherBox.y + otherBox.height &&
-           myBox.y + myBox.height > otherBox.y
+    // 计算两个圆心之间的距离
+    const dx = myCenterX - otherCenterX
+    const dy = myCenterY - otherCenterY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    
+    // 如果距离小于两个半径之和，则发生碰撞
+    return distance < (myRadius + otherRadius)
   }
   
   /**
@@ -307,13 +326,10 @@ export class Obstacle {
       width: this.width,
       height: this.height,
       type: this.type,
+      imageVariantIndex: this.imageVariantIndex, // 添加固定的图片变体索引
       animationFrame: this.animationFrame,
       color: this.config.color,
-      // 添加可见性标志
-      visible: true,
-      // 添加速度信息用于调试
-      speedMultiplier: this.speedMultiplier,
-      moveSpeed: this.moveSpeed
+      visible: true
     }
   }
   
@@ -342,9 +358,17 @@ export class Obstacle {
       updateInterval: this.updateInterval,
       lastUpdateTime: this.lastUpdateTime,
       animationFrame: this.animationFrame,
-      baseSpeed: this.baseSpeed,
-      moveSpeed: this.moveSpeed,
-      speedMultiplier: this.speedMultiplier
+      moveSpeed: this.moveSpeed
     }
   }
-} 
+  
+  // 新增方法：获取指定类型的变体数量
+  getVariantCount(type) {
+    const variantCounts = {
+      'obs1': 3,
+      'obs2': 3, // 修改为3，因为现在有obs2-1.png, obs2-2.png, obs2-3.png
+      'obs3': 1
+    }
+    return variantCounts[type] || 1
+  }
+}

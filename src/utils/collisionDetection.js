@@ -135,4 +135,28 @@ export function isInBounds(obj, screenWidth, screenHeight) {
 export function isOutOfBounds(obj, screenWidth, screenHeight) {
   return obj.x + obj.width < 0 || obj.x > screenWidth ||
          obj.y + obj.height < 0 || obj.y > screenHeight
-} 
+}
+
+/**
+ * 检查对象是否在画布边界内
+ * @param {Object} obj - 对象，包含 x, y, width, height 属性
+ * @param {number} canvasWidth - 画布宽度
+ * @param {number} canvasHeight - 画布高度
+ * @returns {boolean} - 是否在边界内
+ */
+export function isInBounds(obj, canvasWidth, canvasHeight) {
+  return obj.x >= 0 && obj.x + obj.width <= canvasWidth &&
+         obj.y >= 0 && obj.y + obj.height <= canvasHeight
+}
+
+/**
+ * 检查对象是否完全离开画布
+ * @param {Object} obj - 对象，包含 x, y, width, height 属性
+ * @param {number} canvasWidth - 画布宽度
+ * @param {number} canvasHeight - 画布高度
+ * @returns {boolean} - 是否完全离开画布
+ */
+export function isOutOfBounds(obj, canvasWidth, canvasHeight) {
+  return obj.x + obj.width < 0 || obj.x > canvasWidth ||
+         obj.y + obj.height < 0 || obj.y > canvasHeight
+}

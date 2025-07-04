@@ -1,6 +1,7 @@
 // 游戏状态管理模块
 import { defineStore } from 'pinia'
 import audioManager from '../../utils/audio-manager'
+import { getDifficultyLevelFromVw, getMovementSpeed, convertMetersToVw } from '../../utils/obstacles/obstacleConfig.js'
 
 export const useGameStateStore = defineStore('gameState', {
   state: () => ({
@@ -49,7 +50,9 @@ export const useGameStateStore = defineStore('gameState', {
     // 游戏速度
     gameSpeed: 2,
     baseSpeed: 2,
-    speedMultiplier: 1.0,
+    
+    // 资源管理
+    loadedResources: null, // 保存已加载的游戏资源
   }),
   
   getters: {
@@ -64,56 +67,51 @@ export const useGameStateStore = defineStore('gameState', {
       return `${(distance / 1000).toFixed(2)} km`
     },
     
-    // 五档速度系统：使用vh单位，适应不同屏幕尺寸
+    // 动态难度系统：基于新的0-6级难度配置
     currentSpeedMultiplier: (state) => {
-      const distance = Math.floor(state.distance)
-      let baseSpeedMultiplier = 1.0
+      // 将距离（米）转换为vw，然后获取当前难度等级
+      const distanceVw = convertMetersToVw(state.distance)
+      const currentLevel = getDifficultyLevelFromVw(distanceVw)
+      const levelMovementSpeed = getMovementSpeed(currentLevel) // vw/s
       
-      // 获取视窗高度，转换vh为像素
-      const viewportHeight = window.innerHeight
-      
-      if (distance < 15) {
-        // 一档：0-15m，10vh/s
-        const targetSpeed = (10 * viewportHeight / 100) / 60 // 转换为每帧像素(60fps)
-        baseSpeedMultiplier = targetSpeed / state.baseSpeed
-      } else if (distance < 200) {
-        // 二档：15-200m，18vh/s
-        const targetSpeed = (18 * viewportHeight / 100) / 60 // 转换为每帧像素(60fps)
-        baseSpeedMultiplier = targetSpeed / state.baseSpeed
-      } else if (distance < 500) {
-        // 三档：200-500m，25vh/s
-        const targetSpeed = (25 * viewportHeight / 100) / 60 // 转换为每帧像素(60fps)
-        baseSpeedMultiplier = targetSpeed / state.baseSpeed
-      } else if (distance < 2000) {
-        // 四档：500-2000m，32vh/s
-        const targetSpeed = (32 * viewportHeight / 100) / 60 // 转换为每帧像素(60fps)
-        baseSpeedMultiplier = targetSpeed / state.baseSpeed
-      } else {
-        // 五档：2000m+，40vh/s
-        const targetSpeed = (40 * viewportHeight / 100) / 60 // 转换为每帧像素(60fps)
-        baseSpeedMultiplier = targetSpeed / state.baseSpeed
-      }
+      // 获取视窗宽度，转换vw/s为像素/帧
+      const viewportWidth = window.innerWidth
+      const targetSpeedPerFrame = (levelMovementSpeed * viewportWidth / 100) / 60 // 转换为每帧像素(60fps)
+      const baseSpeedMultiplier = targetSpeedPerFrame / state.baseSpeed
       
       // 开发者测试模式：检查是否有开发者冲刺状态
       if (state.devSprintActive) {
-        baseSpeedMultiplier *= 3.0 // 开发者测试3倍速度
+        return baseSpeedMultiplier * 5.0 // 开发者测试5倍速度
       }
       // 道具冲刺状态处理（无敌冲刺）
       else if (state.rushActive) {
         const remainingTime = state.rushTime
-        if (remainingTime > 60) { // 前2秒保持2倍速度
-          baseSpeedMultiplier *= 2.0
+        if (remainingTime > 60) { // 前2秒保持2.4倍速度
+          return baseSpeedMultiplier * 2.4
         } else { // 后1秒衰减
-          const decayFactor = 1.0 + (1.0 * remainingTime / 60) // 从2倍线性衰减到1倍
-          baseSpeedMultiplier *= decayFactor
+          const decayFactor = 1.0 + (1.4 * remainingTime / 60) // 从2.4倍线性衰减到1倍
+          return baseSpeedMultiplier * decayFactor
         }
       }
       // 主动冲刺状态处理（无无敌状态）
       else if (state.isActiveSprinting) {
-        baseSpeedMultiplier *= 2.5 // 主动冲刺时2.5倍速度
+        return baseSpeedMultiplier * 2.5 // 主动冲刺时2.5倍速度
       }
       
       return Math.max(0.1, baseSpeedMultiplier) // 确保最小速度
+    },
+
+    // 当前难度等级（调试用）
+    currentDifficultyLevel: (state) => {
+      const distanceVw = convertMetersToVw(state.distance)
+      return getDifficultyLevelFromVw(distanceVw)
+    },
+
+    // 当前运动速度（调试用）
+    currentMovementSpeed: (state) => {
+      const distanceVw = convertMetersToVw(state.distance)
+      const currentLevel = getDifficultyLevelFromVw(distanceVw)
+      return getMovementSpeed(currentLevel)
     }
   },
   
@@ -145,6 +143,8 @@ export const useGameStateStore = defineStore('gameState', {
     actuallyStartGame() {
       if (this.gameState === 'waiting') {
         this.gameState = 'playing'
+        this.gameStartTime = Date.now() // 重新设置游戏开始时间
+        
         // 开始播放背景音乐
         audioManager.playBackgroundMusic()
       }
@@ -154,7 +154,24 @@ export const useGameStateStore = defineStore('gameState', {
     restartGame() {
       // 重置音频状态
       audioManager.reset()
+      
+      // 从视频直接开始游戏
       this.startGameFromVideo()
+    },
+    
+    // 设置已加载的资源
+    setLoadedResources(resources) {
+      this.loadedResources = resources
+    },
+    
+    // 获取已加载的资源
+    getLoadedResources() {
+      return this.loadedResources
+    },
+    
+    // 检查资源是否已加载
+    areResourcesLoaded() {
+      return this.loadedResources && this.loadedResources.isLoaded
     },
     
     // 游戏结束
@@ -229,7 +246,6 @@ export const useGameStateStore = defineStore('gameState', {
       this.lives = 3
       this.distance = 0
       this.score = 0
-      this.speedMultiplier = 1.0
       this.gameSpeed = this.baseSpeed
       this.invulnerable = false
       this.invulnerableTime = 0
@@ -387,5 +403,3 @@ export const useGameStateStore = defineStore('gameState', {
     }
   }
 })
-    
-    // 开发者测试模式

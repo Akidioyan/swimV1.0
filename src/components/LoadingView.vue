@@ -12,6 +12,9 @@
             :style="{ width: progress + '%' }"
           ></div>
         </div>
+        
+        <!-- 显示当前提示 -->
+        <div class="loading-tip">{{ currentTip }}</div>
       </div>
     </div>
   </div>
@@ -19,12 +22,15 @@
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useGameStateStore } from '../stores/gamestore/gameState'
+import { ResourceManager } from '../utils/ResourceManager.js'
 
 export default {
   name: 'LoadingView',
   setup() {
+    const gameStateStore = useGameStateStore()
     const progress = ref(0)
-    const loadingText = ref('正在加载游戏资源...')
+    const loadingText = ref('正在初始化...')
     const currentTip = ref('')
     
     const tips = [
@@ -38,32 +44,10 @@ export default {
       '💡 使用键盘快捷键：ESC暂停，M音乐，S音效'
     ]
     
-    let progressInterval = null
     let tipInterval = null
+    let resourceManager = null
     
     onMounted(() => {
-      // 模拟加载进度
-      progressInterval = setInterval(() => {
-        if (progress.value < 100) {
-          const increment = Math.random() * 15 + 5
-          progress.value = Math.min(progress.value + increment, 100)
-          
-          // 更新加载文本
-          if (progress.value < 30) {
-            loadingText.value = '正在加载游戏资源...'
-          } else if (progress.value < 60) {
-            loadingText.value = '正在初始化游戏引擎...'
-          } else if (progress.value < 90) {
-            loadingText.value = '正在准备游戏场景...'
-          } else {
-            loadingText.value = '加载完成！'
-          }
-        } else {
-          clearInterval(progressInterval)
-          loadingText.value = '即将进入游戏...'
-        }
-      }, 100)
-      
       // 循环显示提示
       let tipIndex = 0
       currentTip.value = tips[tipIndex]
@@ -71,13 +55,42 @@ export default {
       tipInterval = setInterval(() => {
         tipIndex = (tipIndex + 1) % tips.length
         currentTip.value = tips[tipIndex]
-      }, 2000)
+      }, 3000)
+      
+      // 开始真正的资源加载
+      startResourceLoading()
     })
     
+    const startResourceLoading = async () => {
+      resourceManager = new ResourceManager()
+      
+      // 开始加载所有资源
+      await resourceManager.loadAllResources(
+        // 进度更新回调
+        (progressValue, textValue) => {
+          progress.value = progressValue
+          loadingText.value = textValue
+        },
+        // 加载完成回调
+        () => {
+          // 将加载完成的资源保存到全局状态
+          const loadedResources = resourceManager.getLoadedResources()
+          gameStateStore.setLoadedResources(loadedResources)
+          
+          // 延迟一秒让用户看到100%完成状态
+          setTimeout(() => {
+            loadingText.value = '即将进入游戏...'
+            
+            // 再延迟一秒后切换到介绍页面
+            setTimeout(() => {
+              gameStateStore.setCurrentView('intro')
+            }, 1000)
+          }, 1000)
+        }
+      )
+    }
+    
     onUnmounted(() => {
-      if (progressInterval) {
-        clearInterval(progressInterval)
-      }
       if (tipInterval) {
         clearInterval(tipInterval)
       }
@@ -159,6 +172,16 @@ export default {
   animation: progressShine 2s ease-in-out infinite;
 }
 
+.loading-tip {
+  color: rgb(60, 60, 60);
+  font-size: 16px;
+  font-style: italic;
+  opacity: 0.8;
+  max-width: 400px;
+  line-height: 1.4;
+  animation: tipFade 3s ease-in-out infinite;
+}
+
 @keyframes progressShine {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -174,6 +197,11 @@ export default {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes tipFade {
+  0%, 80%, 100% { opacity: 0.8; }
+  10%, 70% { opacity: 1; }
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .loading-text {
@@ -182,6 +210,11 @@ export default {
   
   .loading-progress {
     width: 250px;
+  }
+  
+  .loading-tip {
+    font-size: 14px;
+    max-width: 300px;
   }
 }
 
@@ -192,6 +225,11 @@ export default {
   
   .loading-progress {
     width: 200px;
+  }
+  
+  .loading-tip {
+    font-size: 12px;
+    max-width: 250px;
   }
 }
 </style>

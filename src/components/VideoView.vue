@@ -3,9 +3,7 @@
     <video 
       ref="videoElement"
       class="opening-video"
-      :src="videoSrc"
       @ended="handleVideoEnd"
-      @loadeddata="handleVideoLoaded"
       @error="handleVideoError"
       autoplay
       muted
@@ -22,36 +20,52 @@
     >
       跳过 {{ skipCountdown }}s
     </button>
-    
-    <!-- 加载提示 -->
-    <div v-if="isLoading" class="loading-overlay">
-      <div class="loading-text">加载中...</div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStateStore } from '../stores/gamestore/gameState'
+
 const gameStateStore = useGameStateStore()
 const videoElement = ref(null)
-const isLoading = ref(true)
 const showSkipButton = ref(false)
 const skipCountdown = ref(3)
-
-const videoSrc = '/OpeningVideo.mp4'
 
 let skipTimer = null
 let countdownTimer = null
 
-const handleVideoLoaded = () => {
-  isLoading.value = false
-  // 3秒后显示跳过按钮
-  skipTimer = setTimeout(() => {
-    showSkipButton.value = true
-    startCountdown()
-  }, 3000)
-}
+onMounted(() => {
+  // 使用预加载的视频资源
+  const loadedResources = gameStateStore.getLoadedResources()
+  
+  if (loadedResources && loadedResources.videoElement) {
+    // 使用预加载的视频
+    const preloadedVideo = loadedResources.videoElement
+    
+    // 将预加载的视频设置到DOM元素
+    if (videoElement.value) {
+      // 复制视频源和属性
+      videoElement.value.src = preloadedVideo.src
+      videoElement.value.currentTime = 0 // 重置播放位置
+      
+      // 开始播放
+      videoElement.value.play().catch(error => {
+        console.warn('视频自动播放失败:', error)
+        handleVideoError()
+      })
+      
+      // 3秒后显示跳过按钮
+      skipTimer = setTimeout(() => {
+        showSkipButton.value = true
+        startCountdown()
+      }, 3000)
+    }
+  } else {
+    console.error('视频资源未预加载，直接开始游戏')
+    handleVideoError()
+  }
+})
 
 const handleVideoEnd = () => {
   // 视频播放完毕，开始游戏
@@ -59,7 +73,7 @@ const handleVideoEnd = () => {
 }
 
 const handleVideoError = () => {
-  console.error('视频加载失败，直接开始游戏')
+  console.error('视频播放失败，直接开始游戏')
   gameStateStore.startGameFromVideo()
 }
 
@@ -79,13 +93,6 @@ const startCountdown = () => {
     }
   }, 1000)
 }
-
-onMounted(() => {
-  // 确保视频元素存在
-  if (videoElement.value) {
-    videoElement.value.load()
-  }
-})
 
 onUnmounted(() => {
   // 清理定时器
@@ -134,31 +141,6 @@ onUnmounted(() => {
   transform: scale(1.05);
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 5;
-}
-
-.loading-text {
-  color: rgb(0, 0, 0);
-  font-size: 24px;
-  font-weight: bold;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .skip-button {
@@ -166,10 +148,6 @@ onUnmounted(() => {
     right: 20px;
     padding: 10px 16px;
     font-size: 14px;
-  }
-  
-  .loading-text {
-    font-size: 20px;
   }
 }
 
@@ -179,10 +157,6 @@ onUnmounted(() => {
     right: 15px;
     padding: 8px 12px;
     font-size: 12px;
-  }
-  
-  .loading-text {
-    font-size: 18px;
   }
 }
 </style>

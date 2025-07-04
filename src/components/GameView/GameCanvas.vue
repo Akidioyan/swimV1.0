@@ -15,7 +15,10 @@ import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../../stores/gamestore/gameLayout'
 import { usePlayerControlStore } from '../../stores/gamestore/playerControl'
-import { SwimmerAnimation, ObstacleAssets, PowerUpAssets } from '../../utils/spriteAnimation.js'
+import { SwimmerAnimation } from '../../utils/spriteAnimation.js'
+import { ObstacleAssets, PowerUpAssets, StarEffects } from '../../utils/obstacles/AssetManager.js'
+// 导入碰撞调试器
+import { collisionDebugger } from '../../utils/collisionDebugger.js'
 
 export default {
   name: 'GameCanvas',
@@ -32,6 +35,7 @@ export default {
     let swimmerAnimation = null
     let obstacleAssets = null
     let powerUpAssets = null
+    let starEffects = null
     let backgroundImage = null
     
     onMounted(async () => {
@@ -49,6 +53,9 @@ export default {
       }
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('keyup', handleKeyUp)
+      
+      // 清理resize事件监听器
+      window.removeEventListener('resize', resizeCanvas)
     })
     
     const initGame = () => {
@@ -64,12 +71,11 @@ export default {
       // 初始化游戏布局store
       gameLayoutStore.initCanvas(canvas, canvas.getContext('2d'))
       
-      // 只有在currentView为game且gameState不是waiting时才重置游戏数据
-      if (gameStateStore.currentView === 'game' && gameStateStore.gameState !== 'waiting') {
-        gameStateStore.resetGameData()
-        playerControlStore.resetPlayerControl()
-        gameLayoutStore.resetPlayerPosition()
-      }
+      // 完全重置所有游戏状态（无论当前状态如何）
+      gameStore.resetGameState()
+      gameStateStore.resetGameData('waiting')
+      playerControlStore.resetPlayerControl()
+      gameLayoutStore.resetPlayerPosition()
       
       // 初始化动画和资源
       initAssets()
@@ -82,18 +88,32 @@ export default {
     }
     
     const initAssets = () => {
-      // 初始化游泳者动画
-      swimmerAnimation = new SwimmerAnimation()
+      // 使用预加载的资源
+      const gameStateStore = useGameStateStore()
+      const loadedResources = gameStateStore.getLoadedResources()
       
-      // 初始化障碍物资源
-      obstacleAssets = new ObstacleAssets()
-      
-      // 初始化道具资源
-      powerUpAssets = new PowerUpAssets()
-      
-      // 加载背景图片
-      backgroundImage = new Image()
-      backgroundImage.src = '/bg-menu.png'
+      if (loadedResources && loadedResources.isLoaded) {
+        // 使用预加载的资源管理器
+        swimmerAnimation = loadedResources.swimmerAnimation
+        obstacleAssets = loadedResources.obstacleAssets
+        powerUpAssets = loadedResources.powerUpAssets
+        starEffects = loadedResources.starEffects
+        backgroundImage = loadedResources.backgroundImage
+        
+        console.log('使用预加载的游戏资源')
+      } else {
+        // 降级方案：如果资源未预加载，则创建新的实例
+        console.warn('资源未预加载，使用降级方案')
+        
+        swimmerAnimation = new SwimmerAnimation()
+        obstacleAssets = new ObstacleAssets()
+        powerUpAssets = new PowerUpAssets()
+        starEffects = new StarEffects()
+        
+        // 加载背景图片
+        backgroundImage = new Image()
+        backgroundImage.src = '/bg-menu.png'
+      }
     }
     
     const resizeCanvas = () => {
@@ -142,9 +162,9 @@ export default {
         swimmerAnimation.update(deltaTime)
       }
       
-      // 更新障碍物动画
-      if (obstacleAssets) {
-        obstacleAssets.update(deltaTime)
+      // 更新星星特效
+      if (starEffects) {
+        starEffects.update(gameStateStore.gameSpeed)
       }
       
       // 更新玩家状态
@@ -153,119 +173,41 @@ export default {
       // 更新玩家位置
       gameLayoutStore.updatePlayerPosition(gameStateStore.isActiveSprinting)
       
-      // 使用统一的游戏对象生成系统
-      gameStore.gameObjectTimer++
-      if (gameStore.gameObjectTimer > 30) { // 每0.5秒检查一次
-        gameStore.generateGameObjects()
-        gameStore.gameObjectTimer = 0
-      }
-      
-      // 更新障碍物位置
-      updateObstacles()
+      // 更新障碍物系统（使用性能优化版本）
+      const currentTime = performance.now()
+      gameStore.updateObstacleSystemOptimized(gameStateStore.gameSpeed, gameLayoutStore, gameStateStore, currentTime)
       
       // 更新道具位置
       updatePowerUps()
       
       // 更新粒子效果
       updateParticles()
+      
+      // 检查碰撞
+      checkCollisions()
     }
     
-    const updateObstacles = () => {
-      gameStore.obstacles = gameStore.obstacles.filter(obstacle => {
-        // 更新障碍物位置
-        obstacle.y += gameStateStore.gameSpeed
-        
-        // 更新障碍物动画帧
-        if (obstacle.animationFrame !== undefined) {
-          obstacle.animationFrame++
-        }
-        
-        // 处理不同类型障碍物的移动逻辑
-        if (obstacle.type === 'obs2') {
-          // obs2类型左右移动
-          obstacle.x += obstacle.moveSpeed
-          
-          // 边界检查，保持在泳道内
-          const laneLeft = gameLayoutStore.getLaneX(obstacle.lane) - gameLayoutStore.laneWidth / 2
-          const laneRight = gameLayoutStore.getLaneX(obstacle.lane) + gameLayoutStore.laneWidth / 2
-          
-          if (obstacle.x <= laneLeft || obstacle.x + obstacle.width >= laneRight) {
-            obstacle.moveSpeed *= -1 // 反向移动
-          }
-        } else if (obstacle.type === 'obs3' || obstacle.type === 'obs4') {
-          // obs3和obs4跨泳道移动
-          const currentTime = Date.now()
-          
-          // 检查是否需要切换目标泳道
-          if (currentTime >= obstacle.nextLaneChangeTime) {
-            // 随机选择新的目标泳道
-            const availableLanes = []
-            for (let i = 0; i < gameLayoutStore.lanes; i++) {
-              if (i !== obstacle.currentLane) {
-                availableLanes.push(i)
-              }
-            }
-            
-            if (availableLanes.length > 0) {
-              obstacle.targetLane = availableLanes[Math.floor(Math.random() * availableLanes.length)]
-              obstacle.nextLaneChangeTime = currentTime + 
-                (obstacle.type === 'obs3' ? 2000 : 1500) + Math.random() * 1000
-            }
-          }
-          
-          // 平滑移动到目标泳道
-          if (obstacle.targetLane !== obstacle.currentLane) {
-            const targetX = gameLayoutStore.getLaneX(obstacle.targetLane) - obstacle.width / 2
-            const currentX = obstacle.x + obstacle.width / 2
-            const targetCenterX = targetX + obstacle.width / 2
-            
-            const moveSpeed = obstacle.type === 'obs3' ? 0.02 : 0.03
-            const deltaX = (targetCenterX - currentX) * moveSpeed
-            
-            obstacle.x += deltaX
-            
-            // 检查是否到达目标泳道
-            if (Math.abs(targetCenterX - currentX) < 5) {
-              obstacle.currentLane = obstacle.targetLane
-              obstacle.lane = obstacle.targetLane // 更新泳道信息
-              obstacle.x = targetX // 精确对齐
-            }
-          }
-          
-          // obs4额外的波浪移动效果
-          if (obstacle.type === 'obs4') {
-            obstacle.x += Math.sin(gameStore.animationFrame * 0.1) * 0.5
-          }
-        } else {
-          // 确保其他障碍物始终在泳道中央
-          obstacle.x = gameLayoutStore.getLaneX(obstacle.lane) - obstacle.width / 2
-        }
-        
-        // 碰撞检测
-        const player = {
-          x: gameLayoutStore.player.x,
-          y: gameLayoutStore.player.y,
-          width: gameLayoutStore.player.width,
-          height: gameLayoutStore.player.height,
-          collisionWidth: gameLayoutStore.player.collisionWidth,
-          collisionHeight: gameLayoutStore.player.collisionHeight
-        }
-        
-        if (gameStore.checkCollision(player, obstacle)) {
-          if (!playerControlStore.invulnerable) {
-            const gameOver = gameStateStore.takeDamage()
-            if (!gameOver) {
-              gameStore.addExplosion(obstacle.x, obstacle.y)
-            }
-            return false
-          } else {
-            gameStore.addExplosion(obstacle.x, obstacle.y)
-            return false
+    // 新增：统一的碰撞检测函数
+    const checkCollisions = () => {
+      const player = {
+        x: gameLayoutStore.player.x,
+        y: gameLayoutStore.player.y,
+        width: gameLayoutStore.player.width,
+        height: gameLayoutStore.player.height,
+        collisionWidth: gameLayoutStore.player.collisionWidth,
+        collisionHeight: gameLayoutStore.player.collisionHeight
+      }
+      
+      // 检查障碍物碰撞
+      if (!playerControlStore.invulnerable) {
+        const collidedObstacle = gameStore.checkObstacleCollision(player)
+        if (collidedObstacle) {
+          const gameOver = gameStateStore.takeDamage()
+          if (!gameOver) {
+            gameStore.removeObstacleWithEffect(collidedObstacle)
           }
         }
-        
-        return obstacle.y < gameLayoutStore.canvas.height + 100
-      })
+      }
     }
     
     const updatePowerUps = () => {
@@ -274,9 +216,7 @@ export default {
         powerUp.y += gameStateStore.gameSpeed
         powerUp.glowPhase += 0.2
         
-        // 确保道具始终在泳道中央（图片中心对齐泳道中心线）
-        powerUp.x = gameLayoutStore.getLaneX(powerUp.lane) - powerUp.width / 2
-        
+        // 道具的X坐标在创建时已确定，不需要每帧重新计算
         // 收集检测
         const player = {
           x: gameLayoutStore.player.x,
@@ -299,8 +239,13 @@ export default {
     
     const updateParticles = () => {
       gameStore.particles = gameStore.particles.filter(particle => {
+        // 粒子自身的移动
         particle.x += particle.vx
         particle.y += particle.vy
+        
+        // 与游戏速度保持一致的向下移动
+        particle.y += gameStateStore.gameSpeed
+        
         particle.life--
         particle.vy += 0.2 // 重力
         return particle.life > 0
@@ -319,16 +264,26 @@ export default {
       // 绘制背景
       drawBackground(ctx, canvas)
       
-      // 绘制游戏对象
-      drawObstacles(ctx)
-      drawPowerUps(ctx)
-      drawPlayer(ctx)
+      // 绘制游戏对象 - 调整顺序让障碍物显示在玩家上面
+      drawPowerUps(ctx)     // 1. 道具在最底层
+      drawPlayer(ctx)       // 2. 玩家在中间层
+      drawObstacles(ctx)    // 3. 障碍物在最上层（显示在玩家上面）
+      
+      // 绘制星星特效
+      if (starEffects) {
+        starEffects.draw(ctx)
+      }
+      
+      // 绘制粒子效果
       drawParticles(ctx)
       
       // 绘制护盾效果
       if (playerControlStore.invulnerable) {
         drawShield(ctx)
       }
+      
+      // 绘制碰撞边界调试信息（只在按P键开启时显示）
+      collisionDebugger.drawAllCollisionBoxes(ctx, gameStore, gameLayoutStore)
     }
     
     const drawBackground = (ctx, canvas) => {
@@ -435,9 +390,17 @@ export default {
     }
     
     const drawObstacles = (ctx) => {
-      gameStore.obstacles.forEach(obstacle => {
+      // 使用新的障碍物管理系统获取渲染信息
+      const obstacleRenderInfo = gameStore.getObstacleRenderInfo()
+      
+      obstacleRenderInfo.forEach(obstacle => {
         if (obstacleAssets) {
-          obstacleAssets.drawObstacle(ctx, obstacle.type, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+          // 传递固定的图片变体索引
+          obstacleAssets.drawObstacle(ctx, obstacle.type, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.imageVariantIndex)
+        } else {
+          // 降级渲染
+          ctx.fillStyle = obstacle.color
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
         }
       })
     }
@@ -469,7 +432,7 @@ export default {
     const drawShield = (ctx) => {
       const player = gameLayoutStore.player
       const x = player.x + player.width / 2
-      const y = player.y + player.height / 2 + 10 // 向下偏移10像素
+      const y = player.y + player.height / 2
       
       // 使用bubble.png包裹玩家
       const bubbleImage = powerUpAssets?.images?.['bubble']
@@ -513,12 +476,12 @@ export default {
       
       const rect = gameCanvas.value.getBoundingClientRect()
       const clickX = event.clientX - rect.left
-      const screenWidth = rect.width
+      const canvasWidth = rect.width // 使用canvas宽度而非screenWidth
       
       // 如果是等待状态，点击任意位置启动游戏
       if (gameStateStore.gameState === 'waiting') {
         // 判断点击位置是左半屏还是右半屏
-        if (clickX < screenWidth / 2) {
+        if (clickX < canvasWidth / 2) {
           // 点击左半屏，向左移动一个泳道
           playerControlStore.switchLane(-1)
         } else {
@@ -530,7 +493,7 @@ export default {
       
       if (gameStateStore.gameState === 'playing') {
         // 判断点击位置是左半屏还是右半屏
-        if (clickX < screenWidth / 2) {
+        if (clickX < canvasWidth / 2) {
           // 点击左半屏，向左移动一个泳道
           playerControlStore.switchLane(-1)
         } else {
@@ -539,7 +502,7 @@ export default {
         }
       }
     }
-    
+
     const handleTouchStart = (event) => {
       event.preventDefault()
       hasInteracted.value = true
@@ -548,12 +511,12 @@ export default {
       const rect = gameCanvas.value.getBoundingClientRect()
       const touchX = touch.clientX - rect.left
       const touchY = touch.clientY - rect.top
-      const screenWidth = rect.width
+      const canvasWidth = rect.width // 使用canvas宽度而非screenWidth
       
       // 如果是等待状态，触摸任意位置都启动游戏
       if (gameStateStore.gameState === 'waiting') {
         // 判断触摸位置是左半屏还是右半屏
-        if (touchX < screenWidth / 2) {
+        if (touchX < canvasWidth / 2) {
           // 点击左半屏，向左移动一个泳道
           playerControlStore.switchLane(-1)
         } else {
@@ -566,7 +529,7 @@ export default {
       // 如果是游戏进行状态
       if (gameStateStore.gameState === 'playing') {
         // 判断触摸位置是左半屏还是右半屏
-        if (touchX < screenWidth / 2) {
+        if (touchX < canvasWidth / 2) {
           // 点击左半屏，向左移动一个泳道
           playerControlStore.switchLane(-1)
         } else {
