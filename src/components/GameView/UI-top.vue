@@ -58,7 +58,7 @@
     <div class="game-rules-panel" @click.stop>
       <div class="rules-header">
         <div class="rules-title">
-          <img src="/vector/Hint.svg" alt="规则图标" class="title-icon" />
+          <img src="/vector/hint.svg" alt="规则图标" class="title-icon" />
           <span>游戏规则</span>
         </div>
         <button class="close-btn" @click="hideGameRules">
