@@ -3,12 +3,7 @@
     <!-- 顶部状态栏 -->
     <div class="topbar"></div>
     
-    <!-- 音乐控制按钮 -->
-    <div class="music-control">
-      <div class="music-circle">
-        <img src="/vector/music.svg" class="music-icon" alt="music" />
-      </div>
-    </div>
+
     
     <!-- 加载内容区域 -->
     <div class="loading-content">
@@ -113,10 +108,6 @@ export default {
   cursor: pointer;
 }
 
-.music-icon {
-  width: 22px;
-  height: 22px;
-}
 
 /* 加载内容区域 */
 .loading-content {

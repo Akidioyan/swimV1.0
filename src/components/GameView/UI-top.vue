@@ -48,7 +48,7 @@
           <img src="/vector/Question.svg" alt="游戏规则" class="control-icon" />
         </button>
         <button class="control-btn" @click="toggleSound">
-          <img :src="isSoundOn ? '/vector/Sound-on.svg' : '/vector/Sound-off.svg'" alt="声音" class="control-icon" />
+          <img :src="isSoundOn ? '/vector/SoundOn.svg' : '/vector/Soundff.svg'" alt="声音" class="control-icon" />
         </button>
       </div>
     </div>

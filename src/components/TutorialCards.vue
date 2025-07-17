@@ -852,14 +852,6 @@ defineExpose({
   line-height: 0;
 }
 
-.obstacle-banner-up {
-  /* tip1-left 在上方 */
-}
-
-.obstacle-banner-bottom {
-  /* tip1-right 在下方 */
-}
-
 .banner-image {
   display: block;
   width: 100%;
@@ -869,7 +861,6 @@ defineExpose({
   margin: 0;
   padding: 0;
   border: 0;
-  vertical-align: top; /* 消除baseline对齐造成的空隙 */
   font-size: 0;
   line-height: 0;
 }
@@ -884,9 +875,7 @@ defineExpose({
   margin-top: 0;
 }
 
-/* 在现有的 .banner-image 样式后添加以下样式 */
 
-/* 修改 .banner-image-left 样式，添加居中对齐 */
 .banner-image-left {
   width: calc(100% / 3) !important;
   max-width: calc(80dvw / 3) !important;
