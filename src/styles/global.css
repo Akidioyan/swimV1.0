@@ -228,28 +228,6 @@ body {
   transform-origin: center center;
 }
 
-/* 确保game-ui不受影响 */
-.game-ui {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 50;
-  /* 明确不旋转 */
-  transform: none;
-}
-
-.ui-top {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  gap: 15px;
-  pointer-events: auto;
-}
-
 .ui-bottom {
   position: absolute;
   bottom: 20px;
@@ -433,12 +411,6 @@ body {
       width: 35px;
       height: 35px;
       font-size: 14px;
-    }
-    
-    .ui-top {
-      top: 10px;
-      left: 10px;
-      gap: 8px;
     }
     
     .score-display {
