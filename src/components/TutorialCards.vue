@@ -29,7 +29,7 @@
               @click="prevCard"
               :disabled="currentCardIndex === 0"
             >
-              <img src="/vector/Vec-left.svg" alt="上一张" class="arrow-svg" />
+              <img src="/vector/left.svg" alt="上一张" class="arrow-svg" />
             </button>
             
             <!-- 图片显示：统一使用雪碧图 -->
@@ -45,7 +45,7 @@
               class="nav-arrow"
               @click="nextCard"
             >
-              <img src="/vector/Vec-right.svg" alt="下一张" class="arrow-svg" />
+              <img src="/vector/right.svg" alt="下一张" class="arrow-svg" />
             </button>
           </div>
           

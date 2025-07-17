@@ -58,11 +58,11 @@ export class ResourceManager {
         { name: 'gold', src: '/vector/gold.svg' },
         { name: 'restart', src: '/vector/restart.svg' },
         { name: 'question', src: '/vector/Question.svg' },
-        { name: 'soundOn', src: '/vector/Sound-on.svg' },
-        { name: 'soundOff', src: '/vector/Sound-off.svg' },
+        { name: 'soundOn', src: '/vector/SoundOn.svg' },
+        { name: 'soundOff', src: '/vector/SoundOff.svg' },
         { name: 'hint', src: '/vector/hint.svg' },
-        { name: 'vecLeft', src: '/vector/Vec-left.svg' },
-        { name: 'vecRight', src: '/vector/Vec-right.svg' },
+        { name: 'vecLeft', src: '/vector/left.svg' },
+        { name: 'vecRight', src: '/vector/right.svg' },
         // LoadingView.vue 中的SVG图标
         { name: 'music', src: '/vector/music.svg' }
       ],

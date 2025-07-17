@@ -141,11 +141,11 @@ export class PowerUpAssets {
     
     // 道具图片列表
     this.powerUpImages = [
-      { name: 'snorkel', src: '/Props/snorkel/snorkel.png' },
-      { name: 'snorkel-glow', src: '/Props/snorkel/snorkel-glow.png' },
-      { name: 'star', src: '/Props/star/star.png' },
-      { name: 'star-glow', src: '/Props/star/star-glow.png' },
-      { name: 'bubble', src: '/Props/bubble/bubble.png' } // 护盾效果
+      { name: 'snorkel', src: 'props/snorkel.png' },
+      { name: 'snorkel-glow', src: 'props/snorkel-glow.png' },
+      { name: 'star', src: 'props/star.png' },
+      { name: 'star-glow', src: 'props/star-glow.png' },
+      { name: 'bubble', src: 'props/bubble.png' } // 护盾效果
     ]
     
     this.loadAssets()
