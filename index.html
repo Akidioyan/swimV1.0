@@ -1,19 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon_io/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon_io/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon_io/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon_io/favicon-16x16.png">
-    <link rel="manifest" href="/favicon_io/site.webmanifest">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon_io/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/favicon_io/android-chrome-512x512.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>指尖游泳</title>
-  </head>
-  <body>
+    <!-- 游泳项目图标 - 使用腾讯CDN -->
+    <link rel="icon" type="image/png" href="https://mat1.gtimg.com/rain/apub2019/swim-favicon.png" />
+    <title>指尖游泳挑战赛_腾讯新闻</title>
+    
+    <!-- 引入灯塔sdk -->
+    <script src="https://beacon.cdn.qq.com/sdk/4.5.30/beacon_web.min.js"></script>
+    <script charset="utf-8">
+        window.beacon = new BeaconAction({
+          appkey: 'JS0NFTHS34S64A'
+        })
+    </script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- 完整的favicon配置 - CDN版本 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://mat1.gtimg.com/rain/apub2019/swim-apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://mat1.gtimg.com/rain/apub2019/swim-favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://mat1.gtimg.com/rain/apub2019/swim-favicon-16x16.png">
+    <link rel="manifest" href="https://mat1.gtimg.com/rain/apub2019/swim-site.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://mat1.gtimg.com/rain/apub2019/swim-android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="https://mat1.gtimg.com/rain/apub2019/swim-android-chrome-512x512.png">
+    
+    <!-- 内联样式 - 游泳项目主题 -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #A4D0F5; /* 游泳主题蓝色背景 */
+        }
+        
+        #app {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 游泳项目Loading样式 */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #A4D0F5;
+            z-index: 9999;
+        }
+
+        .loading-container img {
+            width: 127px;
+            height: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            font-family: "PingFang SC", sans-serif;
+            font-size: 10px;
+            line-height: 24px;
+            color: rgb(4, 4, 4);
+            text-align: center;
+            width: 120px;
+            margin-bottom: 10px;
+        }
+        
+        .progress-text {
+            font-family: "PingFang SC", sans-serif;
+            font-size: 13px;
+            line-height: 24px;
+            color: rgb(0, 0, 0);
+            text-align: center;
+        }
+
+        .loading-container.hide {
+            display: none;
+        }
+        
+        /* 音乐控制按钮样式 */
+        .music-control {
+            position: absolute;
+            top: 64px;
+            right: 20px;
+            z-index: 10;
+        }
+        
+        .music-circle {
+            width: 35px;
+            height: 35px;
+            background: rgb(52, 113, 212);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .music-icon {
+            width: 22px;
+            height: 22px;
+        }
+    </style>
+    
+    <!-- 引入构建后的CSS文件 -->
+    <link rel="stylesheet" crossorigin href="/assets/index-C7rYn7pW.css">
+</head>
+<body ontouchstart="">
+    <!-- Loading 显示区域 -->
+    <div class="loading-container" id="initial-loading">
+        <!-- 音乐控制按钮 -->
+        <div class="music-control">
+            <div class="music-circle">
+                <img src="https://mat1.gtimg.com/rain/apub2019/swim-music-icon.svg" class="music-icon" alt="music" />
+            </div>
+        </div>
+        
+        <!-- 加载内容 - CDN资源 -->
+        <img src="https://mat1.gtimg.com/rain/apub2019/swim-loading-image.png" alt="loading">
+        <div class="loading-text">助力中国运动健儿赛场驰骋</div>
+        <div class="progress-text" id="progress-text">0%</div>
+    </div>
+
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+    
+    <!-- 引入构建后的JS文件 - 按依赖顺序加载 -->
+    <script type="module" crossorigin src="/assets/vendor-CfQ3YXgO.js"></script>
+    <script type="module" crossorigin src="/assets/gsap-CH_iu5NA.js"></script>
+    <script type="module" crossorigin src="/assets/lottie-ChOBWohP.js"></script>
+    <script type="module" crossorigin src="/assets/index-CyTsUbM6.js"></script>
+    
+    <!-- 进度模拟和统计 -->
+    <script>
+        let progress = 0;
+        const progressElement = document.getElementById('progress-text');
+        
+        const updateProgress = () => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                progressElement.textContent = '100%';
+                // 当进度达到100%时，等待Vue应用初始化完成
+                setTimeout(() => {
+                    const loadingElement = document.getElementById('initial-loading');
+                    if (loadingElement && document.getElementById('app').children.length > 0) {
+                        loadingElement.classList.add('hide');
+                    }
+                }, 500);
+                return;
+            }
+            progressElement.textContent = Math.floor(progress) + '%';
+            setTimeout(updateProgress, 100 + Math.random() * 200);
+        };
+        
+        setTimeout(updateProgress, 500);
+        
+        // 数据统计
+        window.beacon && window.beacon.onPageView();
+        
+        // 监听Vue应用加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            // 检查Vue应用是否已挂载
+            const checkAppMounted = () => {
+                const appElement = document.getElementById('app');
+                if (appElement && appElement.children.length > 0) {
+                    setTimeout(() => {
+                        const loadingElement = document.getElementById('initial-loading');
+                        if (loadingElement) {
+                            loadingElement.classList.add('hide');
+                        }
+                    }, 1000);
+                } else {
+                    setTimeout(checkAppMounted, 100);
+                }
+            };
+            
+            setTimeout(checkAppMounted, 2000);
+        });
+    </script>
+</body>
 </html>
