@@ -40,6 +40,15 @@ export class Obstacle {
     this.animationFrame = 0
     this.created = Date.now()
     
+    // obs3专用动画状态
+    if (this.type === 'obs3') {
+      this.obs3AnimationFrame = 0  // obs3专用动画计数器
+      this.obs3AnimationSpeed = 1  // 动画播放速度
+      this.obs3LoopMode = Math.random() > 0.5 ? 'complex' : 'simple' // 随机选择初始循环模式
+      this.obs3CurrentCycle = 0     // 当前循环进度
+      this.obs3LastCycleFrame = -1  // 上次记录的循环帧，用于检测循环完成
+    }
+    
     // 性能优化：跟踪上次更新时间
     this.lastUpdateTime = 0
     this.updateInterval = this.calculateUpdateInterval()
@@ -55,45 +64,53 @@ export class Obstacle {
    * 计算更新间隔（性能优化）
    */
   calculateUpdateInterval() {
-    // 统一使用标准更新频率
-    return 16.67 // 标准60fps
+    // obs3需要更频繁的更新以支持动画
+    if (this.type === 'obs3') {
+      return 16 // 每16ms更新一次（约60fps）
+    }
+    
+    switch (this.config.type) {
+      case 'static':
+        return 100 // 静止障碍物更新频率较低
+      case 'moving':
+        return 33  // 移动障碍物需要较高频率
+      case 'custom':
+        return 16  // 自定义障碍物需要高频率
+      default:
+        return 50
+    }
   }
   
   /**
    * 初始化移动属性
    */
   initMovementProperties() {
+    // 移动速度（为obs2设置）
     this.moveSpeed = 0
+    this.maxMoveSpeed = 0
+    this.acceleration = 0
+    this.direction = 1
     
-    if (this.config.type === 'moving' && this.config.movement) {
-      const movement = this.config.movement
-      
-      if (movement.type === 'horizontal') {
-        // 使用配置中的移动速度，随机化移动方向
-        const baseSpeed = movement.speed || 1.5
-        this.moveDirection = Math.random() > 0.5 ? 1 : -1
-        this.moveSpeed = baseSpeed * this.moveDirection
-        this.bounceOnBoundary = movement.bounceOnBoundary || false
-      }
+    if (this.config.movement) {
+      this.moveSpeed = this.config.movement.speed || 0
+      this.maxMoveSpeed = Math.abs(this.moveSpeed)
+      this.direction = Math.random() > 0.5 ? 1 : -1
+      this.moveSpeed *= this.direction
     }
     
     // 跨泳道移动属性（为obs3预留）
-    this.laneChangeTimer = 0
-    this.nextLaneChangeTime = 0
+    this.crossLaneMovement = false
+    this.laneTransitionSpeed = 0
   }
   
   /**
    * 初始化自定义属性
    */
   initCustomProperties() {
-    if (this.config.type === 'custom' && this.config.custom) {
-      // 为obs3自定义行为预留接口
+    // 为obs3自定义行为预留接口
+    if (this.config.custom) {
       this.customBehavior = this.config.custom.behavior || 'default'
       this.specialEffect = this.config.custom.specialEffect || false
-      
-      // 添加自定义属性
-      this.customPhase = 0
-      this.customAmplitude = 2.0
     }
   }
   
@@ -119,18 +136,24 @@ export class Obstacle {
    * @param {Array} powerUps - 道具数组（用于碰撞检测）
    */
   updateComplexLogic(gameLayoutStore, currentTime = Date.now(), powerUps = []) {
-    // 性能优化：控制复杂逻辑的更新频率
+    // 性能优化：只在指定间隔内更新复杂逻辑
     if (currentTime - this.lastUpdateTime < this.updateInterval) {
-      // 跳过复杂的移动逻辑
       return
     }
-    
     this.lastUpdateTime = currentTime
     
     // 更新动画帧
     this.animationFrame++
     
-    // 根据类型执行特定的移动逻辑，传递powerUps引用
+    // obs3专用动画更新
+    if (this.type === 'obs3') {
+      this.obs3AnimationFrame += this.obs3AnimationSpeed
+      
+      // 检测循环完成并切换模式
+      this.checkAndSwitchLoopMode()
+    }
+    
+    // 更新移动逻辑
     this.updateMovement(gameLayoutStore, powerUps)
   }
   
@@ -176,48 +199,37 @@ export class Obstacle {
     this.x += this.moveSpeed
     
     // 更新当前所在泳道（允许穿越泳道）
-    if (this.type === 'obs2') {
-      // 计算当前位置对应的泳道
-      const currentLane = gameLayoutStore.getClosestLane(this.x + this.width / 2)
-      if (currentLane !== undefined && currentLane >= 0) {
-        this.lane = currentLane
-      }
-    }
+    this.updateCurrentLane(gameLayoutStore)
+    
+    // 修复边界计算：严格控制在第1-4个泳道内（游戏区域边界）
+    // 游戏区域从20vw到80vw，对应canvas宽度的20%到80%
+    const gameAreaLeft = gameLayoutStore.canvas.width * 0.20  // 20vw - 游戏区域左边界
+    const gameAreaRight = gameLayoutStore.canvas.width * 0.80 // 80vw - 游戏区域右边界
+    
+    // obs2的移动边界应该考虑障碍物宽度，确保整个障碍物都在游戏区域内
+    const minX = gameAreaLeft  // 左边界：障碍物左侧贴着游戏区域左边界
+    const maxX = gameAreaRight - this.width // 右边界：障碍物右侧贴着游戏区域右边界
     
     let shouldReverse = false
     
-    if (this.bounceOnBoundary) {
-      // 边界检查，检查是否碰到游戏区域边界
-      const gameAreaLeft = gameLayoutStore.gameAreaX
-      const gameAreaRight = gameLayoutStore.gameAreaX + gameLayoutStore.gameAreaWidth
-      
-      if (this.x <= gameAreaLeft || this.x + this.width >= gameAreaRight) {
+    if (this.type === 'obs2') {
+      // 简化边界检测逻辑：直接检查障碍物是否超出边界
+      if (this.x <= minX || this.x >= maxX) {
         shouldReverse = true
       }
     }
     
     // 检测与其他障碍物和道具的碰撞（仅对obs2类型）
     if (this.type === 'obs2' && !shouldReverse) {
-      const obstacleManager = gameLayoutStore.obstacleManager
-      
-      // 检测与其他障碍物的碰撞
-      if (obstacleManager && obstacleManager.obstacles) {
-        for (const otherObstacle of obstacleManager.obstacles) {
-          // 跳过自己
-          if (otherObstacle === this) continue
-          
-          // 检测碰撞
-          if (this.checkCollision(otherObstacle)) {
-            shouldReverse = true
-            break
-          }
+      const gameStore = this.getGameStore()
+      if (gameStore) {
+        const collidedObstacle = gameStore.obstacleManager.checkObstacleCollisions(this)
+        if (collidedObstacle) {
+          shouldReverse = true
         }
-      }
-      
-      // 检测与道具的碰撞
-      if (!shouldReverse && powerUps) {
+        
+        // 检查与道具的碰撞
         for (const powerUp of powerUps) {
-          // 检测碰撞
           if (this.checkCollision(powerUp)) {
             shouldReverse = true
             break
@@ -226,11 +238,31 @@ export class Obstacle {
       }
     }
     
-    // 如果需要掉头，回退位置并反向移动速度
-    if (shouldReverse) {
-      this.x = oldX // 回退到移动前的位置
-      this.lane = oldLane // 回退泳道
+    // 反弹逻辑
+    if (shouldReverse && this.config.movement?.bounceOnBoundary) {
+      this.x = oldX // 回退到原位置
+      this.lane = oldLane
       this.moveSpeed *= -1 // 反向移动
+      this.direction *= -1
+    }
+  }
+  
+  /**
+   * 更新当前所在泳道
+   * @param {Object} gameLayoutStore - 游戏布局store
+   */
+  updateCurrentLane(gameLayoutStore) {
+    const centerX = this.x + this.width / 2
+    
+    for (let i = 0; i < gameLayoutStore.laneCount; i++) {
+      const laneX = gameLayoutStore.getLaneX(i)
+      const laneLeft = laneX - gameLayoutStore.laneWidth / 2
+      const laneRight = laneX + gameLayoutStore.laneWidth / 2
+      
+      if (centerX >= laneLeft && centerX <= laneRight) {
+        this.currentLane = i
+        break
+      }
     }
   }
   
@@ -239,30 +271,22 @@ export class Obstacle {
    * @param {Object} gameLayoutStore - 游戏布局store
    */
   updateCustomMovement(gameLayoutStore) {
-    const baseLaneX = gameLayoutStore.getLaneX(this.lane) - this.width / 2
-    
-    // 更新自定义相位
-    this.customPhase += 0.08
-    
-    // 根据自定义行为模式移动
+    // obs3的特殊行为可以在这里实现
+    // 目前保持静止，只处理动画
     switch (this.customBehavior) {
-      case 'default':
-        // 默认行为：保持在泳道中央
-        this.x = baseLaneX
-        break
-        
       case 'wave':
-        // 波浪移动
-        this.x = baseLaneX + Math.sin(this.customPhase) * this.customAmplitude
+        // 波浪移动（可选）
+        this.x = this.originalX + Math.sin(this.animationFrame * 0.1) * 10
         break
-        
+      case 'default':
       default:
-        this.x = baseLaneX
+        // 保持静止
+        break
     }
   }
   
   /**
-   * 检查障碍物是否超出屏幕
+   * 检查是否超出屏幕
    * @param {number} canvasHeight - 画布高度
    * @returns {boolean} 是否超出屏幕
    */
@@ -287,8 +311,8 @@ export class Obstacle {
   }
   
   /**
-   * 碰撞检测 - 使用圆形碰撞检测
-   * @param {Object} other - 另一个对象
+   * 检查与其他对象的碰撞（圆形碰撞检测）
+   * @param {Object} other - 其他对象
    * @returns {boolean} 是否发生碰撞
    */
   checkCollision(other) {
@@ -316,21 +340,53 @@ export class Obstacle {
   }
   
   /**
+   * 检查是否应该触发碰撞（考虑obs3的特殊规则）
+   * @param {Object} spriteAssets - 雪碧图资源管理器（用于obs3状态检测）
+   * @returns {boolean} 是否应该触发碰撞
+   */
+  shouldTriggerCollision(spriteAssets = null) {
+    switch (this.type) {
+      case 'obs1':
+      case 'obs2':
+        // obs1和obs2始终触发碰撞
+        return true
+      case 'obs3':
+        // obs3仅在危险状态时触发碰撞
+        if (spriteAssets && spriteAssets.isObs3Dangerous) {
+          return spriteAssets.isObs3Dangerous(this.obs3AnimationFrame, this.obs3LoopMode)
+        }
+        // 如果没有雪碧图资源，默认不触发碰撞（安全状态）
+        return false
+      default:
+        return true
+    }
+  }
+  
+  /**
    * 获取障碍物渲染信息
    * @returns {Object} 渲染信息
    */
   getRenderInfo() {
-    return {
+    const renderInfo = {
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height,
       type: this.type,
       imageVariantIndex: this.imageVariantIndex, // 添加固定的图片变体索引
-      animationFrame: this.animationFrame,
+      animationFrame: this.type === 'obs3' ? this.obs3AnimationFrame : this.animationFrame,
       color: this.config.color,
-      visible: true
+      visible: true,
+      // obs3专用动画信息
+      obs3AnimationFrame: this.type === 'obs3' ? this.obs3AnimationFrame : 0
     }
+    
+    // 为obs3添加循环模式信息
+    if (this.type === 'obs3') {
+      renderInfo.obs3LoopMode = this.obs3LoopMode
+    }
+    
+    return renderInfo
   }
   
   /**
@@ -358,17 +414,61 @@ export class Obstacle {
       updateInterval: this.updateInterval,
       lastUpdateTime: this.lastUpdateTime,
       animationFrame: this.animationFrame,
-      moveSpeed: this.moveSpeed
+      obs3AnimationFrame: this.obs3AnimationFrame || 0
     }
   }
   
-  // 新增方法：获取指定类型的变体数量
+  /**
+   * 获取变体数量（向后兼容）
+   * @param {string} type - 障碍物类型
+   * @returns {number} 变体数量
+   */
   getVariantCount(type) {
+    // 在雪碧图系统中，obs1和obs2各有1个变体，obs3有动画
     const variantCounts = {
-      'obs1': 3,
-      'obs2': 3, // 修改为3，因为现在有obs2-1.png, obs2-2.png, obs2-3.png
+      'obs1': 1,
+      'obs2': 1, 
       'obs3': 1
     }
     return variantCounts[type] || 1
+  }
+  
+  /**
+   * 获取游戏Store引用（用于碰撞检测）
+   * @returns {Object|null} 游戏Store或null
+   */
+  getGameStore() {
+    // 尝试获取全局游戏Store引用
+    if (typeof window !== 'undefined' && window.gameStoreRef) {
+      return window.gameStoreRef
+    }
+    return null
+  }
+
+  /**
+   * 检查并切换obs3循环模式
+   */
+  checkAndSwitchLoopMode() {
+    if (this.type !== 'obs3') return
+    
+    // 简化的循环完成检测：基于动画帧数
+    const actualFrame = Math.floor(this.obs3AnimationFrame / 3)
+    
+    let cycleLength
+    if (this.obs3LoopMode === 'simple') {
+      cycleLength = 24 * 4 // 简单循环：96帧
+    } else {
+      cycleLength = 24 * 4 // 复杂循环：96帧 (24+24+24+24)
+    }
+    
+    // 检查是否完成了一个循环
+    const currentCycle = Math.floor(actualFrame / cycleLength)
+    if (currentCycle > this.obs3CurrentCycle) {
+      // 循环完成，随机选择下一个循环模式
+      this.obs3LoopMode = Math.random() > 0.5 ? 'complex' : 'simple'
+      this.obs3CurrentCycle = currentCycle
+      
+      console.log(`Obs3 循环完成，切换到: ${this.obs3LoopMode} 模式`)
+    }
   }
 }

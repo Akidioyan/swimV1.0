@@ -6,8 +6,8 @@ import { getDifficultyLevelFromVw, getMovementSpeed, convertMetersToVw } from '.
 export const useGameStateStore = defineStore('gameState', {
   state: () => ({
     // 游戏状态
-    currentView: 'loading', // loading, intro, game, result, video
-    gameState: 'ready', // ready, playing, paused, gameOver, waiting
+    currentView: 'loading',
+    gameState: 'ready',
     
     // 游戏控制
     isPaused: false,
@@ -22,6 +22,7 @@ export const useGameStateStore = defineStore('gameState', {
     maxLives: 3,
     distance: 0,
     score: 0,
+    stars: 0, // 添加星星计数
     bestScore: parseInt(localStorage.getItem('bestScore') || '0'),
     bestDistance: parseInt(localStorage.getItem('bestDistance') || '0'),
     
@@ -50,6 +51,10 @@ export const useGameStateStore = defineStore('gameState', {
     // 游戏速度
     gameSpeed: 2,
     baseSpeed: 2,
+    
+    // 首次游戏相关状态
+    isFirstTimeGame: true, // 是否是首次游戏
+    hasShownObstacleHint: false, // 是否已显示障碍物提示
     
     // 资源管理
     loadedResources: null, // 保存已加载的游戏资源
@@ -152,11 +157,26 @@ export const useGameStateStore = defineStore('gameState', {
     
     // 重新开始游戏
     restartGame() {
+      // 设置为非首次游戏（跳过所有教学内容）
+      this.setNotFirstTimeGame()
+      
       // 重置音频状态
       audioManager.reset()
       
-      // 从视频直接开始游戏
-      this.startGameFromVideo()
+      // 直接切换到游戏视图并立即开始游戏
+      this.currentView = 'game'
+      this.gameStartTime = Date.now()
+      
+      // 重置游戏数据并直接设置为游戏状态（跳过等待状态）
+      this.resetGameData('playing')
+      
+      // 同步音频状态
+      this.syncAudioState()
+      
+      // 立即开始播放背景音乐
+      audioManager.playBackgroundMusic()
+      
+      console.log('🔄 游戏重新开始，跳过所有教学内容')
     },
     
     // 设置已加载的资源
@@ -177,6 +197,11 @@ export const useGameStateStore = defineStore('gameState', {
     // 游戏结束
     gameOver() {
       this.gameState = 'gameOver'
+      
+      // 如果是首次游戏，将其设置为非首次游戏
+      if (this.isFirstTimeGame) {
+        this.setNotFirstTimeGame()
+      }
       
       // 停止背景音乐
       audioManager.pauseBackgroundMusic()
@@ -246,6 +271,7 @@ export const useGameStateStore = defineStore('gameState', {
       this.lives = 3
       this.distance = 0
       this.score = 0
+      this.stars = 0 // 重置星星计数
       this.gameSpeed = this.baseSpeed
       this.invulnerable = false
       this.invulnerableTime = 0
@@ -264,6 +290,9 @@ export const useGameStateStore = defineStore('gameState', {
       this.activeSprintTime = 0
       this.isSprintKeyHeld = false
       
+      // 注意：不重置 isFirstTimeGame 和 hasShownObstacleHint
+      // 这些状态应该在整个游戏会话中保持
+      
       // 同步音频状态
       this.syncAudioState()
     },
@@ -271,6 +300,18 @@ export const useGameStateStore = defineStore('gameState', {
     // 受到伤害
     takeDamage() {
       if (this.invulnerable) return false
+      
+      // 首次游戏且首次碰撞时显示提示
+      if (this.isFirstTimeGame && !this.hasShownObstacleHint) {
+        console.log('🚨 首次碰撞检测到，触发障碍物提示事件', {
+          isFirstTimeGame: this.isFirstTimeGame,
+          hasShownObstacleHint: this.hasShownObstacleHint
+        })
+        this.hasShownObstacleHint = true
+        // 通过事件总线通知显示障碍物提示
+        window.dispatchEvent(new CustomEvent('showObstacleHint'))
+        console.log('✅ 障碍物提示事件已触发')
+      }
       
       this.lives--
       if (this.lives <= 0) {
@@ -281,17 +322,21 @@ export const useGameStateStore = defineStore('gameState', {
       }
     },
     
+    // 设置为非首次游戏（从"再次游戏"进入时调用）
+    setNotFirstTimeGame() {
+      this.isFirstTimeGame = false
+    },
+    
+    // 重置为首次游戏状态
+    resetToFirstTimeGame() {
+      this.isFirstTimeGame = true
+      this.hasShownObstacleHint = false
+    },
+    
     // 更新距离和得分
     updateDistanceAndScore(gameSpeed) {
       // 更新距离：100像素 = 1米
       this.distance += gameSpeed * 0.01 // 每像素代表0.01米
-      
-      // 距离得分：每1m +1分
-      const newDistanceScore = Math.floor(this.distance)
-      const oldDistanceScore = Math.floor(this.distance - gameSpeed * 0.01)
-      if (newDistanceScore > oldDistanceScore) {
-        this.score += (newDistanceScore - oldDistanceScore)
-      }
     },
     
     // 更新游戏状态和计时器
@@ -323,8 +368,8 @@ export const useGameStateStore = defineStore('gameState', {
         }
       }
       
-      // 冲刺能量恢复（只有在不进行主动冲刺时才恢复）
-      if (!this.isActiveSprinting && !this.rushActive && !this.isSprintCooldown && this.sprintEnergy < 100) {
+      // 冲刺能量恢复（在主动冲刺和冷却时暂停，但snorkel状态下可以恢复）
+      if (!this.isActiveSprinting && !this.isSprintCooldown && this.sprintEnergy < 100) {
         this.sprintEnergy = Math.min(100, this.sprintEnergy + this.sprintEnergyRecoverRate)
       }
       
@@ -393,6 +438,12 @@ export const useGameStateStore = defineStore('gameState', {
       setTimeout(() => {
         this.gameSpeed = this.baseSpeed * this.currentSpeedMultiplier
       }, 1000)
+    },
+    
+    // 收集星星
+    collectStar() {
+      this.stars++
+      this.score += 1 // 每个星星增加1分
     },
     
     // 同步音频状态到本地状态

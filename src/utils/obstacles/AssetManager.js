@@ -4,9 +4,27 @@
  */
 export class ObstacleAssets {
   constructor() {
-    this.images = {}
-    this.obstacleVariants = {} // 存储每种障碍物的变体图片
+    this.obstacleVariants = {}
     this.isLoaded = false
+    
+    // 障碍物图片配置
+    this.obstacleConfig = [
+      {
+        name: 'obs1',
+        folder: '/obs/',
+        variants: ['obs.png']
+      },
+      {
+        name: 'obs2',
+        folder: '/obs/',
+        variants: ['obs.png']
+      },
+      {
+        name: 'obs3',
+        folder: '/obs/',
+        variants: ['obs3-1.png', 'obs3-2.png']
+      }
+    ]
     
     this.loadAssets()
   }
@@ -16,34 +34,15 @@ export class ObstacleAssets {
   }
   
   loadObstacleImages() {
-    // 障碍物文件夹配置
-    const obstacleConfigs = [
-      { 
-        name: 'obs1', 
-        folder: '/obs/obs1/',
-        variants: ['obs1-1.png', 'obs1-2.png', 'obs1-3.png']
-      },
-      { 
-        name: 'obs2', 
-        folder: '/obs/obs2/',
-        variants: ['obs2-1.png', 'obs2-2.png', 'obs2-3.png']
-      },
-      { 
-        name: 'obs3', 
-        folder: '/obs/obs3/',
-        variants: ['obs3-1.png']
-      }
-    ]
-    
     let totalImagesToLoad = 0
     let loadedImages = 0
     
     // 计算总图片数量
-    obstacleConfigs.forEach(config => {
+    this.obstacleConfig.forEach(config => {
       totalImagesToLoad += config.variants.length
     })
     
-    obstacleConfigs.forEach(config => {
+    this.obstacleConfig.forEach(config => {
       this.obstacleVariants[config.name] = []
       
       config.variants.forEach(variant => {

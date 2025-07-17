@@ -17,7 +17,7 @@ import { useGameLayoutStore } from '../../stores/gamestore/gameLayout'
 import { usePlayerControlStore } from '../../stores/gamestore/playerControl'
 import { SwimmerAnimation } from '../../utils/spriteAnimation.js'
 import { ObstacleAssets, PowerUpAssets, StarEffects } from '../../utils/obstacles/AssetManager.js'
-// 导入碰撞调试器
+import { SpriteObstacleAssets } from '../../utils/obstacles/SpriteObstacleAssets.js'
 import { collisionDebugger } from '../../utils/collisionDebugger.js'
 
 export default {
@@ -33,7 +33,8 @@ export default {
     let animationId = null
     let lastTime = 0
     let swimmerAnimation = null
-    let obstacleAssets = null
+    let obstacleAssets = null  // 旧的资源管理器（保留作为降级）
+    let spriteObstacleAssets = null  // 新的雪碧图资源管理器
     let powerUpAssets = null
     let starEffects = null
     let backgroundImage = null
@@ -100,6 +101,14 @@ export default {
         starEffects = loadedResources.starEffects
         backgroundImage = loadedResources.backgroundImage
         
+        // 检查是否有新的雪碧图资源管理器
+        if (loadedResources.spriteObstacleAssets) {
+          spriteObstacleAssets = loadedResources.spriteObstacleAssets
+        } else {
+          // 如果没有预加载的雪碧图资源，创建新的
+          spriteObstacleAssets = new SpriteObstacleAssets()
+        }
+        
         console.log('使用预加载的游戏资源')
       } else {
         // 降级方案：如果资源未预加载，则创建新的实例
@@ -107,12 +116,18 @@ export default {
         
         swimmerAnimation = new SwimmerAnimation()
         obstacleAssets = new ObstacleAssets()
+        spriteObstacleAssets = new SpriteObstacleAssets()  // 创建新的雪碧图资源管理器
         powerUpAssets = new PowerUpAssets()
         starEffects = new StarEffects()
         
         // 加载背景图片
         backgroundImage = new Image()
         backgroundImage.src = '/bg-menu.png'
+      }
+      
+      // 设置全局游戏Store引用（用于障碍物碰撞检测）
+      if (typeof window !== 'undefined') {
+        window.gameStoreRef = gameStore
       }
     }
     
@@ -198,9 +213,9 @@ export default {
         collisionHeight: gameLayoutStore.player.collisionHeight
       }
       
-      // 检查障碍物碰撞
-      if (!playerControlStore.invulnerable) {
-        const collidedObstacle = gameStore.checkObstacleCollision(player)
+      // 检查障碍物碰撞 - 使用gameStateStore.invulnerable确保状态一致性
+      if (!gameStateStore.invulnerable) {
+        const collidedObstacle = gameStore.checkObstacleCollisionWithSpriteAssets(player, spriteObstacleAssets)
         if (collidedObstacle) {
           const gameOver = gameStateStore.takeDamage()
           if (!gameOver) {
@@ -277,8 +292,8 @@ export default {
       // 绘制粒子效果
       drawParticles(ctx)
       
-      // 绘制护盾效果
-      if (playerControlStore.invulnerable) {
+      // 绘制护盾效果 - 使用gameStateStore.invulnerable确保状态一致性
+      if (gameStateStore.invulnerable) {
         drawShield(ctx)
       }
       
@@ -335,8 +350,8 @@ export default {
     const drawPlayer = (ctx) => {
       const player = gameLayoutStore.player
       
-      // 无敌状态闪烁效果
-      if (playerControlStore.invulnerable && Math.floor(gameStore.animationFrame / 10) % 2) {
+      // 无敌状态闪烁效果 - 使用gameStateStore.invulnerable确保状态一致性
+      if (gameStateStore.invulnerable && Math.floor(gameStore.animationFrame / 10) % 2) {
         ctx.globalAlpha = 0.5
       }
       
@@ -394,11 +409,27 @@ export default {
       const obstacleRenderInfo = gameStore.getObstacleRenderInfo()
       
       obstacleRenderInfo.forEach(obstacle => {
-        if (obstacleAssets) {
-          // 传递固定的图片变体索引
+        // 优先使用雪碧图资源管理器
+        if (spriteObstacleAssets && spriteObstacleAssets.checkAllLoaded()) {
+          // 使用新的雪碧图系统绘制
+          const animationFrame = obstacle.obs3AnimationFrame || obstacle.animationFrame
+          const loopMode = obstacle.obs3LoopMode || 'complex'
+          
+          spriteObstacleAssets.drawObstacle(
+            ctx, 
+            obstacle.type, 
+            obstacle.x, 
+            obstacle.y, 
+            obstacle.width, 
+            obstacle.height, 
+            animationFrame,
+            loopMode
+          )
+        } else if (obstacleAssets) {
+          // 降级到旧的资源管理器
           obstacleAssets.drawObstacle(ctx, obstacle.type, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.imageVariantIndex)
         } else {
-          // 降级渲染
+          // 最终降级渲染
           ctx.fillStyle = obstacle.color
           ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
         }

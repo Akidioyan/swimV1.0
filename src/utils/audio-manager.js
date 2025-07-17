@@ -178,13 +178,14 @@ class AudioManager {
    * 切换所有音效（包括音乐和音效）
    */
   toggleAllSound() {
-    const newState = !this.isSoundOn
+    // 直接基于当前的音乐暂停状态来切换，而不是基于复杂的isSoundOn计算
+    const shouldEnable = this.musicPaused || !this.musicEnabled || !this.soundEnabled
     
-    this.musicEnabled = newState
-    this.soundEnabled = newState
-    this.musicPaused = !newState
+    this.musicEnabled = shouldEnable
+    this.soundEnabled = shouldEnable
+    this.musicPaused = !shouldEnable
     
-    if (newState) {
+    if (shouldEnable) {
       // 开启声音时播放背景音乐
       this.playBackgroundMusic()
     } else {
@@ -193,7 +194,7 @@ class AudioManager {
       this.stopSwimmingSound()
     }
     
-    console.log(`音效状态切换为: ${newState ? '开启' : '关闭'}`)
+    console.log(`音效状态切换为: ${shouldEnable ? '开启' : '关闭'}`)
   }
   
   /**
@@ -343,4 +344,4 @@ class AudioManager {
 }
 
 // 导出单例实例
-export default new AudioManager() 
+export default new AudioManager()

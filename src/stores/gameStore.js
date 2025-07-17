@@ -139,18 +139,22 @@ export const useGameStore = defineStore('game', {
         })
       }
       
-      // 从队列中取出一部分对象进行生成（避免同时生成过多）
-      const maxSpawnPerBatch = Math.min(4, this.pendingObjectTypes.length) // 每批最多生成4个
+      // 根据难度等级确定每批最大生成数量
+      let maxSpawnPerBatch = Math.min(4, this.pendingObjectTypes.length) // 默认最多4个
+      
       const spawnBatch = this.pendingObjectTypes.splice(0, maxSpawnPerBatch)
       
       // 获取可用泳道
       const availableLanes = this.getAvailableLanes(gameLayoutStore)
       
+      // 根据等级和概率确定实际最大生成数量
+      let actualMaxSpawn = this.determineMaxSpawnForLevel(availableLanes.length)
+      
       // 生成这批对象
       let spawnedCount = 0
       for (const objectType of spawnBatch) {
-        if (availableLanes.length === 0 || spawnedCount >= availableLanes.length) {
-          // 没有可用泳道了，把剩余对象放回队列前面
+        if (availableLanes.length === 0 || spawnedCount >= actualMaxSpawn) {
+          // 没有可用泳道了或达到最大生成数量，把剩余对象放回队列前面
           this.pendingObjectTypes.unshift(...spawnBatch.slice(spawnedCount))
           break
         }
@@ -168,6 +172,55 @@ export const useGameStore = defineStore('game', {
           // 生成失败，把对象放回队列
           this.pendingObjectTypes.unshift(objectType)
         }
+      }
+      
+      // 添加调试信息
+      if (this.currentDifficultyLevel >= 4) {
+        console.log(`🎯 等级${this.currentDifficultyLevel} 生成结果: 预定最多${actualMaxSpawn}个对象，实际生成${spawnedCount}个`)
+      }
+    },
+
+    // 根据等级和概率确定最大生成数量
+    determineMaxSpawnForLevel(availableLanesCount) {
+      // 等级1：保持原来的逻辑，最多生成可用泳道数量的对象（通常0-2个）
+      if (this.currentDifficultyLevel === 1) {
+        return Math.min(availableLanesCount, 2) // 等级1最多2个，无概率系统
+      }
+      
+      // 等级2-6：根据概率决定是否生成3个对象
+      const randomValue = Math.random() * 100 // 0-100的随机数
+      let threeObjectProbability = 0
+      
+      switch (this.currentDifficultyLevel) {
+        case 2:
+          threeObjectProbability = 2 // 2%概率生成3个
+          break
+        case 3:
+          threeObjectProbability = 5 // 5%概率生成3个
+          break
+        case 4:
+          threeObjectProbability = 10 // 10%概率生成3个
+          break
+        case 5:
+          threeObjectProbability = 25 // 25%概率生成3个
+          break
+        case 6:
+        default:
+          threeObjectProbability = 40 // 40%概率生成3个（等级6及以上）
+          break
+      }
+      
+      // 根据概率决定最大生成数量
+      if (randomValue < threeObjectProbability) {
+        // 生成3个对象（如果有足够的泳道）
+        const maxSpawn = Math.min(availableLanesCount, 3)
+        console.log(`🎲 等级${this.currentDifficultyLevel} 概率触发: ${threeObjectProbability}% 概率生成3个对象，实际最多${maxSpawn}个`)
+        return maxSpawn
+      } else {
+        // 生成0-2个对象（和等级1一样）
+        const maxSpawn = Math.min(availableLanesCount, 2)
+        console.log(`🎲 等级${this.currentDifficultyLevel} 正常生成: 最多${maxSpawn}个对象`)
+        return maxSpawn
       }
     },
 
@@ -255,7 +308,29 @@ export const useGameStore = defineStore('game', {
     
     // 检查玩家与障碍物的碰撞
     checkObstacleCollision(player) {
-      return this.obstacleManager.checkPlayerCollision(player)
+      for (const obstacle of this.obstacleManager.obstacles) {
+        if (this.checkCollision(player, obstacle)) {
+          return obstacle
+        }
+      }
+      return null
+    },
+    
+    // 新增：检查障碍物碰撞（支持雪碧图和obs3特殊规则）
+    checkObstacleCollisionWithSpriteAssets(player, spriteAssets = null) {
+      for (const obstacle of this.obstacleManager.obstacles) {
+        // 首先检查物理碰撞
+        if (this.checkCollision(player, obstacle)) {
+          // 然后检查是否应该触发碰撞（考虑obs3的特殊规则）
+          if (obstacle.shouldTriggerCollision && obstacle.shouldTriggerCollision(spriteAssets)) {
+            return obstacle
+          } else if (!obstacle.shouldTriggerCollision) {
+            // 向后兼容：如果障碍物没有shouldTriggerCollision方法，使用默认规则
+            return obstacle
+          }
+        }
+      }
+      return null
     },
     
     // 移除障碍物并添加爆炸效果
@@ -292,8 +367,9 @@ export const useGameStore = defineStore('game', {
         gameStateStore.invulnerable = true
         gameStateStore.invulnerableTime = 180
       } else if (powerUp.type === 'star') {
-        // star道具增加得分
-        gameStateStore.score += 10
+        // 调用gameStateStore的collectStar方法，同时增加stars和score
+        gameStateStore.collectStar()
+        
         // 检查是否达到新的最佳分数
         if (gameStateStore.score > gameStateStore.bestScore) {
           gameStateStore.bestScore = gameStateStore.score

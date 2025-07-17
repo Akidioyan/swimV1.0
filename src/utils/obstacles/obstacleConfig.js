@@ -55,8 +55,8 @@ export const GAME_OBJECTS_CONFIG = {
     type: 'custom',
     folder: 'obs3',
     displaySize: {
-      widthRatio: 0.10,
-      heightRatio: 0.10
+      widthRatio: 0.15,  // 从0.10放大到0.15
+      heightRatio: 0.15  // 从0.10放大到0.15
     },
     collisionSize: {
       widthRatio: 0.07,
@@ -94,8 +94,8 @@ export const GAME_OBJECTS_CONFIG = {
     category: 'powerup',
     type: 'score',
     displaySize: {
-      widthRatio: 0.06,
-      heightRatio: 0.06
+      widthRatio: 0.048,  // 从0.06缩小到0.048 (0.06 * 0.8)
+      heightRatio: 0.048  // 从0.06缩小到0.048 (0.06 * 0.8)
     },
     collisionSize: {
       widthRatio: 0.04,

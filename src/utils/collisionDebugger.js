@@ -1,10 +1,10 @@
 /**
  * 碰撞边界调试工具
- * 按P键切换显示所有物体的碰撞边界
- */
+ * 按P键切换显示所有物体的碰撞边界*/
 export class CollisionDebugger {
   constructor() {
     this.isEnabled = false
+    this.showLanes = false // 新增：泳道分界线显示状态
     this.setupKeyListener()
   }
 
@@ -15,12 +15,18 @@ export class CollisionDebugger {
         this.toggle()
         console.log(`碰撞边界显示: ${this.isEnabled ? '开启' : '关闭'}`)
       }
+      
     })
   }
 
   // 切换显示状态
   toggle() {
     this.isEnabled = !this.isEnabled
+  }
+
+  // 新增：切换泳道分界线显示状态
+  toggleLanes() {
+    this.showLanes = !this.showLanes
   }
 
   // 绘制玩家碰撞边界 - 圆形
@@ -104,26 +110,61 @@ export class CollisionDebugger {
     this.drawDebugInfo(ctx)
   }
 
+  // 新增：绘制所有调试元素（包括泳道线）
+  drawAllDebugElements(ctx, gameStore, gameLayoutStore, canvasWidth, canvasHeight) {
+    // 绘制泳道分界线
+    this.drawLaneLines(ctx, canvasWidth, canvasHeight)
+    
+    // 绘制碰撞边界
+    this.drawAllCollisionBoxes(ctx, gameStore, gameLayoutStore)
+  }
+
   // 显示调试信息
   drawDebugInfo(ctx) {
-    if (!this.isEnabled) return
+    if (!this.isEnabled && !this.showLanes) return
 
+    const infoHeight = this.isEnabled && this.showLanes ? 120 : 100
+    
     ctx.save()
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(10, 10, 200, 80)
+    ctx.fillRect(10, 10, 220, infoHeight)
     
     ctx.fillStyle = '#FFFFFF'
     ctx.font = '14px Arial'
-    ctx.fillText('碰撞边界调试模式', 20, 30)
-    ctx.fillText('绿色: 玩家碰撞圆', 20, 50)
-    ctx.fillText('红色: 障碍物碰撞圆', 20, 65)
-    ctx.fillText('蓝色: 道具碰撞圆', 20, 80)
+    
+    let yPos = 30
+    
+    if (this.isEnabled) {
+      ctx.fillText('碰撞边界调试模式 (P键)', 20, yPos)
+      yPos += 20
+      ctx.fillText('绿色: 玩家碰撞圆', 20, yPos)
+      yPos += 15
+      ctx.fillText('红色: 障碍物碰撞圆', 20, yPos)
+      yPos += 15
+      ctx.fillText('蓝色: 道具碰撞圆', 20, yPos)
+      yPos += 20
+    }
+    
+    if (this.showLanes) {
+      ctx.fillText('泳道分界线显示 (Y键)', 20, yPos)
+      yPos += 15
+      ctx.fillText('黄色: 泳道分界线', 20, yPos)
+    }
+    
     ctx.restore()
   }
 
   // 获取当前状态
   getState() {
-    return this.isEnabled
+    return {
+      collisionDebug: this.isEnabled,
+      laneLines: this.showLanes
+    }
+  }
+
+  // 新增：获取泳道线显示状态
+  getLaneState() {
+    return this.showLanes
   }
 }
 

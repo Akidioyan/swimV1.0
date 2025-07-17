@@ -1,74 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>指尖游泳 - Fingertip swimming</title>
-  <meta name="description" content="基于Vue 3的游泳小游戏，支持桌面端和移动端">
-  
-  <!-- 添加favicon配置 -->
-  <link rel="icon" type="image/x-icon" href="/media/favicon_io/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="./favicon_io/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./favicon_io/apple-touch-icon.png">
-  <link rel="manifest" href="./favicon_io/site.webmanifest">
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="./favicon_io/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon_io/favicon-16x16.png">
+    <link rel="manifest" href="./favicon_io/site.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="./favicon_io/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./favicon_io/android-chrome-512x512.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指尖游泳</title>
+    <script type="module" crossorigin src="./assets/index-28c160bd.js"></script>
+    <link rel="stylesheet" href="./assets/index-edea1eba.css">
+  </head>
+  <body>
+    <div id="app"></div>
     
-    body {
-      font-family: 'Microsoft YaHei', Arial, sans-serif;
-      background: linear-gradient(45deg, #87CEEB, #4682B4);
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-    
-    #app {
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-    }
-    
-    .loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(45deg, #87CEEB, #4682B4);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-  <script type="module" crossorigin src="./assets/index-89223731.js"></script>
-  <link rel="stylesheet" href="./assets/index-a7b41f4f.css">
-</head>
-<body>
-  <div id="app">
-    <div class="loading-screen">
-      <div class="spinner"></div>
-    </div>
-  </div>
-  
-</body>
+  </body>
 </html>

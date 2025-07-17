@@ -36,34 +36,63 @@ let skipTimer = null
 let countdownTimer = null
 
 onMounted(() => {
+  console.log('🎬 VideoView 组件挂载')
+  
   // 使用预加载的视频资源
   const loadedResources = gameStateStore.getLoadedResources()
   
   if (loadedResources && loadedResources.videoElement) {
-    // 使用预加载的视频
+    console.log('✅ 发现预加载的视频资源')
     const preloadedVideo = loadedResources.videoElement
     
-    // 将预加载的视频设置到DOM元素
     if (videoElement.value) {
-      // 复制视频源和属性
-      videoElement.value.src = preloadedVideo.src
-      videoElement.value.currentTime = 0 // 重置播放位置
-      
-      // 开始播放
-      videoElement.value.play().catch(error => {
-        console.warn('视频自动播放失败:', error)
+      try {
+        // 直接设置视频源，让浏览器处理缓存
+        videoElement.value.src = '/video/OpeningVideo.mp4'
+        videoElement.value.currentTime = 0
+        videoElement.value.muted = true
+        videoElement.value.playsInline = true
+        
+        console.log('🎬 开始播放视频')
+        
+        // 直接尝试播放
+        videoElement.value.play().then(() => {
+          console.log('🎬 视频播放成功')
+          // 3秒后显示跳过按钮
+          skipTimer = setTimeout(() => {
+            showSkipButton.value = true
+            startCountdown()
+          }, 3000)
+        }).catch(error => {
+          console.warn('⚠️ 视频播放失败:', error)
+          handleVideoError()
+        })
+        
+      } catch (error) {
+        console.error('❌ 视频设置失败:', error)
         handleVideoError()
-      })
-      
-      // 3秒后显示跳过按钮
-      skipTimer = setTimeout(() => {
-        showSkipButton.value = true
-        startCountdown()
-      }, 3000)
+      }
     }
   } else {
-    console.error('视频资源未预加载，直接开始游戏')
-    handleVideoError()
+    console.warn('⚠️ 视频资源未预加载，尝试直接播放')
+    // 即使没有预加载，也尝试直接播放
+    if (videoElement.value) {
+      videoElement.value.src = '/video/OpeningVideo.mp4'
+      videoElement.value.currentTime = 0
+      videoElement.value.muted = true
+      videoElement.value.playsInline = true
+      
+      videoElement.value.play().then(() => {
+        console.log('🎬 视频播放成功（未预加载）')
+        skipTimer = setTimeout(() => {
+          showSkipButton.value = true
+          startCountdown()
+        }, 3000)
+      }).catch(error => {
+        console.warn('⚠️ 视频播放失败（未预加载）:', error)
+        handleVideoError()
+      })
+    }
   }
 })
 
