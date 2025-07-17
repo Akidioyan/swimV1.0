@@ -3,84 +3,350 @@ import { useGameStateStore } from './gamestore/gameState'
 import { useGameLayoutStore } from './gamestore/gameLayout'
 import { usePlayerControlStore } from './gamestore/playerControl'
 import audioManager from '../utils/audio-manager'
+import { ObstacleManager } from '../utils/obstacles/ObstacleManager.js'
+import { 
+  getRandomGameObjectType,
+  getGameObjectConfig,
+  isObstacle,
+  isPowerUp,
+  DIFFICULTY_CONFIG,
+  getDifficultyLevelFromVw,
+  getObjectCountPer100vw,
+  generateObjectTypesForLevel,
+  getCurrentDifficultyInfo,
+  getSpawnInterval,
+  getDynamicSpawnIntervalFromDistance,
+  convertMetersToVw
+} from '../utils/obstacles/obstacleConfig.js'
 
 export const useGameStore = defineStore('game', {
   state: () => ({
     // 游戏对象
-    obstacles: [],
     powerUps: [],
     particles: [],
     
-    // 障碍物距离追踪
-    lastObstacleDistance: {}, // 记录每个泳道最后障碍物的距离
+    // 障碍物管理器
+    obstacleManager: new ObstacleManager(),
     
-    // 生成计时器
-    obstacleTimer: 0,
-    powerUpTimer: 0,
-    gameObjectTimer: 0, // 统一的游戏对象生成计时器
+    // 动态难度生成系统
+    lastSpawnDistance: 0,
+    forceNextSpawn: true, // 强制下次生成标志
+    currentDifficultyLevel: 1,
+    pendingObjectTypes: [], // 待生成的对象类型队列
+    lastLevelUpdate: 0, // 上次等级更新时的距离
     
-    // 智能障碍物生成系统
-    difficultyLevel: 1, // 当前难度等级
-    lastMultiObstacleTime: 0, // 上次生成多重障碍物的时间
-    
-    // 动画
+    // 动画相关
     animationFrame: 0,
     waterOffset: 0,
     backgroundOffset: 0,
   }),
   
   getters: {
-    // 调整难度，让障碍物更快出现
-    getCurrentDifficulty: (state) => {
-      const gameStateStore = useGameStateStore()
-      // 基于距离的动态难度调整，初始间隔更短
-      const baseInterval = 80 // 从120改为80，进一步减少间隔
-      const difficultyFactor = Math.floor(gameStateStore.distance / 500)
-      return Math.max(baseInterval - difficultyFactor * 15, 25) // 最小间隔从40改为25
-    },
+    // 获取所有障碍物（兼容旧代码）
+    obstacles: (state) => state.obstacleManager.obstacles,
     
-    // 获取当前难度下的障碍物生成间隔
-    getObstacleSpawnInterval: (state) => {
-      const baseDifficulty = state.getCurrentDifficulty
-      const dynamicDifficulty = state.calculateDifficultyLevel
-      
-      // 根据动态难度调整间隔
-      const difficultyMultiplier = Math.max(1 - (dynamicDifficulty * 0.05), 0.3) // 最多减少70%
-      
-      return Math.floor(baseDifficulty * difficultyMultiplier)
+    // 获取障碍物数量
+    getObstacleCount: (state) => {
+      return state.obstacleManager.getObstacleCount()
     }
   },
   
   actions: {
-    // 计算当前难度等级
-    getCurrentDifficultyLevel() {
-      const gameStateStore = useGameStateStore()
-      const distance = Math.floor(gameStateStore.distance)
+    // 重置游戏状态
+    resetGameState() {
+      this.powerUps = []
+      this.particles = []
+      this.obstacleManager.reset()
+      this.lastSpawnDistance = 0 // 重置距离记录
+      this.animationFrame = 0
+      this.waterOffset = 0
+      this.backgroundOffset = 0
       
-      if (distance < 200) return 1
-      if (distance < 500) return 2
-      if (distance < 1000) return 3
-      if (distance < 2000) return 4
-      return 5
+      // 重置动态难度系统
+      this.forceNextSpawn = true
+      this.currentDifficultyLevel = 1
+      this.pendingObjectTypes = []
+      this.lastLevelUpdate = 0
+    },
+
+    // 动态难度生成系统
+    updateSpawnSystem(gameSpeed, gameLayoutStore, gameStateStore) {
+      // 只在playing状态下生成
+      if (gameStateStore.gameState !== 'playing') return
+      
+      // 将当前距离（米）转换为vw
+      const currentDistanceVw = convertMetersToVw(gameStateStore.distance)
+      
+      // 更新难度等级
+      this.updateDifficultyLevel(currentDistanceVw)
+      
+      // 使用动态间隔系统计算生成间隔
+      const dynamicInterval = getDynamicSpawnIntervalFromDistance(currentDistanceVw)
+      
+      // 检查是否需要生成新对象（基于动态间隔）
+      const shouldSpawn = this.forceNextSpawn || 
+                         (currentDistanceVw - this.lastSpawnDistance >= dynamicInterval)
+      
+      if (shouldSpawn) {
+        // 打印间隔信息（调试用）
+        console.log(`等级 ${this.currentDifficultyLevel} 生成信息:`, {
+          当前距离: Math.round(currentDistanceVw),
+          当前间隔: Math.round(dynamicInterval * 10) / 10,
+          上次生成距离: Math.round(this.lastSpawnDistance)
+        })
+        
+        this.lastSpawnDistance = currentDistanceVw
+        this.forceNextSpawn = false
+        
+        // 使用动态难度系统生成对象
+        this.spawnObjectsForCurrentLevel(gameLayoutStore)
+      }
+    },
+
+    // 更新难度等级
+    updateDifficultyLevel(currentDistanceVw) {
+      const newLevel = getDifficultyLevelFromVw(currentDistanceVw)
+      
+      if (newLevel !== this.currentDifficultyLevel) {
+        console.log(`难度等级提升: ${this.currentDifficultyLevel} → ${newLevel}`)
+        this.currentDifficultyLevel = newLevel
+        this.lastLevelUpdate = currentDistanceVw
+        
+        // 清空待生成队列，重新生成新等级的对象类型
+        this.pendingObjectTypes = []
+      }
+    },
+
+    // 为当前等级生成对象
+    spawnObjectsForCurrentLevel(gameLayoutStore) {
+      // 如果没有待生成的对象，生成新的对象类型列表
+      if (this.pendingObjectTypes.length === 0) {
+        // 计算本次应生成的对象数量（基于100vw的数量动态调整）
+        const objectsPer100vw = getObjectCountPer100vw(this.currentDifficultyLevel)
+        // 根据实际间隔调整数量（间隔越大，单次生成越少）
+        const currentInterval = getSpawnInterval(this.currentDifficultyLevel)
+        const adjustedCount = Math.max(1, Math.round(objectsPer100vw * (currentInterval / 100)))
+        
+        this.pendingObjectTypes = generateObjectTypesForLevel(this.currentDifficultyLevel, adjustedCount)
+        
+        // 打印当前等级信息（调试用）
+        const difficultyInfo = getCurrentDifficultyInfo(this.lastSpawnDistance)
+        console.log(`等级 ${difficultyInfo.level} 生成配置:`, {
+          基础数量: objectsPer100vw,
+          调整数量: adjustedCount,
+          概率分布: difficultyInfo.probability,
+          生成列表: this.pendingObjectTypes
+        })
+      }
+      
+      // 根据难度等级确定每批最大生成数量
+      let maxSpawnPerBatch = Math.min(4, this.pendingObjectTypes.length) // 默认最多4个
+      
+      const spawnBatch = this.pendingObjectTypes.splice(0, maxSpawnPerBatch)
+      
+      // 获取可用泳道
+      const availableLanes = this.getAvailableLanes(gameLayoutStore)
+      
+      // 根据等级和概率确定实际最大生成数量
+      let actualMaxSpawn = this.determineMaxSpawnForLevel(availableLanes.length)
+      
+      // 生成这批对象
+      let spawnedCount = 0
+      for (const objectType of spawnBatch) {
+        if (availableLanes.length === 0 || spawnedCount >= actualMaxSpawn) {
+          // 没有可用泳道了或达到最大生成数量，把剩余对象放回队列前面
+          this.pendingObjectTypes.unshift(...spawnBatch.slice(spawnedCount))
+          break
+        }
+        
+        // 随机选择一个可用泳道
+        const laneIndex = Math.floor(Math.random() * availableLanes.length)
+        const lane = availableLanes[laneIndex]
+        
+        // 生成对象
+        if (this.spawnSingleObject(objectType, lane, gameLayoutStore)) {
+          spawnedCount++
+          // 移除已使用的泳道（避免在同一泳道生成多个对象）
+          availableLanes.splice(laneIndex, 1)
+        } else {
+          // 生成失败，把对象放回队列
+          this.pendingObjectTypes.unshift(objectType)
+        }
+      }
+      
+      // 添加调试信息
+      if (this.currentDifficultyLevel >= 4) {
+        console.log(`🎯 等级${this.currentDifficultyLevel} 生成结果: 预定最多${actualMaxSpawn}个对象，实际生成${spawnedCount}个`)
+      }
+    },
+
+    // 根据等级和概率确定最大生成数量
+    determineMaxSpawnForLevel(availableLanesCount) {
+      // 等级1：保持原来的逻辑，最多生成可用泳道数量的对象（通常0-2个）
+      if (this.currentDifficultyLevel === 1) {
+        return Math.min(availableLanesCount, 2) // 等级1最多2个，无概率系统
+      }
+      
+      // 等级2-6：根据概率决定是否生成3个对象
+      const randomValue = Math.random() * 100 // 0-100的随机数
+      let threeObjectProbability = 0
+      
+      switch (this.currentDifficultyLevel) {
+        case 2:
+          threeObjectProbability = 2 // 2%概率生成3个
+          break
+        case 3:
+          threeObjectProbability = 5 // 5%概率生成3个
+          break
+        case 4:
+          threeObjectProbability = 10 // 10%概率生成3个
+          break
+        case 5:
+          threeObjectProbability = 25 // 25%概率生成3个
+          break
+        case 6:
+        default:
+          threeObjectProbability = 40 // 40%概率生成3个（等级6及以上）
+          break
+      }
+      
+      // 根据概率决定最大生成数量
+      if (randomValue < threeObjectProbability) {
+        // 生成3个对象（如果有足够的泳道）
+        const maxSpawn = Math.min(availableLanesCount, 3)
+        console.log(`🎲 等级${this.currentDifficultyLevel} 概率触发: ${threeObjectProbability}% 概率生成3个对象，实际最多${maxSpawn}个`)
+        return maxSpawn
+      } else {
+        // 生成0-2个对象（和等级1一样）
+        const maxSpawn = Math.min(availableLanesCount, 2)
+        console.log(`🎲 等级${this.currentDifficultyLevel} 正常生成: 最多${maxSpawn}个对象`)
+        return maxSpawn
+      }
+    },
+
+    // 获取可用泳道列表
+    getAvailableLanes(gameLayoutStore) {
+      const allLanes = Array.from({length: gameLayoutStore.lanes}, (_, i) => i)
+      return allLanes.filter(lane => this.isLaneAvailable(lane, gameLayoutStore))
+    },
+
+    // 生成单个对象
+    spawnSingleObject(objectType, lane, gameLayoutStore) {
+      if (isObstacle(objectType)) {
+        return this.spawnSpecificObstacle(objectType, lane, gameLayoutStore)
+      } else if (isPowerUp(objectType)) {
+        return this.spawnPowerUp(lane, objectType)
+      }
+      return false
+    },
+
+    // 统一的游戏对象生成函数
+    spawnGameObject(objectType, lane, gameLayoutStore) {
+      if (isObstacle(objectType)) {
+        // 生成障碍物
+        this.spawnSpecificObstacle(objectType, lane, gameLayoutStore)
+      } else if (isPowerUp(objectType)) {
+        // 生成道具
+        this.spawnPowerUp(lane, objectType)
+      }
+    },
+
+    // 生成指定类型的障碍物
+    spawnSpecificObstacle(obstacleType, lane, gameLayoutStore) {
+      const obstacle = this.obstacleManager.createObstacle(obstacleType, lane, gameLayoutStore)
+      if (obstacle) {
+        this.obstacleManager.obstacles.push(obstacle)
+        return true
+      }
+      return false
+    },
+
+    // 检查泳道是否可用（基于新的19vw最小距离要求）
+    isLaneAvailable(lane, gameLayoutStore) {
+      // 基于新的19vw最小距离要求
+      const minDistanceVw = DIFFICULTY_CONFIG.absoluteMinInterval // 19vw
+      const minDistancePx = gameLayoutStore.canvas.width * (minDistanceVw / 100)
+      
+      // 检查障碍物
+      const hasObstacle = this.obstacleManager.obstacles.some(obstacle => 
+        obstacle.lane === lane && 
+        Math.abs(obstacle.y - (-obstacle.height)) < minDistancePx
+      )
+      
+      // 检查道具
+      const hasPowerUp = this.powerUps.some(powerUp => 
+        powerUp.lane === lane && 
+        Math.abs(powerUp.y - (-gameLayoutStore.powerUpDisplayHeight)) < minDistancePx
+      )
+      
+      return !hasObstacle && !hasPowerUp
     },
     
-    // 计算动态难度等级
-    calculateDifficultyLevel() {
-      const gameStateStore = useGameStateStore()
-      // 基于距离的难度：每30米增加1级，从50米改为30米
-      const distanceDifficulty = Math.floor(gameStateStore.distance / 30)
+    // 更新障碍物系统
+    updateObstacleSystem(gameSpeed, gameLayoutStore, gameStateStore) {
+      // 将obstacleManager引用传递给gameLayoutStore，以便障碍物可以访问
+      gameLayoutStore.obstacleManager = this.obstacleManager
       
-      // 基于时间的难度：每20秒增加1级，从30秒改为20秒
-      const currentTime = Date.now()
-      const timeDifficulty = Math.floor((currentTime - gameStateStore.gameStartTime) / 20000)
+      // 更新现有障碍物，传递powerUps引用
+      this.obstacleManager.updateObstacles(gameSpeed, gameLayoutStore, this.powerUps)
       
-      // 返回较高的难度值，但限制最大难度为12，从10改为12
-      const newDifficulty = Math.min(12, Math.max(distanceDifficulty, timeDifficulty))
+      // 使用统一生成系统
+      this.updateSpawnSystem(gameSpeed, gameLayoutStore, gameStateStore)
+    },
+    
+    // 性能优化版本的障碍物更新系统
+    updateObstacleSystemOptimized(gameSpeed, gameLayoutStore, gameStateStore, currentTime) {
+      // 将obstacleManager引用传递给gameLayoutStore，以便障碍物可以访问
+      gameLayoutStore.obstacleManager = this.obstacleManager
       
-      // 更新状态中的难度等级
-      this.difficultyLevel = newDifficulty
+      // 使用性能优化的更新方法，传递powerUps引用
+      this.obstacleManager.updateObstaclesOptimized(gameSpeed, gameLayoutStore, currentTime, this.powerUps)
       
-      return newDifficulty
+      // 使用统一生成系统
+      this.updateSpawnSystem(gameSpeed, gameLayoutStore, gameStateStore)
+    },
+    
+    // 检查玩家与障碍物的碰撞
+    checkObstacleCollision(player) {
+      for (const obstacle of this.obstacleManager.obstacles) {
+        if (this.checkCollision(player, obstacle)) {
+          return obstacle
+        }
+      }
+      return null
+    },
+    
+    // 新增：检查障碍物碰撞（支持雪碧图和obs3特殊规则）
+    checkObstacleCollisionWithSpriteAssets(player, spriteAssets = null) {
+      for (const obstacle of this.obstacleManager.obstacles) {
+        // 首先检查物理碰撞
+        if (this.checkCollision(player, obstacle)) {
+          // 然后检查是否应该触发碰撞（考虑obs3的特殊规则）
+          if (obstacle.shouldTriggerCollision && obstacle.shouldTriggerCollision(spriteAssets)) {
+            return obstacle
+          } else if (!obstacle.shouldTriggerCollision) {
+            // 向后兼容：如果障碍物没有shouldTriggerCollision方法，使用默认规则
+            return obstacle
+          }
+        }
+      }
+      return null
+    },
+    
+    // 移除障碍物并添加爆炸效果
+    removeObstacleWithEffect(obstacle) {
+      this.addExplosion(obstacle.x, obstacle.y)
+      this.obstacleManager.removeObstacle(obstacle)
+    },
+    
+    // 获取障碍物渲染信息
+    getObstacleRenderInfo() {
+      return this.obstacleManager.getRenderInfo()
+    },
+    
+    // 预测安全泳道
+    predictSafeLane(playerX, lookAhead, lanes) {
+      return this.obstacleManager.predictSafeLane(playerX, lookAhead, lanes)
     },
     
     // 收集道具
@@ -88,11 +354,8 @@ export const useGameStore = defineStore('game', {
       const gameStateStore = useGameStateStore()
       const playerControlStore = usePlayerControlStore()
       
-      // 只有snorkel道具在已有冲刺状态时无效，其他道具正常收集
-      if (gameStateStore.rushActive && powerUp.type === 'snorkel') return
-      
       if (powerUp.type === 'snorkel') {
-        // snorkel改为3秒无敌加速冲刺
+        // 重置snorkel加速效果，以最新获得的为准
         playerControlStore.isRushing = true
         playerControlStore.invulnerable = true
         playerControlStore.rushTime = 180 // 3秒
@@ -104,203 +367,58 @@ export const useGameStore = defineStore('game', {
         gameStateStore.invulnerable = true
         gameStateStore.invulnerableTime = 180
       } else if (powerUp.type === 'star') {
-        // star道具增加得分
-        gameStateStore.score += 10
+        // 调用gameStateStore的collectStar方法，同时增加stars和score
+        gameStateStore.collectStar()
+        
         // 检查是否达到新的最佳分数
         if (gameStateStore.score > gameStateStore.bestScore) {
           gameStateStore.bestScore = gameStateStore.score
           localStorage.setItem('bestScore', gameStateStore.bestScore.toString())
         }
-      } else if (powerUp.type === 'shield') {
-        // shield道具增加得分
-        gameStateStore.score += 50
       }
       
       // 添加收集特效
       this.addCollectEffect(powerUp.x, powerUp.y)
     },
     
-    // 检查是否可以放置障碍物
-    canPlaceObstacle(lane, y) {
-      const minDistance = 150 // 最小距离
-      
-      return !this.obstacles.some(obstacle => 
-        obstacle.lane === lane && 
-        Math.abs(obstacle.y - y) < minDistance
-      )
-    },
-    
-    // 检查障碍物最小距离
-    canPlaceObstacleByDistance(lane, distance) {
-      const lastDistance = this.lastObstacleDistance[lane] || 0
-      return (distance - lastDistance) >= 3 // 最小3米距离
-    },
-    
-    // 记录障碍物位置
-    recordObstaclePosition(lane, distance) {
-      this.lastObstacleDistance[lane] = distance
-    },
-    
-    // 添加水花效果
-    addSplash(x, y) {
+    // 创建道具对象
+    createPowerUp(lane, type) {
       const gameLayoutStore = useGameLayoutStore()
-      for (let i = 0; i < 8; i++) {
-        this.particles.push({
-          x: x + gameLayoutStore.player.width / 2,
-          y: y + gameLayoutStore.player.height / 2,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
-          life: 30,
-          maxLife: 30,
-          size: Math.random() * 4 + 2,
-          color: 'white'
-        })
-      }
-    },
-    
-    // 生成障碍物
-    spawnObstacle() {
-      const gameStateStore = useGameStateStore()
-      const gameLayoutStore = useGameLayoutStore()
-      
-      if (gameStateStore.gameState !== 'playing') return
-      
-      const difficultyLevel = this.calculateDifficultyLevel()
-      const currentTime = Date.now()
-      
-      // 根据难度决定是否生成多重障碍物 - 增加概率
-      const shouldSpawnMultiple = difficultyLevel >= 2 && // 从3改为2，更早开始多重障碍物
-                             (currentTime - this.lastMultiObstacleTime) > 3000 && // 从5000改为3000，间隔更短
-                             Math.random() < (difficultyLevel * 0.15) // 从0.1改为0.15，概率更高
-      
-      if (shouldSpawnMultiple) {
-        this.spawnMultipleObstacles(difficultyLevel)
-        this.lastMultiObstacleTime = currentTime
-      } else {
-        this.spawnSingleObstacle()
-      }
-    },
-    
-    // 生成单个障碍物
-    spawnSingleObstacle() {
-      const gameLayoutStore = useGameLayoutStore()
-      const gameStateStore = useGameStateStore()
-      const lane = Math.floor(Math.random() * gameLayoutStore.lanes)
-      const types = ['obs1', 'obs2', 'obs3', 'obs4']
-      const type = types[Math.floor(Math.random() * types.length)]
-      
-      // 使用泳道中线坐标，障碍物居中对齐
       const laneX = gameLayoutStore.getLaneX(lane)
       
-      const obstacle = {
-        x: laneX - gameLayoutStore.obstacleDisplayWidth / 2, // 使用显示宽度居中
-        y: -gameLayoutStore.obstacleDisplayHeight,
-        width: gameLayoutStore.obstacleDisplayWidth,        // 显示宽度
-        height: gameLayoutStore.obstacleDisplayHeight,      // 显示高度
-        collisionWidth: gameLayoutStore.obstacleCollisionWidth,   // 碰撞宽度
-        collisionHeight: gameLayoutStore.obstacleCollisionHeight, // 碰撞高度
-        type: type,
-        lane: lane,
-        animationFrame: 0,
-        originalX: laneX - gameLayoutStore.obstacleDisplayWidth / 2,
-        // 添加移动属性
-        moveSpeed: type === 'obs2' ? (Math.random() - 0.5) * 2 : 0,
-        // 添加跨泳道移动属性
-        targetLane: lane,
-        currentLane: lane,
-        laneChangeTimer: 0,
-        nextLaneChangeTime: type === 'obs3' || type === 'obs4' ?
-          Date.now() + (type === 'obs3' ? 2000 : 1500) + Math.random() * 1000 : 0
-      }
-      
-      this.obstacles.push(obstacle)
-      
-      // 记录障碍物位置
-      this.recordObstaclePosition(lane, gameStateStore.distance)
-    },
-    
-    // 智能生成多重障碍物（确保至少有一条安全通道）
-    spawnMultipleObstacles(difficultyLevel) {
-      const gameLayoutStore = useGameLayoutStore()
-      const maxObstacles = Math.min(difficultyLevel - 1, gameLayoutStore.lanes - 1) // 最多生成lanes-1个障碍物
-      const actualObstacles = Math.floor(Math.random() * maxObstacles) + 1 // 至少生成1个
-      
-      // 随机选择要阻塞的泳道
-      const blockedLanes = new Set()
-      const availableLanes = Array.from({length: gameLayoutStore.lanes}, (_, i) => i)
-      
-      // 随机选择要阻塞的泳道
-      for (let i = 0; i < actualObstacles; i++) {
-        if (availableLanes.length > 1) { // 确保至少留一条通道
-          const randomIndex = Math.floor(Math.random() * availableLanes.length)
-          const selectedLane = availableLanes.splice(randomIndex, 1)[0]
-          blockedLanes.add(selectedLane)
-        }
-      }
-      
-      // 生成障碍物
-      const types = ['obs1', 'obs2', 'obs3', 'obs4']
-      blockedLanes.forEach(lane => {
-        const type = types[Math.floor(Math.random() * types.length)]
-        const laneX = gameLayoutStore.getLaneX(lane)
-        
-        const obstacle = {
-          x: laneX - gameLayoutStore.obstacleDisplayWidth / 2,
-          y: -gameLayoutStore.obstacleDisplayHeight,
-          width: gameLayoutStore.obstacleDisplayWidth,
-          height: gameLayoutStore.obstacleDisplayHeight,
-          collisionWidth: gameLayoutStore.obstacleCollisionWidth,
-          collisionHeight: gameLayoutStore.obstacleCollisionHeight,
-          type: type,
-          lane: lane,
-          animationFrame: 0,
-          originalX: laneX - gameLayoutStore.obstacleDisplayWidth / 2,
-          // 添加移动属性
-          moveSpeed: type === 'obs2' ? (Math.random() - 0.5) * 2 : 0,
-          // 添加跨泳道移动属性
-          targetLane: lane,
-          currentLane: lane,
-          laneChangeTimer: 0,
-          nextLaneChangeTime: type === 'obs3' || type === 'obs4' ?
-            Date.now() + (type === 'obs3' ? 2000 : 1500) + Math.random() * 1000 : 0
-        }
-        
-        this.obstacles.push(obstacle)
-        
-        // 记录障碍物位置
-        const gameStateStore = useGameStateStore()
-        this.recordObstaclePosition(lane, gameStateStore.distance)
-      })
-    },
-    
-    // 生成道具
-    spawnPowerUp() {
-      const gameStateStore = useGameStateStore()
-      const gameLayoutStore = useGameLayoutStore()
-      
-      if (gameStateStore.gameState !== 'playing') return
-      
-      const lane = Math.floor(Math.random() * gameLayoutStore.lanes)
-      const types = ['snorkel', 'shield', 'star']
-      const type = types[Math.floor(Math.random() * types.length)]
-      
-      // 使用泳道中线坐标，道具居中对齐
-      const laneX = gameLayoutStore.getLaneX(lane)
-      
-      const powerUp = {
-        x: laneX - gameLayoutStore.powerUpDisplayWidth / 2, // 使用显示宽度居中
+      return {
+        x: laneX - gameLayoutStore.powerUpDisplayWidth / 2,
         y: -gameLayoutStore.powerUpDisplayHeight,
-        width: gameLayoutStore.powerUpDisplayWidth,         // 显示宽度
-        height: gameLayoutStore.powerUpDisplayHeight,       // 显示高度
-        collisionWidth: gameLayoutStore.powerUpCollisionWidth,   // 碰撞宽度
-        collisionHeight: gameLayoutStore.powerUpCollisionHeight, // 碰撞高度
+        width: gameLayoutStore.powerUpDisplayWidth,
+        height: gameLayoutStore.powerUpDisplayHeight,
+        collisionWidth: gameLayoutStore.powerUpCollisionWidth,
+        collisionHeight: gameLayoutStore.powerUpCollisionHeight,
         type: type,
         lane: lane,
         collected: false,
         glowPhase: 0
       }
+    },
+    
+    // 生成道具
+    spawnPowerUp(specificLane = null, specificType = null) {
+      const gameStateStore = useGameStateStore()
+      const gameLayoutStore = useGameLayoutStore()
       
-      this.powerUps.push(powerUp)
+      if (gameStateStore.gameState !== 'playing') return false
+      
+      // 选择泳道和道具类型
+      const lane = specificLane !== null ? specificLane : Math.floor(Math.random() * gameLayoutStore.lanes)
+      const type = specificType || getRandomGameObjectType()
+      
+      // 检查泳道是否可用
+      if (this.isLaneAvailable(lane, gameLayoutStore)) {
+        // 创建并添加道具
+        const powerUp = this.createPowerUp(lane, type)
+        this.powerUps.push(powerUp)
+        return true
+      }
+      return false
     },
     
     // 添加收集特效
@@ -335,37 +453,46 @@ export const useGameStore = defineStore('game', {
       }
     },
     
-    // 碰撞检测 - 支持碰撞体系统和动画帧检测
-    checkCollision(obj1, obj2) {
-      // 特殊处理：obs4的动画帧共有100帧，碰撞只在第51-100帧生效
-      if (obj2.type === 'obs4' && obj2.animationFrame !== undefined) {
-        const currentFrame = Math.floor(obj2.animationFrame / 10) % 100 + 1 // 帧数从1开始计算，共100帧
-        if (currentFrame < 51 || currentFrame > 100) {
-          return false // 不在碰撞帧范围内，不产生碰撞
-        }
+    // 添加水花效果
+    addSplash(x, y) {
+      const gameLayoutStore = useGameLayoutStore()
+      for (let i = 0; i < 8; i++) {
+        this.particles.push({
+          x: x + gameLayoutStore.player.width / 2,
+          y: y + gameLayoutStore.player.height / 2,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 30,
+          maxLife: 30,
+          size: Math.random() * 4 + 2,
+          color: 'white'
+        })
       }
-      
-      // 获取对象1的碰撞盒信息
+    },
+    
+    // 碰撞检测 - 使用圆形碰撞检测
+    checkCollision(obj1, obj2) {
+    // 获取对象1的碰撞圆信息
       const obj1CollisionWidth = obj1.collisionWidth || obj1.width
       const obj1CollisionHeight = obj1.collisionHeight || obj1.height
-      const obj1CollisionOffsetX = (obj1.width - obj1CollisionWidth) / 2
-      const obj1CollisionOffsetY = (obj1.height - obj1CollisionHeight) / 2
-      const obj1CollisionX = obj1.x + obj1CollisionOffsetX
-      const obj1CollisionY = obj1.y + obj1CollisionOffsetY
-      
-      // 获取对象2的碰撞盒信息
+    const obj1Radius = Math.min(obj1CollisionWidth, obj1CollisionHeight) / 2
+    const obj1CenterX = obj1.x + obj1.width / 2
+    const obj1CenterY = obj1.y + obj1.height / 2
+    
+    // 获取对象2的碰撞圆信息
       const obj2CollisionWidth = obj2.collisionWidth || obj2.width
       const obj2CollisionHeight = obj2.collisionHeight || obj2.height
-      const obj2CollisionOffsetX = (obj2.width - obj2CollisionWidth) / 2
-      const obj2CollisionOffsetY = (obj2.height - obj2CollisionHeight) / 2
-      const obj2CollisionX = obj2.x + obj2CollisionOffsetX
-      const obj2CollisionY = obj2.y + obj2CollisionOffsetY
-      
-      // 使用碰撞盒进行检测
-      return obj1CollisionX < obj2CollisionX + obj2CollisionWidth &&
-             obj1CollisionX + obj1CollisionWidth > obj2CollisionX &&
-             obj1CollisionY < obj2CollisionY + obj2CollisionHeight &&
-             obj1CollisionY + obj1CollisionHeight > obj2CollisionY
+    const obj2Radius = Math.min(obj2CollisionWidth, obj2CollisionHeight) / 2
+    const obj2CenterX = obj2.x + obj2.width / 2
+    const obj2CenterY = obj2.y + obj2.height / 2
+    
+    // 计算两个圆心之间的距离
+    const dx = obj1CenterX - obj2CenterX
+    const dy = obj1CenterY - obj2CenterY
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    
+    // 如果距离小于两个半径之和，则发生碰撞
+    return distance < (obj1Radius + obj2Radius)
     },
     
     // 播放游泳音效
@@ -373,149 +500,14 @@ export const useGameStore = defineStore('game', {
       audioManager.playSwimmingSound()
     },
     
-    // 更新对象位置（根据泳道布局调整游戏对象位置）
+    // 更新对象位置
     updateObjectPositions() {
       const gameLayoutStore = useGameLayoutStore()
       
-      // 更新障碍物位置
-      this.obstacles.forEach(obstacle => {
-        obstacle.x = gameLayoutStore.getLaneX(obstacle.lane) - obstacle.width / 2
-      })
-      
-      // 更新道具位置
+      // 障碍物位置由ObstacleManager管理，这里只更新道具
       this.powerUps.forEach(powerUp => {
         powerUp.x = gameLayoutStore.getLaneX(powerUp.lane) - powerUp.width / 2
       })
-    },
-    
-    // 统一的游戏对象生成方法
-    generateGameObjects() {
-      const difficultyLevel = this.calculateDifficultyLevel()
-      const gameStateStore = useGameStateStore()
-      
-      // 生成概率计算 - 增加障碍物概率
-      const starProbability = 0.3 // 星星30%概率
-      const snorkelProbability = 0.05 // 潜水镜5%概率
-      const obstacleProbability = 0.65 // 障碍物65%概率
-      
-      // 随机选择要生成的对象类型
-      const randomValue = Math.random()
-      let objectType = null
-      
-      if (randomValue < obstacleProbability) {
-        objectType = 'obstacle'
-      } else if (randomValue < obstacleProbability + starProbability) {
-        objectType = 'star'
-      } else if (randomValue < obstacleProbability + starProbability + snorkelProbability) {
-        objectType = 'snorkel'
-      }
-      
-      if (objectType) {
-        // 选择一个随机泳道
-        const gameLayoutStore = useGameLayoutStore()
-        const lane = Math.floor(Math.random() * gameLayoutStore.lanes)
-        
-        // 检查该泳道是否已有对象
-        const hasRecentObject = this.checkLaneOccupied(lane, gameStateStore.distance)
-        
-        if (!hasRecentObject) {
-          if (objectType === 'obstacle') {
-            this.spawnObstacleInLane(lane, difficultyLevel)
-          } else {
-            this.spawnPowerUpInLane(lane, objectType)
-          }
-        }
-      }
-    },
-    
-    // 检查泳道是否被占用
-    checkLaneOccupied(lane, currentDistance) {
-      const gameLayoutStore = useGameLayoutStore()
-      
-      // 检查障碍物
-      for (let obstacle of this.obstacles) {
-        if (obstacle.lane === lane && 
-            Math.abs(obstacle.y - (-gameLayoutStore.obstacleDisplayHeight)) < gameLayoutStore.canvas.height * 0.3) {
-          return true
-        }
-      }
-      
-      // 检查道具
-      for (let powerUp of this.powerUps) {
-        if (powerUp.lane === lane && 
-            Math.abs(powerUp.y - (-gameLayoutStore.powerUpDisplayHeight)) < gameLayoutStore.canvas.height * 0.3) {
-          return true
-        }
-      }
-      
-      return false
-    },
-    
-    // 在指定泳道生成障碍物
-    spawnObstacleInLane(lane, difficultyLevel) {
-      const gameLayoutStore = useGameLayoutStore()
-      
-      if (this.checkLaneOccupied(lane, -100)) return false
-      
-      // 障碍物类型：obs1(静止), obs2(移动), obs3(移动), obs4(水下)
-      const obstacleTypes = ['obs1', 'obs2', 'obs3', 'obs4']
-      const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
-      
-      // 使用泳道中线坐标，障碍物居中对齐
-      const laneX = gameLayoutStore.getLaneX(lane)
-      
-      const obstacle = {
-        x: laneX - gameLayoutStore.obstacleDisplayWidth / 2,
-        y: -gameLayoutStore.obstacleDisplayHeight,
-        width: gameLayoutStore.obstacleDisplayWidth,
-        height: gameLayoutStore.obstacleDisplayHeight,
-        collisionWidth: gameLayoutStore.obstacleCollisionWidth,
-        collisionHeight: gameLayoutStore.obstacleCollisionHeight,
-        type: type,
-        lane: lane,
-        animationFrame: 0,
-        originalX: laneX - gameLayoutStore.obstacleDisplayWidth / 2,
-        // 添加移动属性
-        moveSpeed: type === 'obs2' ? (Math.random() - 0.5) * 2 : 0,
-        // 添加跨泳道移动属性
-        targetLane: lane,
-        currentLane: lane,
-        laneChangeTimer: 0,
-        nextLaneChangeTime: type === 'obs3' || type === 'obs4' ?
-          Date.now() + (type === 'obs3' ? 2000 : 1500) + Math.random() * 1000 : 0
-      }
-      
-      this.obstacles.push(obstacle)
-      
-      const gameStateStore = useGameStateStore()
-      this.recordObstaclePosition(lane, gameStateStore.distance)
-      return true
-    },
-    
-    // 在指定泳道生成道具
-    spawnPowerUpInLane(lane, type) {
-      const gameLayoutStore = useGameLayoutStore()
-      
-      if (this.checkLaneOccupied(lane, -100)) return false
-      
-      // 使用泳道中线坐标，道具居中对齐
-      const laneX = gameLayoutStore.getLaneX(lane)
-      
-      const powerUp = {
-        x: laneX - gameLayoutStore.powerUpDisplayWidth / 2, // 使用显示宽度居中
-        y: -gameLayoutStore.powerUpDisplayHeight,
-        width: gameLayoutStore.powerUpDisplayWidth,         // 显示宽度
-        height: gameLayoutStore.powerUpDisplayHeight,       // 显示高度
-        collisionWidth: gameLayoutStore.powerUpCollisionWidth,   // 碰撞宽度
-        collisionHeight: gameLayoutStore.powerUpCollisionHeight, // 碰撞高度
-        type: type,
-        lane: lane,
-        collected: false,
-        glowPhase: 0
-      }
-      
-      this.powerUps.push(powerUp)
-      return true
     }
   }
 })

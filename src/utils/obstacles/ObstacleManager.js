@@ -4,7 +4,7 @@
  */
 
 import { Obstacle } from './Obstacle.js'
-import { OBSTACLE_CONFIG, SPAWN_CONFIG, getPerformanceConfig } from './obstacleConfig.js'
+import { SPAWN_CONFIG, DIFFICULTY_CONFIG, getPerformanceConfig } from './obstacleConfig.js'
 
 export class ObstacleManager {
   constructor() {
@@ -20,11 +20,12 @@ export class ObstacleManager {
    * 更新所有障碍物
    * @param {number} gameSpeed - 游戏速度
    * @param {Object} gameLayoutStore - 游戏布局store
+   * @param {Array} powerUps - 道具数组（可选）
    */
-  updateObstacles(gameSpeed, gameLayoutStore) {
+  updateObstacles(gameSpeed, gameLayoutStore, powerUps = []) {
     this.obstacles = this.obstacles.filter(obstacle => {
-      // 更新障碍物状态
-      obstacle.update(gameSpeed, gameLayoutStore)
+      // 更新障碍物状态，传递powerUps引用
+      obstacle.update(gameSpeed, gameLayoutStore, Date.now(), powerUps)
       
       // 检查是否超出屏幕
       if (obstacle.isOffScreen(gameLayoutStore.canvas.height)) {
@@ -40,8 +41,9 @@ export class ObstacleManager {
    * @param {number} gameSpeed - 游戏速度
    * @param {Object} gameLayoutStore - 游戏布局store
    * @param {number} currentTime - 当前时间
+   * @param {Array} powerUps - 道具数组（可选）
    */
-  updateObstaclesOptimized(gameSpeed, gameLayoutStore, currentTime) {
+  updateObstaclesOptimized(gameSpeed, gameLayoutStore, currentTime, powerUps = []) {
     // 限制最大障碍物数量
     if (this.obstacles.length > this.performanceConfig.maxObjects) {
       // 移除最远的障碍物
@@ -50,28 +52,30 @@ export class ObstacleManager {
         .slice(0, this.performanceConfig.maxObjects)
     }
     
-    // 批量更新障碍物（分帧处理）
+    // 第一步：所有障碍物都更新基础Y坐标（确保与道具移动一致）
+    this.obstacles.forEach(obstacle => {
+      obstacle.y += gameSpeed
+    })
+    
+    // 第二步：批量更新复杂逻辑（分帧处理）
     const batchSize = this.performanceConfig.updateBatchSize
     const startIndex = this.updateBatchIndex
     const endIndex = Math.min(startIndex + batchSize, this.obstacles.length)
     
-    // 更新当前批次的障碍物
+    // 更新当前批次的障碍物的复杂逻辑
     for (let i = startIndex; i < endIndex; i++) {
       if (this.obstacles[i]) {
-        this.obstacles[i].update(gameSpeed, gameLayoutStore, currentTime)
+        // 调用updateComplexLogic而不是update，避免重复更新Y坐标
+        this.obstacles[i].updateComplexLogic(gameLayoutStore, currentTime, powerUps)
       }
     }
     
     // 更新批次索引
     this.updateBatchIndex = endIndex >= this.obstacles.length ? 0 : endIndex
     
-    // 移除超出屏幕的障碍物（每帧只检查部分）
-    this.obstacles = this.obstacles.filter((obstacle, index) => {
-      // 只检查当前批次的障碍物是否超出屏幕
-      if (index >= startIndex && index < endIndex) {
-        return !obstacle.isOffScreen(gameLayoutStore.canvas.height)
-      }
-      return true
+    // 移除超出屏幕的障碍物（每帧都检查）
+    this.obstacles = this.obstacles.filter(obstacle => {
+      return !obstacle.isOffScreen(gameLayoutStore.canvas.height)
     })
   }
   
@@ -81,12 +85,16 @@ export class ObstacleManager {
    * @param {Object} gameLayoutStore - 游戏布局store
    * @returns {boolean} 泳道是否可用
    */
+  /**
+   * 检查泳道是否可用（更新为vw单位）
+   */
   isLaneAvailable(lane, gameLayoutStore) {
-    const checkHeight = gameLayoutStore.canvas.height * SPAWN_CONFIG.laneOccupation.checkHeight
+    const minDistanceVw = DIFFICULTY_CONFIG.absoluteMinInterval // 19vw
+    const minDistancePx = gameLayoutStore.canvas.width * (minDistanceVw / 100)
     
     return !this.obstacles.some(obstacle => 
       obstacle.lane === lane && 
-      Math.abs(obstacle.y - (-obstacle.height)) < checkHeight
+      Math.abs(obstacle.y - (-obstacle.height)) < minDistancePx
     )
   }
   
@@ -202,4 +210,41 @@ export class ObstacleManager {
       return null
     }
   }
-} 
+
+  /**
+   * 获取指定泳道的所有障碍物（除了指定的障碍物）
+   * @param {number} lane - 泳道索引
+   * @param {Obstacle} excludeObstacle - 要排除的障碍物
+   * @returns {Array} 障碍物数组
+   */
+  getObstaclesInLane(lane, excludeObstacle = null) {
+    return this.obstacles.filter(obstacle => 
+      obstacle.lane === lane && obstacle !== excludeObstacle
+    )
+  }
+  
+  /**
+   * 检测障碍物与其他对象的碰撞（支持跨泳道检测）
+   * @param {Obstacle} targetObstacle - 目标障碍物
+   * @returns {Obstacle|null} 碰撞的障碍物或null
+   */
+  checkObstacleCollisions(targetObstacle) {
+    for (const obstacle of this.obstacles) {
+      if (obstacle === targetObstacle) continue
+      
+      // 对于obs2类型，检测所有泳道的障碍物
+      if (targetObstacle.type === 'obs2') {
+        if (targetObstacle.checkCollision(obstacle)) {
+          return obstacle
+        }
+      } else {
+        // 其他类型障碍物仍然只检测同一泳道
+        if (obstacle.lane !== targetObstacle.lane) continue
+        if (targetObstacle.checkCollision(obstacle)) {
+          return obstacle
+        }
+      }
+    }
+    return null
+  }
+}

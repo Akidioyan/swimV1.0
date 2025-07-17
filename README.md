@@ -1,4 +1,4 @@
-# 🏊 游泳英雄 (Swimming Hero)
+# 🏊 指尖游泳
 
 基于Vue 3框架开发的2D游泳小游戏，支持桌面端和移动端。
 
@@ -92,8 +92,11 @@ src/
 ├── stores/              # 状态管理
 │   └── gameStore.js     # 游戏状态存储
 ├── utils/               # 工具函数
-│   ├── collisionDetection.js # 碰撞检测工具
-│   └── obstacleGenerator.js  # 障碍物生成工具
+│   ├── obstacles/       # 障碍物系统
+│   │   ├── obstacleConfig.js    # 障碍物配置
+│   │   ├── Obstacle.js          # 障碍物类
+│   │   └── ObstacleManager.js   # 障碍物管理器
+│   └── collisionDetection.js   # 碰撞检测工具
 └── styles/
     └── global.css       # 全局样式表
 ```
@@ -152,10 +155,17 @@ src/
 ## 🔧 自定义配置
 
 ### 游戏难度
-在 `src/utils/obstacleGenerator.js` 中调整：
+在 `src/utils/obstacles/obstacleConfig.js` 中调整：
 - 障碍物生成频率
-- 道具出现概率
+- 障碍物类型配置
 - 难度增长曲线
+- 多重障碍物生成概率
+
+### 障碍物行为
+在 `src/utils/obstacles/Obstacle.js` 中修改：
+- 障碍物移动逻辑
+- 碰撞检测
+- 自定义障碍物行为
 
 ### 视觉效果
 在 `src/styles/global.css` 中修改：
@@ -210,4 +220,4 @@ MIT License
 
 ---
 
-🏊‍♂️ **开始你的游泳英雄之旅吧！** 🏊‍♀️ 
+🏊‍♂️ **开始你的游泳英雄之旅吧！** 🏊‍♀️

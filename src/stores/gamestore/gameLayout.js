@@ -3,60 +3,58 @@ import { defineStore } from 'pinia'
 
 export const useGameLayoutStore = defineStore('gameLayout', {
   state: () => ({
-    // Canvas相关
     canvas: null,
     ctx: null,
     
     // 游戏区域布局
     lanes: 4,
-    laneHeight: 0,
     laneWidth: 0,
     gameAreaWidth: 0,
-    gameAreaX: 0, // 游戏区域X起始位置
-    gameAreaHeight: 0,
-    gameAreaY: 0,
+    laneHeight: 0,
+    gameAreaX: 0,
     
-    // 玩家数据
+    // 玩家对象
     player: {
-      x: 100,
+      x: 0,
       y: 0,
-      width: 0, // 将在calculateGameLayout中动态设置
-      height: 0, // 将在calculateGameLayout中动态设置
-      currentLane: 1, // 0, 1, 2, 3
       targetX: 0,
       targetY: 0,
-      speed: 8,
-      // 显示尺寸
+      currentLane: 1,
+      width: 0,
+      height: 0,
       displayWidth: 0,
       displayHeight: 0,
-      // 碰撞尺寸
       collisionWidth: 0,
-      collisionHeight: 0,
+      collisionHeight: 0
     },
     
-    // 玩家显示和碰撞尺寸
+    // 全局玩家尺寸
     playerDisplayWidth: 0,
     playerDisplayHeight: 0,
     playerCollisionWidth: 0,
     playerCollisionHeight: 0,
     
-    // 障碍物尺寸
+    // 游戏对象尺寸（障碍物和道具共用）
+    gameObjectDisplayWidth: 0,
+    gameObjectDisplayHeight: 0,
+    gameObjectCollisionWidth: 0,
+    gameObjectCollisionHeight: 0,
+    
+    // 兼容属性（保留旧的命名以兼容现有代码）
     obstacleDisplayWidth: 0,
     obstacleDisplayHeight: 0,
     obstacleCollisionWidth: 0,
     obstacleCollisionHeight: 0,
-    obstacleWidth: 0, // 兼容属性
-    obstacleHeight: 0, // 兼容属性
-    obstacleSize: 0, // 兼容属性
-    
-    // 道具尺寸
+    obstacleWidth: 0,
+    obstacleHeight: 0,
+    obstacleSize: 0,
     powerUpDisplayWidth: 0,
     powerUpDisplayHeight: 0,
     powerUpCollisionWidth: 0,
     powerUpCollisionHeight: 0,
-    powerUpWidth: 0, // 兼容属性
-    powerUpHeight: 0, // 兼容属性
-    powerUpSize: 0, // 兼容属性
+    powerUpWidth: 0,
+    powerUpHeight: 0,
+    powerUpSize: 0,
     
     // 玩家位置
     playerX: 0,
@@ -76,25 +74,34 @@ export const useGameLayoutStore = defineStore('gameLayout', {
   },
   
   actions: {
+    /**
+     * 根据X坐标获取最接近的泳道索引
+     * @param {number} x - X坐标
+     * @returns {number} 泳道索引
+     */
+    getClosestLane(x) {
+      let closestLane = 0
+      let minDistance = Math.abs(x - this.getLaneX(0))
+      
+      for (let i = 1; i < this.lanes; i++) {
+        const distance = Math.abs(x - this.getLaneX(i))
+        if (distance < minDistance) {
+          minDistance = distance
+          closestLane = i
+        }
+      }
+      
+      return closestLane
+    },
+    
     // 获取指定泳道的X坐标（泳道中线）
     getLaneX(laneIndex) {
       if (!this.canvas) return 0 // 添加空值检查
       
-      const screenWidth = this.canvas.width
-      
-      // 根据泳道索引返回对应的中线X坐标
-      switch(laneIndex) {
-        case 0: // 第一泳道中线
-          return screenWidth * 0.275
-        case 1: // 第二泳道中线
-          return screenWidth * 0.425
-        case 2: // 第三泳道中线
-          return screenWidth * 0.575
-        case 3: // 第四泳道中线
-          return screenWidth * 0.725
-        default:
-          return screenWidth * 0.275
-      }
+      // 根据泳道索引返回对应的中线X坐标（使用canvas宽度而不是window宽度）
+      // 泳道中线位置，从左到右分别是27.5vw、42.5vw、57.5vw、72.5vw
+      const lanePositions = [27.5, 42.5, 57.5, 72.5];
+      return (this.canvas.width * (lanePositions[laneIndex] || 27.5)) / 100;
     },
     
     // 修改getLaneY方法，让玩家距离底部屏幕40%
@@ -127,28 +134,29 @@ export const useGameLayoutStore = defineStore('gameLayout', {
     },
     
     // 计算游戏布局
+    // 计算游戏布局
     calculateGameLayout() {
       if (!this.canvas) return
       
-      const screenWidth = this.canvas.width
-      const screenHeight = this.canvas.height
+      const canvasWidth = this.canvas.width
+      const canvasHeight = this.canvas.height
       
-      // 每个泳道宽度 = 屏幕宽度 * 0.15 (15%)
-      this.laneWidth = screenWidth * 0.15
+      // 每个泳道宽度 = 15vw
+      this.laneWidth = canvasWidth * 0.15
       
-      // 游戏区域宽度 = 屏幕宽度 * 0.60 (4个泳道总共60%)
-      this.gameAreaWidth = screenWidth * 0.6
+      // 游戏区域宽度 = 60vw (4个泳道总共60%)
+      this.gameAreaWidth = canvasWidth * 0.6
       
-      this.laneHeight = screenHeight
+      this.laneHeight = canvasHeight
       
-      // 游戏区域X起始位置 = 屏幕宽度 * 0.2 (左边景观20%)
-      this.gameAreaX = screenWidth * 0.2
+      // 游戏区域X起始位置 = 20vw (左边景观20%)
+      this.gameAreaX = canvasWidth * 0.2
       
-      // 设置玩家尺寸 - 显示尺寸和碰撞尺寸都加大1.5倍
-      this.player.displayWidth = screenWidth * 0.15 * 1.5          // 显示宽度：15% * 1.5 = 22.5%
-      this.player.displayHeight = screenWidth * 0.08 * 1.5         // 显示高度：8% * 1.5 = 12%
-      this.player.collisionWidth = screenWidth * 0.105 * 1.5       // 碰撞宽度：10.5% * 1.5 = 15.75%
-      this.player.collisionHeight = screenWidth * 0.056 * 1.5      // 碰撞高度：5.6% * 1.5 = 8.4%
+      // 设置玩家尺寸 - 使用响应式单位
+      this.player.displayWidth = canvasWidth * 0.2          // 显示宽度：20vw
+      this.player.displayHeight = canvasWidth * 0.2         // 显示高度：20vh
+      this.player.collisionWidth = canvasWidth * 0.1  // 碰撞宽度：显示宽度的0.5倍
+      this.player.collisionHeight = canvasWidth * 0.1 // 碰撞高度：显示高度的0.5倍
       
       // 保留旧的属性以兼容现有代码
       this.player.width = this.player.displayWidth
@@ -160,27 +168,29 @@ export const useGameLayoutStore = defineStore('gameLayout', {
       this.playerCollisionWidth = this.player.collisionWidth
       this.playerCollisionHeight = this.player.collisionHeight
       
-      // 设置障碍物尺寸 - 显示尺寸 10% × 10%，碰撞尺寸 7% × 4%
-      this.obstacleDisplayWidth = screenWidth * 0.10         // 障碍物显示宽度
-      this.obstacleDisplayHeight = screenWidth * 0.10        // 障碍物显示高度
-      this.obstacleCollisionWidth = screenWidth * 0.07       // 障碍物碰撞宽度
-      this.obstacleCollisionHeight = screenWidth * 0.04      // 障碍物碰撞高度
+      // 设置游戏对象尺寸（障碍物和道具共用）- 使用响应式单位
+      this.gameObjectDisplayWidth = canvasWidth * 0.10         // 游戏对象显示宽度：10vw
+      this.gameObjectDisplayHeight = canvasWidth * 0.10       // 游戏对象显示高度：10vw
+      this.gameObjectCollisionWidth = canvasWidth * 0.07   // 游戏对象碰撞宽度：显示宽度的0.7倍
+      this.gameObjectCollisionHeight = canvasWidth * 0.07 // 游戏对象碰撞高度：显示高度的0.7倍
       
-      // 保留旧的属性以兼容现有代码
-      this.obstacleWidth = this.obstacleDisplayWidth
-      this.obstacleHeight = this.obstacleDisplayHeight
-      this.obstacleSize = this.obstacleDisplayWidth
+      // 兼容属性 - 障碍物
+      this.obstacleDisplayWidth = this.gameObjectDisplayWidth
+      this.obstacleDisplayHeight = this.gameObjectDisplayHeight
+      this.obstacleCollisionWidth = this.gameObjectCollisionWidth
+      this.obstacleCollisionHeight = this.gameObjectCollisionHeight
+      this.obstacleWidth = this.gameObjectDisplayWidth
+      this.obstacleHeight = this.gameObjectDisplayHeight
+      this.obstacleSize = this.gameObjectDisplayWidth
       
-      // 设置道具尺寸 - 显示尺寸 10% × 10%，碰撞尺寸 7% × 7%
-      this.powerUpDisplayWidth = screenWidth * 0.10          // 道具显示宽度
-      this.powerUpDisplayHeight = screenWidth * 0.10         // 道具显示高度
-      this.powerUpCollisionWidth = screenWidth * 0.07        // 道具碰撞宽度 (10% * 0.7)
-      this.powerUpCollisionHeight = screenWidth * 0.07       // 道具碰撞高度 (10% * 0.7)
-      
-      // 保留旧的属性以兼容现有代码
-      this.powerUpWidth = this.powerUpDisplayWidth
-      this.powerUpHeight = this.powerUpDisplayHeight
-      this.powerUpSize = this.powerUpDisplayWidth
+      // 兼容属性 - 道具
+      this.powerUpDisplayWidth = this.gameObjectDisplayWidth
+      this.powerUpDisplayHeight = this.gameObjectDisplayHeight
+      this.powerUpCollisionWidth = this.gameObjectCollisionWidth
+      this.powerUpCollisionHeight = this.gameObjectCollisionHeight
+      this.powerUpWidth = this.gameObjectDisplayWidth
+      this.powerUpHeight = this.gameObjectDisplayHeight
+      this.powerUpSize = this.gameObjectDisplayWidth
     },
     
     // 更新玩家位置状态
@@ -250,3 +260,5 @@ export const useGameLayoutStore = defineStore('gameLayout', {
     }
   }
 })
+
+

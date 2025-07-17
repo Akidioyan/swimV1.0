@@ -36,10 +36,10 @@ onMounted(() => {
   // 启用全屏模式
   enableFullscreen()
   
-  // 模拟加载过程
-  setTimeout(() => {
-    gameStateStore.setCurrentView('intro')
-  }, 2000)
+  // 不再使用模拟加载，让LoadingView组件控制切换时机
+  // setTimeout(() => {
+  //   gameStateStore.setCurrentView('intro')
+  // }, 2000)
   
   // 添加全局键盘事件监听
   document.addEventListener('keydown', handleKeyDown)

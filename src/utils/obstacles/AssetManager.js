@@ -2,121 +2,101 @@
  * 统一资源管理器
  * 管理障碍物、道具和星星的资源加载与渲染
  */
-
-/**
- * 雪碧图动画类
- */
-class SpriteAnimation {
-  constructor(imageSrc, frameWidth, frameHeight, totalFrames, fps = 12, columns = null) {
-    this.imageSrc = imageSrc
-    this.frameWidth = frameWidth
-    this.frameHeight = frameHeight
-    this.totalFrames = totalFrames
-    this.fps = fps
-    this.columns = columns || Math.ceil(Math.sqrt(totalFrames))
-    this.rows = Math.ceil(totalFrames / this.columns)
-    
-    this.currentFrame = 0
-    this.frameDuration = 1000 / fps
-    this.elapsedTime = 0
-    
-    this.image = new Image()
-    this.image.src = imageSrc
-    this.imageLoaded = false
-    
-    this.image.onload = () => {
-      this.imageLoaded = true
-    }
-  }
-  
-  update(deltaTime) {
-    this.elapsedTime += deltaTime
-    
-    if (this.elapsedTime >= this.frameDuration) {
-      this.currentFrame = (this.currentFrame + 1) % this.totalFrames
-      this.elapsedTime = 0
-    }
-  }
-  
-  draw(ctx, x, y, width, height) {
-    if (!this.imageLoaded) return
-    
-    const col = this.currentFrame % this.columns
-    const row = Math.floor(this.currentFrame / this.columns)
-    
-    const sourceX = col * this.frameWidth
-    const sourceY = row * this.frameHeight
-    
-    ctx.drawImage(
-      this.image,
-      sourceX, sourceY,
-      this.frameWidth, this.frameHeight,
-      x, y,
-      width, height
-    )
-  }
-}
-
-/**
- * 障碍物资源管理器
- */
 export class ObstacleAssets {
   constructor() {
-    this.images = {}
-    this.animations = {}
+    this.obstacleVariants = {}
     this.isLoaded = false
+    
+    // 障碍物图片配置
+    this.obstacleConfig = [
+      {
+        name: 'obs1',
+        folder: '/obs/',
+        variants: ['obs.png']
+      },
+      {
+        name: 'obs2',
+        folder: '/obs/',
+        variants: ['obs.png']
+      },
+      {
+        name: 'obs3',
+        folder: '/obs/',
+        variants: ['obs3-1.png', 'obs3-2.png']
+      }
+    ]
     
     this.loadAssets()
   }
   
   loadAssets() {
     this.loadObstacleImages()
-    this.loadObstacleAnimations()
   }
   
   loadObstacleImages() {
-    // 静态障碍物图片
-    const staticObstacles = [
-      { name: 'obs1', src: '/obs/obs1.png' }, // 静止障碍物
-      { name: 'obs2', src: '/obs/obs2.png' }, // 移动障碍物（单帧图片）
-      { name: 'obs3', src: '/obs/obs3.png' }  // 自定义障碍物
-    ]
+    let totalImagesToLoad = 0
+    let loadedImages = 0
     
-    staticObstacles.forEach(obstacle => {
-      const img = new Image()
-      img.src = obstacle.src
-      img.onload = () => {
-        this.images[obstacle.name] = img
-        this.checkAllLoaded()
-      }
-      img.onerror = () => {
-        console.warn(`Failed to load obstacle image: ${obstacle.src}`)
-      }
+    // 计算总图片数量
+    this.obstacleConfig.forEach(config => {
+      totalImagesToLoad += config.variants.length
     })
-  }
-  
-  loadObstacleAnimations() {
-    // 暂时不需要动画，所有障碍物都使用静态图片
-    // 如果后续需要动画障碍物，可以在这里添加
+    
+    this.obstacleConfig.forEach(config => {
+      this.obstacleVariants[config.name] = []
+      
+      config.variants.forEach(variant => {
+        const img = new Image()
+        img.src = config.folder + variant
+        img.onload = () => {
+          this.obstacleVariants[config.name].push(img)
+          loadedImages++
+          
+          // 检查是否所有图片都已加载
+          if (loadedImages >= totalImagesToLoad) {
+            this.isLoaded = true
+          }
+        }
+        img.onerror = () => {
+          console.warn(`Failed to load obstacle image: ${config.folder + variant}`)
+          loadedImages++
+          
+          // 即使加载失败也要检查是否完成
+          if (loadedImages >= totalImagesToLoad) {
+            this.isLoaded = true
+          }
+        }
+      })
+    })
   }
   
   checkAllLoaded() {
-    const expectedImages = 3 // obs1, obs2, obs3
-    if (Object.keys(this.images).length >= expectedImages) {
-      this.isLoaded = true
+    return this.isLoaded
+  }
+  
+  // 随机选择障碍物变体图片
+  getRandomObstacleImage(type) {
+    const variants = this.obstacleVariants[type]
+    if (variants && variants.length > 0) {
+      const randomIndex = Math.floor(Math.random() * variants.length)
+      return variants[randomIndex]
     }
+    return null
   }
   
-  update(deltaTime) {
-    // 更新所有动画
-    Object.values(this.animations).forEach(animation => {
-      animation.update(deltaTime)
-    })
+  // 修改：根据固定索引获取障碍物图片
+  getObstacleImageByIndex(type, index) {
+    const variants = this.obstacleVariants[type]
+    if (variants && variants.length > 0 && index < variants.length) {
+      return variants[index]
+    }
+    return variants && variants.length > 0 ? variants[0] : null
   }
   
-  drawObstacle(ctx, type, x, y, width, height) {
-    // 所有障碍物都使用静态图片
-    const image = this.images[type]
+  // 修改drawObstacle方法，接受imageVariantIndex参数
+  drawObstacle(ctx, type, x, y, width, height, imageVariantIndex = 0) {
+    // 使用固定索引选择障碍物变体图片
+    const image = this.getObstacleImageByIndex(type, imageVariantIndex)
     if (image && image.complete) {
       ctx.drawImage(image, x, y, width, height)
     } else {
@@ -165,8 +145,6 @@ export class PowerUpAssets {
       { name: 'snorkel-glow', src: '/Props/snorkel/snorkel-glow.png' },
       { name: 'star', src: '/Props/star/star.png' },
       { name: 'star-glow', src: '/Props/star/star-glow.png' },
-      { name: 'shield', src: '/Props/shield/shield.png' },
-      { name: 'shield-glow', src: '/Props/shield/shield-glow.png' },
       { name: 'bubble', src: '/Props/bubble/bubble.png' } // 护盾效果
     ]
     
@@ -195,7 +173,27 @@ export class PowerUpAssets {
     const image = this.images[imageName] || this.images[type]
     
     if (image && image.complete) {
-      ctx.drawImage(image, x, y, width, height)
+      // 计算保持宽高比的尺寸
+      const imageAspectRatio = image.naturalWidth / image.naturalHeight
+      const targetAspectRatio = width / height
+      
+      let drawWidth, drawHeight, drawX, drawY
+      
+      if (imageAspectRatio > targetAspectRatio) {
+        // 图片更宽，以宽度为准
+        drawWidth = width
+        drawHeight = width / imageAspectRatio
+        drawX = x
+        drawY = y + (height - drawHeight) / 2
+      } else {
+        // 图片更高，以高度为准
+        drawHeight = height
+        drawWidth = height * imageAspectRatio
+        drawX = x + (width - drawWidth) / 2
+        drawY = y
+      }
+      
+      ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight)
     } else {
       // 降级绘制
       this.drawFallbackPowerUp(ctx, type, x, y, width, height, glowing)
@@ -321,4 +319,5 @@ export class StarEffects {
     })
     ctx.globalAlpha = 1
   }
-} 
+}
+

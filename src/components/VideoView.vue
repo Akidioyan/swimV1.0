@@ -3,9 +3,7 @@
     <video 
       ref="videoElement"
       class="opening-video"
-      :src="videoSrc"
       @ended="handleVideoEnd"
-      @loadeddata="handleVideoLoaded"
       @error="handleVideoError"
       autoplay
       muted
@@ -22,36 +20,81 @@
     >
       跳过 {{ skipCountdown }}s
     </button>
-    
-    <!-- 加载提示 -->
-    <div v-if="isLoading" class="loading-overlay">
-      <div class="loading-text">加载中...</div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStateStore } from '../stores/gamestore/gameState'
+
 const gameStateStore = useGameStateStore()
 const videoElement = ref(null)
-const isLoading = ref(true)
 const showSkipButton = ref(false)
 const skipCountdown = ref(3)
-
-const videoSrc = '/OpeningVideo.mp4'
 
 let skipTimer = null
 let countdownTimer = null
 
-const handleVideoLoaded = () => {
-  isLoading.value = false
-  // 3秒后显示跳过按钮
-  skipTimer = setTimeout(() => {
-    showSkipButton.value = true
-    startCountdown()
-  }, 3000)
-}
+onMounted(() => {
+  console.log('🎬 VideoView 组件挂载')
+  
+  // 使用预加载的视频资源
+  const loadedResources = gameStateStore.getLoadedResources()
+  
+  if (loadedResources && loadedResources.videoElement) {
+    console.log('✅ 发现预加载的视频资源')
+    const preloadedVideo = loadedResources.videoElement
+    
+    if (videoElement.value) {
+      try {
+        // 直接设置视频源，让浏览器处理缓存
+        videoElement.value.src = '/video/OpeningVideo.mp4'
+        videoElement.value.currentTime = 0
+        videoElement.value.muted = true
+        videoElement.value.playsInline = true
+        
+        console.log('🎬 开始播放视频')
+        
+        // 直接尝试播放
+        videoElement.value.play().then(() => {
+          console.log('🎬 视频播放成功')
+          // 3秒后显示跳过按钮
+          skipTimer = setTimeout(() => {
+            showSkipButton.value = true
+            startCountdown()
+          }, 3000)
+        }).catch(error => {
+          console.warn('⚠️ 视频播放失败:', error)
+          handleVideoError()
+        })
+        
+      } catch (error) {
+        console.error('❌ 视频设置失败:', error)
+        handleVideoError()
+      }
+    }
+  } else {
+    console.warn('⚠️ 视频资源未预加载，尝试直接播放')
+    // 即使没有预加载，也尝试直接播放
+    if (videoElement.value) {
+      videoElement.value.src = '/video/OpeningVideo.mp4'
+      videoElement.value.currentTime = 0
+      videoElement.value.muted = true
+      videoElement.value.playsInline = true
+      
+      videoElement.value.play().then(() => {
+        console.log('🎬 视频播放成功（未预加载）')
+        skipTimer = setTimeout(() => {
+          showSkipButton.value = true
+          startCountdown()
+        }, 3000)
+      }).catch(error => {
+        console.warn('⚠️ 视频播放失败（未预加载）:', error)
+        handleVideoError()
+      })
+    }
+  }
+})
 
 const handleVideoEnd = () => {
   // 视频播放完毕，开始游戏
@@ -59,7 +102,7 @@ const handleVideoEnd = () => {
 }
 
 const handleVideoError = () => {
-  console.error('视频加载失败，直接开始游戏')
+  console.error('视频播放失败，直接开始游戏')
   gameStateStore.startGameFromVideo()
 }
 
@@ -79,13 +122,6 @@ const startCountdown = () => {
     }
   }, 1000)
 }
-
-onMounted(() => {
-  // 确保视频元素存在
-  if (videoElement.value) {
-    videoElement.value.load()
-  }
-})
 
 onUnmounted(() => {
   // 清理定时器
@@ -134,31 +170,6 @@ onUnmounted(() => {
   transform: scale(1.05);
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 5;
-}
-
-.loading-text {
-  color: rgb(0, 0, 0);
-  font-size: 24px;
-  font-weight: bold;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .skip-button {
@@ -166,10 +177,6 @@ onUnmounted(() => {
     right: 20px;
     padding: 10px 16px;
     font-size: 14px;
-  }
-  
-  .loading-text {
-    font-size: 20px;
   }
 }
 
@@ -179,10 +186,6 @@ onUnmounted(() => {
     right: 15px;
     padding: 8px 12px;
     font-size: 12px;
-  }
-  
-  .loading-text {
-    font-size: 18px;
   }
 }
 </style>

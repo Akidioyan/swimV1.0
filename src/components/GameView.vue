@@ -8,13 +8,15 @@
       <!-- 统一的顶部UI区域 -->
       <UITop />
       
-      <!-- 冲刺状态指示器 -->
+      <!-- 加速倒计时指示器 -->
       <div 
-        v-if="playerControlStore.isRushing" 
+        v-if="playerControlStore.isRushing || gameStateStore.rushActive" 
         class="rush-indicator"
       >
         <div class="rush-icon">🚀</div>
-        <div class="rush-time">{{ Math.ceil(playerControlStore.rushTime / 1000) }}s</div>
+        <div class="rush-time">
+          {{ Math.ceil((playerControlStore.rushTime || gameStateStore.rushTime) / 60) }}s
+        </div>
       </div>
       
       <!-- 无敌状态指示器 -->
@@ -35,52 +37,34 @@
         @touchstart="handleEnergyBarTouchStart"
         @touchend="handleEnergyBarTouchEnd"
       >
-        <div class="energy-label">冲刺能量</div>
         <div class="energy-bg">
           <div 
             class="energy-fill" 
             :class="{ 'energy-active': gameStateStore.isActiveSprinting }"
-            :style="{ width: gameStateStore.sprintEnergy + '%' }"
+            :style="{ '--energy-percentage': gameStateStore.sprintEnergy + '%' }"
           ></div>
         </div>
         <div class="energy-percentage" :class="{ 'no-energy-flash': gameStateStore.sprintEnergy < 20 }">
-          {{ getEnergyText() }}
+          <!-- 删除所有文字，只保留图标 -->
         </div>
       </div>
       
-      <!-- 冲刺状态指示器 -->
-      <div 
-        v-if="gameStateStore.isActiveSprinting" 
-        class="active-sprint-indicator"
-      >
-        <div class="sprint-icon">⚡</div>
-        <div class="sprint-text">冲刺</div>
-      </div>
     </div>
+
+
     
-    <!-- 等待提示 -->
-    <div 
-      v-if="gameStateStore.gameState === 'waiting'" 
-      class="waiting-hint"
-    >
-      <div class="waiting-content">
-        <div class="waiting-text">点击泳道开始游泳！</div>
-        <div class="waiting-subtext">
-          触摸：点击左半屏向左移动，点击右半屏向右移动
-        </div>
-      </div>
-    </div>
+    <!-- 教学卡片组件 -->
+    <TutorialCards 
+      v-if="gameStateStore.gameState === 'waiting' || gameStateStore.isFirstTimeGame || gameStateStore.gameState === 'paused'"
+      ref="tutorialCards"
+    />
     
-    <!-- 暂停提示 -->
-    <div 
-      v-if="gameStateStore.gameState === 'paused'" 
-      class="pause-overlay"
-    >
-      <div class="pause-backdrop"></div>
-      <div class="pause-hint" @click="handleResumeGame">
-        <img src="/ui/play.png" alt="继续游戏" class="pause-play-icon" />
-      </div>
-    </div>
+    <!-- 开发者调试面板 -->
+    <DeveloperDebugPanel 
+      :visible="showDebugPanel"
+      @close="handleCloseDebugPanel"
+      @jumpToLevel="handleJumpToLevel"
+    />
   </div>
 </template>
 
@@ -88,6 +72,8 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import GameCanvas from './GameView/GameCanvas.vue'
 import UITop from './GameView/UI-top.vue'
+import TutorialCards from './TutorialCards.vue'
+import DeveloperDebugPanel from './DeveloperDebugPanel.vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../stores/gamestore/gameLayout'
@@ -98,7 +84,9 @@ export default {
   name: 'GameView',
   components: {
     GameCanvas,
-    UITop
+    UITop,
+    TutorialCards,
+    DeveloperDebugPanel
   },
   setup() {
     const gameStore = useGameStore()
@@ -108,6 +96,9 @@ export default {
     
     // 能量条防误触定时器
     const energyBarHoldTimer = ref(null)
+    
+    // 开发者调试面板状态
+    const showDebugPanel = ref(false)
     
     onMounted(() => {
       // 在组件挂载时初始化音频 - 使用音频管理器
@@ -132,6 +123,18 @@ export default {
     
     // 全局键盘事件处理
     const handleGlobalKeyDown = (event) => {
+      // 开发者调试面板快捷键
+      if (event.key === 'l' || event.key === 'L') {
+        event.preventDefault()
+        toggleDebugPanel()
+        return
+      }
+      
+      // 如果调试面板已打开，阻止其他按键操作
+      if (showDebugPanel.value) {
+        return
+      }
+      
       // 防止页面滚动等默认行为
       if (['ArrowLeft', 'ArrowRight', ' ', 'Escape'].includes(event.key)) {
         event.preventDefault()
@@ -147,7 +150,40 @@ export default {
     }
     
     const handleGlobalKeyUp = (event) => {
+      // 如果调试面板已打开，阻止其他按键操作
+      if (showDebugPanel.value) {
+        return
+      }
+      
       playerControlStore.handleKeyUp(event.key)
+    }
+    
+    // 开发者调试面板相关函数
+    const toggleDebugPanel = () => {
+      showDebugPanel.value = !showDebugPanel.value
+      console.log('🛠️ 开发者调试面板:', showDebugPanel.value ? '打开' : '关闭')
+    }
+    
+    const handleCloseDebugPanel = () => {
+      showDebugPanel.value = false
+    }
+    
+    const handleJumpToLevel = (jumpData) => {
+      try {
+        // 重置相关状态
+        gameStore.resetGameState()
+        
+        // 强制刷新难度系统
+        gameStore.forceNextSpawn = true
+        gameStore.currentDifficultyLevel = jumpData.level
+        
+        console.log(`🚀 开发者跳跃成功: 等级${jumpData.level}, 距离${Math.round(jumpData.distance)}m (${Math.round(jumpData.distanceVw)}vw)`)
+        
+        // 关闭调试面板
+        showDebugPanel.value = false
+      } catch (error) {
+        console.error('❌ 开发者跳跃失败:', error)
+      }
     }
     
     // 处理点击暂停图标恢复游戏
@@ -170,7 +206,7 @@ export default {
           gameStateStore.startActiveSprint()
         }
         energyBarHoldTimer.value = null
-      }, 150) // 150毫秒后才开始冲刺
+      }, 1) // 1毫秒后才开始冲刺
     }
     
     // 处理能量条鼠标释放事件
@@ -217,29 +253,20 @@ export default {
       }
     }
     
-    // 获取能量条文字显示
-    const getEnergyText = () => {
-      const energy = gameStateStore.sprintEnergy
-      if (energy >= 100) {
-        return 'GO'
-      } else if (energy < 20) {
-        return 'No Energy'
-      } else {
-        return Math.floor(energy) + '%'
-      }
-    }
-    
     return {
       gameStore,
       gameStateStore,
       gameLayoutStore,
       playerControlStore,
+      showDebugPanel,
+      toggleDebugPanel,
+      handleCloseDebugPanel,
+      handleJumpToLevel,
       handleResumeGame,
       handleEnergyBarMouseDown,
       handleEnergyBarMouseUp,
       handleEnergyBarTouchStart,
       handleEnergyBarTouchEnd,
-      getEnergyText
     }
   }
 }
@@ -279,29 +306,35 @@ export default {
   position: absolute;
   top: 15vh;
   left: 50%;
-  transform: translateX(-50%, -50%);
-  background: rgba(255, 215, 0, 0.9);
-  color: #000;
-  padding: 10px 20px;
-  border-radius: 25px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 30px;
   font-family: 'FZLTCH', Arial, sans-serif;
-  font-weight: bold;
-  font-size: 18px;
+  font-weight: 600;
+  font-size: 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  animation: pulse 1s infinite;
+  justify-content: center;
+  gap: 8px;
+  animation: gentlePulse 2s ease-in-out infinite;
   pointer-events: none;
   z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .rush-icon {
-  font-size: 24px;
-  /* 移除旋转动画，让小火箭图标保持静止 */
+  font-size: 20px;
+  opacity: 0.9;
 }
 
 .rush-time {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 无敌状态指示器 */
@@ -330,118 +363,114 @@ export default {
   animation: sparkle 1s infinite;
 }
 
-/* 冲刺能量条 */
+/* 冲刺能量条 - 环形进度按钮 */
 .sprint-energy-bar {
   position: absolute;
   bottom: 25vh;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 100px;
-  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%);
-  border-radius: 50px;
-  border: 1px solid #adb5bd;
-  overflow: hidden;
+  width: 120px;
+  height: 120px;
   z-index: 1000;
   pointer-events: auto;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 
-    0 8px 20px rgba(0, 0, 0, 0.15),
-    inset 0 1px 3px rgba(255, 255, 255, 0.6),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
 }
 
 .sprint-energy-bar:hover {
   transform: translateX(-50%) scale(1.05);
-  box-shadow: 
-    0 12px 30px rgba(0, 0, 0, 0.2),
-    inset 0 1px 3px rgba(255, 255, 255, 0.6),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .sprint-energy-bar:active {
-  transform: translateX(-50%) scale(0.98);
-  box-shadow: 
-    0 4px 15px rgba(0, 0, 0, 0.2),
-    inset 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: translateX(-50%) scale(0.95);
 }
 
-.energy-label {
-  position: absolute;
-  top: -35px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #495057;
-  font-size: 14px;
-  font-family: 'FZLTCH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
-}
 
+
+/* 外层能量槽容器 */
 .energy-bg {
-  width: calc(100% - 16px);
-  height: calc(100% - 16px);
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 50%, #f1f3f4 100%);
-  border-radius: 42px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #72332E;
+  box-shadow: 
+    0 0px 0px rgba(0, 0, 0, 0.25),
+    inset 0 0px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* 环形进度条 */
 .energy-fill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, 
-    #4285f4 0%, 
-    #1a73e8 25%, 
-    #34a853 50%, 
-    #1a73e8 75%, 
-    #4285f4 100%);
-  transition: width 0.3s ease;
-  border-radius: 42px;
-  position: relative;
-  box-shadow: 
-    0 0 20px rgba(66, 133, 244, 0.4),
-    inset 0 1px 3px rgba(255, 255, 255, 0.4),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.1);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #FF9E5D 0% var(--energy-percentage, 0%),
+    transparent var(--energy-percentage, 0%) 100%
+  );
+  transition: all 0.3s ease;
+  mask: radial-gradient(circle, transparent 45%, black 46%);
+  -webkit-mask: radial-gradient(circle, transparent 45%, black 46%);
 }
 
 .energy-fill.energy-active {
-  background: linear-gradient(135deg, 
-    #ea4335 0%, 
-    #fbbc04 25%, 
-    #34a853 50%, 
-    #fbbc04 75%, 
-    #ea4335 100%);
+  background: conic-gradient(
+    from 0deg,
+    #FF6B35 0% var(--energy-percentage, 0%),
+    transparent var(--energy-percentage, 0%) 100%
+  );
   animation: energyActivePulse 0.8s ease-in-out infinite;
-  box-shadow: 
-    0 0 30px rgba(234, 67, 53, 0.6),
-    inset 0 1px 3px rgba(255, 255, 255, 0.4),
-    inset 0 -1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* 内层按钮 */
 .energy-percentage {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #2d3436;
-  font-size: 18px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #FFEBCF;
+  border: 0px solid #72332E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #72332E;
+  font-size: 12px;
   font-weight: 700;
   font-family: 'FZLTCH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   text-shadow: 
-    0 1px 2px rgba(255, 255, 255, 0.8),
-    0 -1px 1px rgba(0, 0, 0, 0.1);
-  pointer-events: none;
+    0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 0px 0px rgba(0, 0, 0, 0.15),
+    inset 0 0px 0 rgba(255, 255, 255, 0.5);
   z-index: 10;
+}
+
+/* 闪电图标 */
+.energy-percentage::before {
+  content: '⚡';
+  font-size: 28px;
+  margin-bottom: 2px;
+  opacity: 0.9;
 }
 
 .energy-percentage.no-energy-flash {
   animation: noEnergyFlash 1s ease-in-out infinite;
-  color: #e74c3c;
-  font-weight: 800;
+}
+
+.energy-percentage.no-energy-flash::before {
+  content: '⚠️';
+  margin-bottom: 8px;
+  opacity: 0.9; 
 }
 
 /* 主动冲刺状态指示器 */
@@ -452,26 +481,32 @@ export default {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  background: rgba(255, 0, 128, 0.9);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: bold;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 25px;
+  font-weight: 600;
   font-family: 'FZLTCH', Arial, sans-serif;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  animation: sprintPulse 0.3s ease-in-out infinite;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: gentleGlow 1.5s ease-in-out infinite;
   pointer-events: none;
   z-index: 1000;
+  white-space: nowrap;
 }
 
 .sprint-icon {
-  font-size: 20px;
-  animation: sparkle 0.5s ease-in-out infinite;
+  font-size: 18px;
+  opacity: 0.95;
 }
 
 .sprint-text {
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 等待提示 */
@@ -485,30 +520,7 @@ export default {
   z-index: 30;
 }
 
-.waiting-content {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 30px 40px;
-  border-radius: 20px;
-  border: 3px solid #FFD700;
-}
 
-.waiting-text {
-  font-size: 28px;
-  color: #FFD700;
-  font-family: 'FZLTCH', Impact, Arial, sans-serif;
-  font-weight: bold;
-  margin-bottom: 15px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-  animation: pulse 2s infinite;
-}
-
-.waiting-subtext {
-  font-size: 16px;
-  color: #FFF;
-  font-family: 'FZLTCH', Arial, sans-serif;
-  line-height: 1.4;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
 
 /* 暂停覆盖层 */
 .pause-overlay {
@@ -545,12 +557,13 @@ export default {
 }
 
 /* Play图标样式 */
+/* 删除以下 CSS 样式 */
 .pause-play-icon {
   width: 80px;
   height: 80px;
   opacity: 0.9;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  animation: pulse 2s ease-in-out infinite;
+  animation: pauseIconPulse 2s ease-in-out infinite;
   transition: transform 0.2s ease;
 }
 
@@ -558,8 +571,8 @@ export default {
   transform: scale(1.1);
 }
 
-/* 动画效果 */
-@keyframes pulse {
+/* 删除相关动画 */
+@keyframes pauseIconPulse {
   0%, 100% { 
     opacity: 0.9; 
     transform: scale(1); 
@@ -567,6 +580,32 @@ export default {
   50% { 
     opacity: 1; 
     transform: scale(1.05); 
+  }
+}
+
+@keyframes gentlePulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes gentleGlow {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(1);
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.02);
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -582,18 +621,12 @@ export default {
 
 @keyframes energyActivePulse {
   0%, 100% { 
-    box-shadow: 
-      0 0 30px rgba(234, 67, 53, 0.6),
-      inset 0 1px 3px rgba(255, 255, 255, 0.4),
-      inset 0 -1px 3px rgba(0, 0, 0, 0.1);
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
   }
   50% { 
-    box-shadow: 
-      0 0 40px rgba(234, 67, 53, 0.8),
-      inset 0 1px 3px rgba(255, 255, 255, 0.6),
-      inset 0 -1px 3px rgba(0, 0, 0, 0.15);
-    transform: scale(1.02);
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.8));
   }
 }
 
@@ -601,10 +634,12 @@ export default {
   0%, 100% { 
     opacity: 1;
     color: #e74c3c;
+    background: #ffecec;
   }
   50% { 
-    opacity: 0.3;
+    opacity: 0.6;
     color: #c0392b;
+    background: #FFEBCF;
   }
 }
 
@@ -616,12 +651,32 @@ export default {
 /* 响应式设计 */
 @media (max-width: 768px) {
   .rush-indicator {
-    font-size: 16px;
-    padding: 8px 16px;
+    padding: 10px 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 1.5px;
   }
   
   .rush-icon {
-    font-size: 20px;
+    font-size: 18px;
+  }
+  
+  .rush-time {
+    font-size: 12px;
+  }
+  
+  .active-sprint-indicator {
+    font-size: 12px;
+    padding: 8px 14px;
+    border-width: 1.5px;
+  }
+  
+  .sprint-icon {
+    font-size: 16px;
+  }
+  
+  .sprint-text {
+    font-size: 12px;
   }
   
   .waiting-text {
@@ -633,22 +688,46 @@ export default {
   }
   
   .sprint-energy-bar {
-    width: 225px;
-    height: 52px;
+    width: 35dvw;
+    height: 35dvw;
     bottom: calc(15vh + 20px);
   }
   
-  .energy-label {
-    font-size: 14px;
-    top: -25px;
-  }
   
-  .energy-percentage {
-    font-size: 16px;
-  }
+
 }
 
 @media (max-width: 480px) {
+  .rush-indicator {
+    font-size: 12px;
+    padding: 8px 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 1px;
+  }
+  
+  .rush-icon {
+    font-size: 16px;
+  }
+  
+  .rush-time {
+    font-size: 11px;
+  }
+  
+  .active-sprint-indicator {
+    font-size: 11px;
+    padding: 6px 12px;
+    border-width: 1px;
+  }
+  
+  .sprint-icon {
+    font-size: 14px;
+  }
+  
+  .sprint-text {
+    font-size: 11px;
+  }
+  
   .waiting-content {
     padding: 20px 25px;
     margin: 0 20px;
@@ -663,18 +742,18 @@ export default {
   }
   
   .sprint-energy-bar {
-    width: 180px;
-    height: 42px;
+    width: 85px;
+    height: 85px;
     bottom: calc(12vh + 15px);
   }
   
   .energy-label {
-    font-size: 12px;
-    top: -20px;
+    font-size: 11px;
+    top: -25px;
   }
   
-  .energy-percentage {
-    font-size: 14px;
-  }
+
 }
+
+
 </style>

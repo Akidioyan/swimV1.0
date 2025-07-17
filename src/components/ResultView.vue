@@ -100,7 +100,7 @@
     <img 
       v-if="showShareTipsImage" 
       ref="tipsImageRef" 
-      src="/needShareToPlayTips.png" 
+      src="/shareToFriend.png" 
       class="share-tips-image" 
       alt="分享提示"
     >

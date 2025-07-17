@@ -34,9 +34,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
     // 键盘控制防抖
     lastKeyPressTime: 0,
     keyDebounceDelay: 100, // 100ms防抖延迟
-    
-    // 速度控制
-    currentSpeedMultiplier: 1.0,
   }),
   
   getters: {
@@ -54,7 +51,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
       this.invulnerableTime = 0
       this.isRushing = false
       this.rushTime = 0
-      this.currentSpeedMultiplier = 1.0
       
       // 重置按键状态
       this.keys = {
@@ -91,9 +87,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
       gameStateStore.invulnerableTime = this.invulnerableTime
       gameStateStore.rushActive = this.isRushing
       gameStateStore.rushTime = this.rushTime
-      
-      // 更新速度倍数
-      this.currentSpeedMultiplier = gameStateStore.currentSpeedMultiplier
     },
     
     // 处理键盘按下事件
@@ -138,7 +131,23 @@ export const usePlayerControlStore = defineStore('playerControl', {
             // 通过gameState设置开发者冲刺状态
             gameStateStore.devSprintActive = true
             break
-            this.startSprint()
+          case 'i':
+          case 'I':
+            // 按I键切换无敌状态
+            if (this.invulnerable && this.invulnerableTime > 0) {
+              // 当前是无敌状态，取消无敌
+              this.invulnerable = false
+              this.invulnerableTime = 0
+              console.log('无敌模式已关闭 - 按I键触发')
+            } else {
+              // 当前不是无敌状态，开启无敌
+              this.invulnerable = true
+              this.invulnerableTime = 999999 // 设置一个很大的值，实现持续无敌
+              console.log('无敌模式已开启 - 按I键触发')
+            }
+            // 同步到gameState
+            gameStateStore.invulnerable = this.invulnerable
+            gameStateStore.invulnerableTime = this.invulnerableTime
             break
           case 'ArrowDown':
             this.keys.down = true
