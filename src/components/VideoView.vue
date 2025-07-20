@@ -58,11 +58,11 @@ onMounted(() => {
         // 直接尝试播放
         videoElement.value.play().then(() => {
           console.log('🎬 视频播放成功')
-          // 3秒后显示跳过按钮
+          // 1秒后显示跳过按钮
           skipTimer = setTimeout(() => {
             showSkipButton.value = true
             startCountdown()
-          }, 3000)
+          }, 1000)
         }).catch(error => {
           console.warn('⚠️ 视频播放失败:', error)
           handleVideoError()

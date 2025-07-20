@@ -78,6 +78,7 @@ import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../stores/gamestore/gameLayout'
 import { usePlayerControlStore } from '../stores/gamestore/playerControl'
+import { useGameObjectsStore } from '../stores/gamestore/gameObjects'
 import audioManager from '../utils/audio-manager'
 
 export default {
@@ -93,6 +94,7 @@ export default {
     const gameStateStore = useGameStateStore()
     const gameLayoutStore = useGameLayoutStore()
     const playerControlStore = usePlayerControlStore()
+    const gameObjectsStore = useGameObjectsStore()
     
     // 能量条防误触定时器
     const energyBarHoldTimer = ref(null)
@@ -171,13 +173,16 @@ export default {
     const handleJumpToLevel = (jumpData) => {
       try {
         // 重置相关状态
-        gameStore.resetGameState()
+        gameObjectsStore.resetGameObjectState()
         
         // 强制刷新难度系统
-        gameStore.forceNextSpawn = true
-        gameStore.currentDifficultyLevel = jumpData.level
+        gameObjectsStore.forceNextSpawn = true
+        gameObjectsStore.currentDifficultyLevel = jumpData.level
         
         console.log(`🚀 开发者跳跃成功: 等级${jumpData.level}, 距离${Math.round(jumpData.distance)}m (${Math.round(jumpData.distanceVw)}vw)`)
+        
+        // 设置距离和其他状态
+        gameStateStore.distance = jumpData.distance
         
         // 关闭调试面板
         showDebugPanel.value = false

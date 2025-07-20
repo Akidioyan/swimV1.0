@@ -9,7 +9,7 @@
 import { defineStore } from 'pinia'
 import { useGameStateStore } from './gameState'
 import { useGameLayoutStore } from './gameLayout'
-import { useGameStore } from '../gameStore'
+import { useGameObjectsStore } from './gameObjects'
 import audioManager from '../../utils/audio-manager'
 
 export const usePlayerControlStore = defineStore('playerControl', {
@@ -195,7 +195,7 @@ export const usePlayerControlStore = defineStore('playerControl', {
     switchLane(direction) {
       const gameStateStore = useGameStateStore()
       const gameLayoutStore = useGameLayoutStore()
-      const gameStore = useGameStore()
+      const gameObjectsStore = useGameObjectsStore()
       
       // 如果是等待状态，则启动游戏
       if (gameStateStore.gameState === 'waiting') {
@@ -224,7 +224,7 @@ export const usePlayerControlStore = defineStore('playerControl', {
     switchToLane(targetLane) {
       const gameStateStore = useGameStateStore()
       const gameLayoutStore = useGameLayoutStore()
-      const gameStore = useGameStore()
+      const gameObjectsStore = useGameObjectsStore()
       
       // 如果是等待状态，则启动游戏
       if (gameStateStore.gameState === 'waiting') {
@@ -238,7 +238,7 @@ export const usePlayerControlStore = defineStore('playerControl', {
         gameLayoutStore.switchToLane(targetLane)
         
         // 添加水花效果
-        gameStore.addSplash(gameLayoutStore.player.x, gameLayoutStore.player.y)
+        gameObjectsStore.addSplash(gameLayoutStore.player.x, gameLayoutStore.player.y, gameLayoutStore)
         
         // 播放游泳音效 - 使用音频管理器
         audioManager.playSwimmingSound()

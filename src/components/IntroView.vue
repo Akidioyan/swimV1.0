@@ -21,7 +21,12 @@
       <div class="challenge-section">
         <button class="challenge-button" @click="handleStartGame">
           <span class="challenge-text">立即挑战</span>
-          <p class="participant-count">—— 已有481,151人参与过挑战 ——</p>
+          <p class="participant-count" v-if="!gameStore.activityData.isLoading">
+            {{ gameStore.participantText }}
+          </p>
+          <p class="participant-count loading" v-else>
+            —— 正在获取参与人数... ——
+          </p>
         </button>
       </div>
 
@@ -101,13 +106,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const isRuleModalVisible = ref(false)
+
+// 组件挂载时获取参与人数数据
+onMounted(async () => {
+  console.log('🎮 IntroView 组件挂载，开始获取参与人数数据...')
+  try {
+    await gameStore.fetchActivityPV()
+    console.log('✅ 参与人数数据获取成功:', gameStore.formattedParticipants)
+  } catch (error) {
+    console.error('❌ 参与人数数据获取失败:', error)
+  }
+})
 
 const handleStartGame = () => {
   gameStateStore.startGame()
@@ -269,6 +285,21 @@ const handleLogin = () => {
   margin: 0;
   text-align: center;
   width: 60.3dvw; /* 226/375*100 */
+  transition: opacity 0.3s ease;
+}
+
+.participant-count.loading {
+  opacity: 0.7;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* 底部登录区域 */

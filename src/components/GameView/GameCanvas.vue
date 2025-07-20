@@ -11,22 +11,23 @@
 
 <script>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../../stores/gamestore/gameLayout'
 import { usePlayerControlStore } from '../../stores/gamestore/playerControl'
+import { useGameObjectsStore } from '../../stores/gamestore/gameObjects'
+import { ResourceManager } from '../../utils/ResourceManager'
+import { SpriteObstacleAssets } from '../../utils/obstacles/SpriteObstacleAssets'
 import { SwimmerAnimation } from '../../utils/spriteAnimation.js'
 import { ObstacleAssets, PowerUpAssets, StarEffects } from '../../utils/obstacles/AssetManager.js'
-import { SpriteObstacleAssets } from '../../utils/obstacles/SpriteObstacleAssets.js'
 import { collisionDebugger } from '../../utils/collisionDebugger.js'
 
 export default {
   name: 'GameCanvas',
   setup() {
-    const gameStore = useGameStore()
     const gameStateStore = useGameStateStore()
     const gameLayoutStore = useGameLayoutStore()
     const playerControlStore = usePlayerControlStore()
+    const gameObjectsStore = useGameObjectsStore()
     const gameCanvas = ref(null)
     const hasInteracted = ref(false)
     
@@ -73,7 +74,7 @@ export default {
       gameLayoutStore.initCanvas(canvas, canvas.getContext('2d'))
       
       // 完全重置所有游戏状态（无论当前状态如何）
-      gameStore.resetGameState()
+      gameObjectsStore.resetGameObjectState()
       gameStateStore.resetGameData('waiting')
       playerControlStore.resetPlayerControl()
       gameLayoutStore.resetPlayerPosition()
@@ -127,7 +128,7 @@ export default {
       
       // 设置全局游戏Store引用（用于障碍物碰撞检测）
       if (typeof window !== 'undefined') {
-        window.gameStoreRef = gameStore
+        window.gameStoreRef = gameObjectsStore
       }
     }
     
@@ -144,7 +145,7 @@ export default {
       gameLayoutStore.calculateGameLayout()
       
       // 更新所有对象位置
-      gameStore.updateObjectPositions()
+      gameObjectsStore.updateObjectPositions()
     }
     
     const gameLoop = (currentTime = 0) => {
@@ -161,9 +162,9 @@ export default {
     }
     
     const updateGame = (deltaTime) => {
-      gameStore.animationFrame++
-      gameStore.waterOffset += gameStateStore.gameSpeed
-      gameStore.backgroundOffset -= gameStateStore.gameSpeed
+      gameObjectsStore.animationFrame++
+      gameObjectsStore.waterOffset += gameStateStore.gameSpeed
+      gameObjectsStore.backgroundOffset -= gameStateStore.gameSpeed
       
       // 更新游戏速度和距离
       gameStateStore.gameSpeed = gameStateStore.baseSpeed * gameStateStore.currentSpeedMultiplier
@@ -190,7 +191,7 @@ export default {
       
       // 更新障碍物系统（使用性能优化版本）
       const currentTime = performance.now()
-      gameStore.updateObstacleSystemOptimized(gameStateStore.gameSpeed, gameLayoutStore, gameStateStore, currentTime)
+      gameObjectsStore.updateObstacleSystemOptimized(gameStateStore.gameSpeed, gameLayoutStore, gameStateStore, currentTime)
       
       // 更新道具位置
       updatePowerUps()
@@ -215,18 +216,18 @@ export default {
       
       // 检查障碍物碰撞 - 使用gameStateStore.invulnerable确保状态一致性
       if (!gameStateStore.invulnerable) {
-        const collidedObstacle = gameStore.checkObstacleCollisionWithSpriteAssets(player, spriteObstacleAssets)
+        const collidedObstacle = gameObjectsStore.checkObstacleCollisionWithSpriteAssets(player, spriteObstacleAssets)
         if (collidedObstacle) {
           const gameOver = gameStateStore.takeDamage()
           if (!gameOver) {
-            gameStore.removeObstacleWithEffect(collidedObstacle)
+            gameObjectsStore.removeObstacleWithEffect(collidedObstacle)
           }
         }
       }
     }
     
     const updatePowerUps = () => {
-      gameStore.powerUps = gameStore.powerUps.filter(powerUp => {
+      gameObjectsStore.powerUps = gameObjectsStore.powerUps.filter(powerUp => {
         // 更新道具位置
         powerUp.y += gameStateStore.gameSpeed
         powerUp.glowPhase += 0.2
@@ -242,9 +243,9 @@ export default {
           collisionHeight: gameLayoutStore.player.collisionHeight
         }
         
-        if (gameStore.checkCollision(player, powerUp) && !powerUp.collected) {
+        if (gameObjectsStore.checkCollision(player, powerUp) && !powerUp.collected) {
           powerUp.collected = true
-          gameStore.collectPowerUp(powerUp)
+          gameObjectsStore.collectPowerUp(powerUp, gameStateStore, playerControlStore)
           return false
         }
         
@@ -253,7 +254,7 @@ export default {
     }
     
     const updateParticles = () => {
-      gameStore.particles = gameStore.particles.filter(particle => {
+      gameObjectsStore.particles = gameObjectsStore.particles.filter(particle => {
         // 粒子自身的移动
         particle.x += particle.vx
         particle.y += particle.vy
@@ -298,7 +299,7 @@ export default {
       }
       
       // 绘制碰撞边界调试信息（只在按P键开启时显示）
-      collisionDebugger.drawAllCollisionBoxes(ctx, gameStore, gameLayoutStore)
+      collisionDebugger.drawAllCollisionBoxes(ctx, gameObjectsStore, gameLayoutStore)
     }
     
     const drawBackground = (ctx, canvas) => {
@@ -316,7 +317,7 @@ export default {
         const scaledHeight = bgHeight * scale
         
         // 背景垂直循环偏移
-        const offsetY = -(gameStore.backgroundOffset % scaledHeight)
+        const offsetY = -(gameObjectsStore.backgroundOffset % scaledHeight)
         
         // 绘制多个背景图片实现垂直无缝循环
         for (let i = -1; i <= Math.ceil(canvas.height / scaledHeight) + 1; i++) {
@@ -331,7 +332,7 @@ export default {
       } else {
         // 降级背景 - 渐变色带移动效果
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height)
-        const offset = (gameStore.backgroundOffset * 0.5) % (canvas.height * 2)
+        const offset = (gameObjectsStore.backgroundOffset * 0.5) % (canvas.height * 2)
         
         gradient.addColorStop(0, '#87CEEB')
         gradient.addColorStop(0.25, '#4682B4')
@@ -351,7 +352,7 @@ export default {
       const player = gameLayoutStore.player
       
       // 无敌状态闪烁效果 - 使用gameStateStore.invulnerable确保状态一致性
-      if (gameStateStore.invulnerable && Math.floor(gameStore.animationFrame / 10) % 2) {
+      if (gameStateStore.invulnerable && Math.floor(gameObjectsStore.animationFrame / 10) % 2) {
         ctx.globalAlpha = 0.5
       }
       
@@ -392,7 +393,7 @@ export default {
       ctx.fill()
       
       // 游泳动作
-      const armOffset = Math.sin(gameStore.animationFrame * 0.3) * 5
+      const armOffset = Math.sin(gameObjectsStore.animationFrame * 0.3) * 5
       ctx.fillStyle = '#FFB6C1'
       ctx.fillRect(x + armOffset, y + h/2 - 2, 15, 4)
       ctx.fillRect(x + 5 - armOffset, y + h/2 + 5, 15, 4)
@@ -406,7 +407,7 @@ export default {
     
     const drawObstacles = (ctx) => {
       // 使用新的障碍物管理系统获取渲染信息
-      const obstacleRenderInfo = gameStore.getObstacleRenderInfo()
+      const obstacleRenderInfo = gameObjectsStore.getObstacleRenderInfo()
       
       obstacleRenderInfo.forEach(obstacle => {
         // 优先使用雪碧图资源管理器
@@ -437,7 +438,7 @@ export default {
     }
     
     const drawPowerUps = (ctx) => {
-      gameStore.powerUps.forEach(powerUp => {
+      gameObjectsStore.powerUps.forEach(powerUp => {
         if (powerUpAssets && !powerUp.collected) {
           const glowing = Math.sin(powerUp.glowPhase) > 0.5
           powerUpAssets.drawPowerUp(ctx, powerUp.type, powerUp.x, powerUp.y, powerUp.width, powerUp.height, glowing)
@@ -446,7 +447,7 @@ export default {
     }
     
     const drawParticles = (ctx) => {
-      gameStore.particles.forEach(particle => {
+      gameObjectsStore.particles.forEach(particle => {
         const alpha = particle.life / particle.maxLife
         const color = particle.color || 'white'
         
@@ -468,7 +469,7 @@ export default {
       // 使用bubble.png包裹玩家
       const bubbleImage = powerUpAssets?.images?.['bubble']
       if (bubbleImage) {
-        const bubbleSize = 100 + Math.sin(gameStore.animationFrame * 0.3) * 5 // 增大气泡尺寸
+        const bubbleSize = 100 + Math.sin(gameObjectsStore.animationFrame * 0.3) * 5 // 增大气泡尺寸
         ctx.globalAlpha = 0.8
         ctx.drawImage(
           bubbleImage,
@@ -480,7 +481,7 @@ export default {
         ctx.globalAlpha = 1
       } else {
         // 如果bubble图片未加载，使用原来的圆圈效果作为备用
-        const radius = 45 + Math.sin(gameStore.animationFrame * 0.3) * 3 // 增大备用圆圈尺寸
+        const radius = 45 + Math.sin(gameObjectsStore.animationFrame * 0.3) * 3 // 增大备用圆圈尺寸
         ctx.strokeStyle = '#FFD700'
         ctx.lineWidth = 3
         ctx.globalAlpha = 0.7
@@ -580,7 +581,6 @@ export default {
     
     return {
       gameCanvas,
-      gameStore,
       gameStateStore,
       gameLayoutStore,
       playerControlStore,

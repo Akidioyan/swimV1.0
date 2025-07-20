@@ -1,0 +1,839 @@
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}
+②,获取活动总人数,GET,/api/activity/pingpong/pv,-,"{""total"": 12345}"
+③,游戏结束: 上传本局统计 -> 返回所有榜单/记录,POST,/api/activity/report_summary,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""levelsCompleted"": 4, ""ballsUsed"": 15, ""cupsDropped"": 10, ""score"": 96, ""trophy"": ""[0,0,0,1,1,0]""}","{
+  ""rankPercent"": ""87%"",
+  ""best"": {
+    ""rank"": 80,
+    ""levelsCompleted"": 6,
+    ""ballsUsed"": 13,
+    ""score"": 120
+  },
+  ""trophiesHistory"": [0,0,1,1,1,0],
+  
+  ""currentUserEntry"": {
+    ""rank"": 176,
+    ""nick"": ""大白兔吃奶糖"",
+    ""levelsCompleted"": 26,
+    ""cupsDropped"": 86
+  },
+  ""leaderboardEntries"": [
+    { ""rank"": 1, ""nick"": ""快乐小兔侠客_997"", ""levelsCompleted"": 99, ""cupsDropped"": 174 },
+    { ""rank"": 2, ""nick"": ""开心狮子玩家_692"", ""levelsCompleted"": 89, ""cupsDropped"": 148 },
+    { ""rank"": 3, ""nick"": ""快乐小猪侠客_100"", ""levelsCompleted"": 90, ""cupsDropped"": 159 }
+…
+…
+  ]
+}"
+#,接口功能,HTTP Method,建议路径 (占位),请求体,预期 data 字段
+①,初次加载环境上报,POST,/api/activity/pingpong_report,"{""deviceId"": ""..."", ""qimei36"": ""..."", ""hasLogin"": false, ""isInQQNewsApp"": false, ""userAgent"": ""..."", ""event"": ""loading_scene_shown""}",{}

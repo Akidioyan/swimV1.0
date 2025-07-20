@@ -195,8 +195,13 @@ export const useGameStateStore = defineStore('gameState', {
     },
     
     // 游戏结束
-    gameOver() {
+    async gameOver() {
       this.gameState = 'gameOver'
+      
+      // 计算游戏时长
+      const gameEndTime = Date.now()
+      const gameTime = Math.floor((gameEndTime - this.gameStartTime) / 1000) // 秒
+      const survivalTime = gameTime
       
       // 如果是首次游戏，将其设置为非首次游戏
       if (this.isFirstTimeGame) {
@@ -217,6 +222,39 @@ export const useGameStateStore = defineStore('gameState', {
       if (currentDistance > this.bestDistance) {
         this.bestDistance = currentDistance
         localStorage.setItem('bestDistance', this.bestDistance.toString())
+      }
+      
+      // 准备游戏数据进行上报
+      const gameData = {
+        score: Math.floor(this.score),
+        distance: currentDistance,
+        stars: this.stars,
+        survivalTime: survivalTime,
+        gameTime: gameTime,
+        deviceId: this.getDeviceId(),
+        bestScore: this.bestScore,
+        bestDistance: this.bestDistance,
+        timestamp: gameEndTime
+      }
+      
+      console.log('🎯 游戏结束，准备上报数据:', gameData)
+      
+      // 异步上报游戏数据到服务器
+      try {
+        // 动态导入gameStore以避免循环依赖
+        const { useGameStore } = await import('../gameStore')
+        const gameStore = useGameStore()
+        
+        console.log('📊 开始上报游戏结果到服务器...')
+        const response = await gameStore.reportGameSummary(gameData)
+        
+        if (response) {
+          console.log('✅ 游戏结果上报成功:', response)
+          // 可以在这里处理服务器返回的排行榜数据
+        }
+      } catch (error) {
+        console.error('❌ 游戏结果上报失败:', error)
+        // 即使上报失败，游戏也应该正常结束
       }
       
       // 切换到结果页面
@@ -451,6 +489,17 @@ export const useGameStateStore = defineStore('gameState', {
       this.musicEnabled = audioManager.musicEnabled
       this.soundEnabled = audioManager.soundEnabled
       this.musicPaused = audioManager.musicPaused
+    },
+    
+    // 获取设备ID（用于用户识别）
+    getDeviceId() {
+      let deviceId = localStorage.getItem('deviceId')
+      if (!deviceId) {
+        // 生成一个简单的设备ID
+        deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+        localStorage.setItem('deviceId', deviceId)
+      }
+      return deviceId
     }
   }
 })
