@@ -1,0 +1,35 @@
+{
+  "name": "@tencent/gh-qqnews-utils",
+  "version": "0.3.4",
+  "description": "前端中常用的工具方法",
+  "keywords": [
+    "utils",
+    "tools"
+  ],
+  "author": {
+    "name": "skeetershi"
+  },
+  "homepage": "",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://mirrors.tencent.com/npm/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.code.oa.com:news-gh-team/gh-news-sdk.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "build": "rimraf ./dist/* && tsc -p tsconfig.json"
+  },
+  "gitHead": "2a2da78e9943ec65f3f320544ee67501c877d3cf"
+}

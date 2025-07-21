@@ -9,10 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "glob": "^11.0.3",
-    "gsap": "^3.13.0",
-    "pinia": "^2.1.0",
-    "vue": "^3.5.17",
+    "@tencent/gh-qqnews-downapp": "^1.5.5",
+    "@tencent/qn-jsbridge": "^2.0.0",
+    "@tencent/qqnews-jsapi": "^1.3.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "cannon-es": "^0.20.0",
+    "cannon-es-debugger": "^1.0.0",
+    "glob": "^11.0.2",
+    "gsap": "^3.12.7",
+    "path": "^0.12.7",
+    "pinia": "^3.0.1",
+    "three": "^0.172.0",
+    "vue": "^3.5.13",
     "vue3-lottie": "^3.3.1"
   },
   "devDependencies": {

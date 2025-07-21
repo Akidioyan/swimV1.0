@@ -1,0 +1,26 @@
+{
+  "name": "@tencent/qn-storage",
+  "version": "3.0.0",
+  "main": "cjs/index.js",
+  "module": "es/index.js",
+  "types": "es/index.d.ts",
+  "files": [
+    "es",
+    "cjs",
+    "umd",
+    "bundle"
+  ],
+  "sideEffects": false,
+  "devDependencies": {
+    "config": "0.0.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.21.0"
+  },
+  "scripts": {
+    "test": "jest --passWithNoTests",
+    "dev": "gulp dev -w",
+    "buildES": "gulp dev",
+    "build": "gulp build"
+  }
+}

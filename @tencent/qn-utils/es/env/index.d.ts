@@ -1,0 +1,17 @@
+import { IsUAMatcEnv } from '../types';
+export * from './helper';
+export declare const isIOS: IsUAMatcEnv;
+export declare const isAndroid: IsUAMatcEnv;
+export declare const isHarmony: IsUAMatcEnv;
+export declare const isHarmonyNext: IsUAMatcEnv;
+export declare const isIPad: IsUAMatcEnv;
+export declare const isWeixin: IsUAMatcEnv;
+export declare const isQQ: IsUAMatcEnv;
+export declare const isWxApplets: IsUAMatcEnv;
+export declare const isOppoSystemBrowser: (userAgent?: string) => boolean;
+export declare const isVivoSystemBrowser: (userAgent?: string) => boolean;
+export declare const isAmap: (userAgent?: string) => boolean;
+export declare const isHanvon: (userAgent?: string) => boolean;
+export declare const isDianPing: (userAgent?: string) => boolean;
+export declare const isIReader: (userAgent?: string) => boolean;
+export declare const isXmly: (userAgent?: string) => boolean;

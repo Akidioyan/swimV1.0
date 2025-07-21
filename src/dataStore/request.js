@@ -30,7 +30,7 @@ export async function request(path, options = {}) {
     
     // 返回模拟数据作为降级方案
     if (path.includes('/pingpang/pv') || path.includes('/pv')) {
-      return { total: 481151 + Math.floor(Math.random() * 1000) };
+      return { total: 91000 + Math.floor(Math.random() * 1000) };
     }
     
     if (path.includes('report') || path.includes('summary')) {
@@ -48,12 +48,12 @@ export async function request(path, options = {}) {
 }
 
 // 获取活动总人数
+// 获取活动总人数
 export async function getActivityPV() {
   try {
-    // 根据正确的请求格式，统一使用pingpong拼写
     const endpoints = [
-      '/api/activity/pingpong/pv',         // 修正：使用正确的路径和拼写
-      '/apiactivity/pingpong/pv',          // 修正：pingpang → pingpong
+      '/api/activity/pingpong/pv',         // 修改：改为pingpong接口
+      '/apiactivity/pingpong/pv',          // 修改：改为pingpong接口
       '/api/activity/pv',                  
       '/apiactivity/pv',                   
     ];
@@ -61,7 +61,6 @@ export async function getActivityPV() {
     let response;
     let lastError;
     
-    // 依次尝试各个端点
     for (const endpoint of endpoints) {
       try {
         console.log(`🌐 尝试活动API端点: ${endpoint}`);
@@ -77,7 +76,6 @@ export async function getActivityPV() {
       }
     }
     
-    // 如果所有端点都失败，使用降级数据
     if (!response) {
       console.log('📊 所有活动API端点都失败，使用模拟数据');
       throw lastError;
@@ -86,18 +84,124 @@ export async function getActivityPV() {
     return response;
   } catch (error) {
     console.error('获取活动人数失败，使用默认值:', error);
-    // 返回默认值，但添加一些随机性模拟真实增长
-    const baseCount = 481151;
-    const randomGrowth = Math.floor(Math.random() * 2000) + 100; // 100-2100的随机增长
+    const baseCount = 91000;
+    const randomGrowth = Math.floor(Math.random() * 2000) + 100;
     return { total: baseCount + randomGrowth };
   }
+}
+
+// 游戏结束数据上报并获取排行榜
+export async function reportSwimmingGameResult(gameData) {
+  try {
+    const endpoints = [
+      '/api/activity/pingpong_report',     // 修改：改为pingpong接口
+      '/apiactivity/pingpong_report',      // 修改：改为pingpong接口
+      '/api/activity/report_summary',      // 修改：改为pingpong接口
+      '/apiactivity/report_summary'        // 修改：改为pingpong接口
+    ];
+    
+    const requestBody = {
+      deviceId: gameData.deviceId || '',
+      qimei36: gameData.qimei36 || '',
+      hasLogin: gameData.hasLogin || false,
+      isInQQNewsApp: gameData.isInQQNewsApp || false,
+      userAgent: gameData.userAgent || '',
+      event: 'pingpong_game_ended',        // 修改：改为pingpong事件
+      levelsCompleted: gameData.distance || 0,  // 距离映射为关卡数
+      cupsDropped: gameData.score || 0,         // 得分映射为击倒杯子数
+      ballsUsed: gameData.ballsUsed || 15,      // 添加球数
+      score: gameData.totalScore || gameData.score || 0,
+      gameEndReason: gameData.gameEndReason || 'completed',
+      trophiesEarned: gameData.trophiesEarned || []
+    };
+    
+    let response;
+    let lastError;
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🌐 尝试游戏结果上报端点: ${endpoint}`);
+        response = await request(endpoint, {
+          method: 'POST',
+          body: JSON.stringify(requestBody)
+        });
+        console.log(`✅ 游戏结果上报成功:`, response);
+        break;
+      } catch (error) {
+        console.log(`⚠️ 端点 ${endpoint} 失败:`, error.message);
+        lastError = error;
+        continue;
+      }
+    }
+    
+    if (!response) {
+      console.log('📊 所有上报端点都失败，使用模拟排行榜数据');
+      throw lastError;
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('游戏结果上报失败，使用模拟数据:', error);
+    return generateMockPingpongLeaderboard(gameData);
+  }
+}
+
+// 生成模拟乒乓球排行榜数据
+function generateMockPingpongLeaderboard(gameData) {
+  const mockLeaderboard = [];
+  const nicknames = ['快乐小兔侠客', '开心狮子玩家', '快乐小猪侠客', '勇敢小熊战士', '聪明小猫大师'];
+  
+  // 生成前50名数据，按得分优先，距离次要排序
+  for (let i = 1; i <= 50; i++) {
+    const score = Math.max(1, 100 - i * 2 + Math.floor(Math.random() * 10));
+    const distance = Math.max(50, 500 - i * 8 + Math.floor(Math.random() * 50));
+    
+    mockLeaderboard.push({
+      rank: i,
+      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
+      distance: distance,
+      score: score
+    });
+  }
+  
+  // 按游泳游戏规则排序：得分优先，得分相同时距离远的排前面
+  mockLeaderboard.sort((a, b) => {
+    if (a.score !== b.score) {
+      return b.score - a.score; // 得分高的排前面
+    }
+    return b.distance - a.distance; // 得分相同时，距离远的排前面
+  });
+  
+  // 重新分配排名
+  mockLeaderboard.forEach((item, index) => {
+    item.rank = index + 1;
+  });
+  
+  const currentUserRank = Math.floor(Math.random() * 1000) + 51;
+  const rankPercent = Math.floor((1 - currentUserRank / 10000) * 100);
+  
+  return {
+    data: {
+      rankPercent: `${rankPercent}%`,
+      best: {
+        rank: Math.min(currentUserRank - 10, 1),
+        distance: gameData.distance + 50,
+        score: gameData.score + 5
+      },
+      currentUserEntry: {
+        rank: currentUserRank,
+        nick: '我',
+        distance: gameData.distance || 0,
+        score: gameData.score || 0
+      },
+      leaderboardEntries: mockLeaderboard
+    }
+  };
 }
 
 // 游戏结束上报
 export async function reportGameSummary(gameData) {
   try {
-    console.log('🎯 准备上报游戏数据:', gameData);
-    
     // 尝试活动相关的上报端点
     const endpoints = [
       '/apiactivity/pingpong_report',      // 乒乓球游戏上报端点
@@ -169,7 +273,12 @@ export async function reportEnvironment(environmentData) {
     });
     return response;
   } catch (error) {
-    console.error('环境上报失败:', error);
-    throw error;
+    console.error('环境上报失败，使用降级处理:', error);
+    // 不重新抛出错误，让降级逻辑生效
+    return {
+      success: false,
+      message: '环境上报失败，使用本地模式',
+      fallback: true
+    };
   }
 }

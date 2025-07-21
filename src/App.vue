@@ -22,6 +22,7 @@ import { onMounted, onUnmounted } from 'vue'
 import { useGameStore } from './stores/gameStore'
 import { useGameStateStore } from './stores/gamestore/gameState'
 import { usePlayerControlStore } from './stores/gamestore/playerControl'
+import { useUserStore } from './stores/userStore'
 import LoadingView from './components/LoadingView.vue'
 import IntroView from './components/IntroView.vue'
 import VideoView from './components/VideoView.vue'
@@ -31,8 +32,20 @@ import ResultView from './components/ResultView.vue'
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const playerControlStore = usePlayerControlStore()
+const userStore = useUserStore()
 
-onMounted(() => {
+onMounted(async () => {
+  // 初始化用户环境
+  await userStore.initEnvironment()
+  
+  // 上报初始环境数据
+  try {
+    const { reportEnvironment } = await import('./dataStore/request')
+    await reportEnvironment()
+  } catch (error) {
+    console.error('初始环境上报失败:', error)
+  }
+  
   // 启用全屏模式
   enableFullscreen()
   

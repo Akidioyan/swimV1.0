@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
+import { useUserStore } from './userStore' // 新增
 
 export const useGameStore = defineStore('game', {
   state: () => ({
     // 服务器数据相关
     activityData: {
-      totalParticipants: 481151, // 默认参与人数
+      totalParticipants: 91000, // 默认参与人数
       isLoading: false,
       lastUpdated: null
     },
@@ -23,10 +24,13 @@ export const useGameStore = defineStore('game', {
     // 格式化参与人数显示
     formattedParticipants: (state) => {
       const total = state.activityData.totalParticipants;
-      if (total >= 100000) {
-        return `${Math.floor(total / 1000) / 10}万`;
-      } else if (total >= 10000) {
-        return `${Math.floor(total / 1000)}万`;
+      if (total >= 10000) {
+        const result = total / 10000;
+        if (result >= 10) {
+          return `${Math.floor(result)}万`;
+        } else {
+          return `${Math.floor(result * 10) / 10}万`;
+        }
       } else {
         return total.toLocaleString();
       }
@@ -36,6 +40,18 @@ export const useGameStore = defineStore('game', {
     participantText: (state) => {
       const formatted = state.formattedParticipants;
       return `—— 已有${formatted}人参与过挑战 ——`;
+    },
+    
+    // 新增：获取用户环境信息
+    userEnvironment: (state) => {
+
+      const userStore = useUserStore()
+      return {
+        isInQQNewsApp: userStore.isInQQNewsApp,
+        hasLogin: userStore.hasLogin,
+        canPlay: userStore.canPlay,
+        remainingPlays: userStore.remainingPlays
+      }
     }
   },
   
@@ -52,10 +68,17 @@ export const useGameStore = defineStore('game', {
         const { getActivityPV } = await import('../dataStore/request');
         const response = await getActivityPV();
         
-        if (response && response.total) {
-          this.activityData.totalParticipants = response.total;
-          this.activityData.lastUpdated = new Date();
-          console.log('活动参与人数更新成功:', response.total);
+        // 支持多种API响应格式
+        if (response && typeof response === 'object') {
+          // 优先使用 total 字段，如果没有则使用 pv 字段
+          const participantCount = response.total || response.pv;
+          if (participantCount && typeof participantCount === 'number') {
+            this.activityData.totalParticipants = participantCount;
+            this.activityData.lastUpdated = new Date();
+            console.log('活动参与人数更新成功:', participantCount, '显示为:', this.formattedParticipants);
+          } else {
+            console.warn('API返回数据中未找到有效的参与人数字段:', response);
+          }
         }
       } catch (error) {
         console.error('获取活动参与人数失败:', error);
@@ -66,26 +89,52 @@ export const useGameStore = defineStore('game', {
     },
     
     // 上报游戏结果
+    // 修改：上报游戏结果时包含用户环境信息和次数管理
     async reportGameSummary(gameData) {
       try {
-        // 动态导入API方法
-        const { reportGameSummary } = await import('../dataStore/request');
-        const response = await reportGameSummary(gameData);
+        const userStore = useUserStore()
         
-        if (response) {
+        // 检查用户是否可以游戏
+        if (!userStore.canPlay) {
+          console.warn('用户今日游戏次数已用完');
+          return null;
+        }
+        
+        // 增加游戏次数
+        userStore.incrementTodayPlayCount();
+        
+        console.log('正在上报游戏结果...', gameData);
+        
+        // 动态导入API方法
+        const { reportSwimmingGameResult } = await import('../dataStore/request');
+        
+        const enhancedGameData = {
+          ...gameData,
+          deviceId: userStore.deviceId,
+          qimei36: userStore.qimei36,
+          hasLogin: userStore.hasLogin,
+          isInQQNewsApp: userStore.isInQQNewsApp,
+          userAgent: userStore.userAgent
+        };
+        
+        const response = await reportSwimmingGameResult(enhancedGameData);
+        
+        if (response && response.data) {
           // 更新排行榜数据
-          this.leaderboard.currentUserEntry = response.currentUserEntry;
-          this.leaderboard.leaderboardEntries = response.leaderboardEntries || [];
-          this.leaderboard.rankPercent = response.rankPercent || '';
-          this.leaderboard.best = response.best;
-          this.leaderboard.trophiesHistory = response.trophiesHistory || [0,0,0,0,0,0];
+          this.leaderboard = {
+            currentUserEntry: response.data.currentUserEntry,
+            leaderboardEntries: response.data.leaderboardEntries || [],
+            rankPercent: response.data.rankPercent || '',
+            best: response.data.best,
+            trophiesHistory: response.data.trophiesHistory || []
+          };
           
-          console.log('游戏结果上报成功，排行榜数据已更新');
+          console.log('游戏结果上报成功，排行榜已更新');
         }
         
         return response;
       } catch (error) {
-        console.error('游戏结果上报失败:', error);
+        console.error('上报游戏结果失败:', error);
         return null;
       }
     }

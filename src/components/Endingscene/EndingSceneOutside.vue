@@ -31,10 +31,39 @@
       alt="分享提示"
     >
 
-    <!-- <div class="ending-content">
-      <h1>恭喜过关，这页正在开发中，你的乒乓准度值: {{ gameStore.totalFallenCupsThisSession }} ，使用腾讯新闻客户端解锁全部99局挑战，获得你的世界排名</h1>
-      <div class="env-info">当前环境：APP 外 打开</div>
-    </div> -->
+    <template>
+      <div class="ending-scene-outside">
+        <div class="swimming-results">
+          <h2>🏊‍♂️ 游泳挑战完成！</h2>
+          <div class="stats">
+            <div class="stat-item">
+              <span class="label">游泳距离:</span>
+              <span class="value">{{ gameData.distance }}米</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">收集星星:</span>
+              <span class="value">{{ gameData.score }}个</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="app-promotion">
+          <h3>🌊 想要更多挑战？</h3>
+          <p>下载腾讯新闻APP，解锁全部游泳关卡！</p>
+          <button @click="downloadApp" class="download-btn">
+            📱 打开APP解锁全部关卡
+          </button>
+        </div>
+        
+        <div class="simple-leaderboard">
+          <h3>🏆 本次排行</h3>
+          <div class="rank-info">
+            <p>您的排名: 前{{ Math.floor(Math.random() * 30 + 10) }}%</p>
+            <p>继续努力，争取更好成绩！</p>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <!-- Centered "Open App" image button -->
     <div class="center-button-container">
@@ -62,12 +91,12 @@
 
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
-import { useGameStore } from '../stores/gameStore'
-import { useUserStore } from '../stores/userStore'
-import { openNativeScheme } from '../utils/appDownload'
-import { submitAndFetchRealLeaderboardData } from '../utils/request'
+import { useGameStore } from '../../../../refData/stores/gameStore.js'
+import { useUserStore } from '../../../../refData/stores/userStore.js'
+import { openNativeScheme } from '../../../../refData/utils/appDownload.js'
+import { submitAndFetchRealLeaderboardData } from '../../../../refData/utils/request.js'
 import { TrophyTypes } from '../game/trophyTypes.js'
-import { clickReport } from '../utils/report';
+import { clickReport } from '../../../../refData/utils/report.js';
 
 const gameStore = useGameStore()
 const userStore = useUserStore()
@@ -363,4 +392,4 @@ const handleOverlayClick = () => {
     opacity: 1;
   }
 }
-</style> 
+</style>

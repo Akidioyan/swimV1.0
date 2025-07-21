@@ -1,0 +1,38 @@
+{
+  "name": "@tencent/gh-qqnews-downapp",
+  "version": "1.5.5",
+  "description": "打开和下载APP",
+  "keywords": [
+    "utils",
+    "tools",
+    "downapp"
+  ],
+  "homepage": "https://git.woa.com/news-gh-team/gh-news-sdk",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "registry": "https://mirrors.tencent.com/npm/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.code.oa.com:news-gh-team/gh-news-sdk.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: run tests from root\" && exit 1",
+    "serve": "webpack serve --config webpack.dev.config.js",
+    "build": "rimraf ./dist/* && tsc -p tsconfig.json"
+  },
+  "gitHead": "2a2da78e9943ec65f3f320544ee67501c877d3cf",
+  "dependencies": {
+    "@tencent/gh-qqnews-utils": "^0.3.4",
+    "eventemitter3": "^4.0.7"
+  }
+}

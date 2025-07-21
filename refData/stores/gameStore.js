@@ -755,3 +755,90 @@ export const useGameStore = defineStore('game', {
     },
   }
 })
+
+
+import { defineStore } from 'pinia'
+
+export const useGameStore = defineStore('game', {
+  state: () => ({
+    // 游泳游戏特有状态
+    sessionDistance: 0,        // 本局游泳距离（米）
+    sessionScore: 0,           // 本局得分（星星数）
+    gameEndReason: '',         // 游戏结束原因
+    earnedTrophies: [],        // 获得的奖杯
+    currentLevel: 1,           // 当前关卡
+    isGameActive: false,       // 游戏是否进行中
+    gameStartTime: null,       // 游戏开始时间
+    gameEndTime: null,         // 游戏结束时间
+  }),
+  
+  getters: {
+    gameDuration() {
+      if (this.gameStartTime && this.gameEndTime) {
+        return this.gameEndTime - this.gameStartTime;
+      }
+      return 0;
+    },
+    
+    averageSpeed() {
+      const duration = this.gameDuration / 1000; // 转换为秒
+      if (duration > 0) {
+        return (this.sessionDistance / duration).toFixed(2);
+      }
+      return 0;
+    }
+  },
+  
+  actions: {
+    startGame() {
+      this.isGameActive = true;
+      this.gameStartTime = Date.now();
+      this.sessionDistance = 0;
+      this.sessionScore = 0;
+      this.earnedTrophies = [];
+      console.log('🏊‍♂️ 游泳游戏开始');
+    },
+    
+    endGame(reason = 'completed') {
+      this.isGameActive = false;
+      this.gameEndTime = Date.now();
+      this.gameEndReason = reason;
+      console.log(`🏁 游泳游戏结束: ${reason}`);
+      console.log(`📊 最终成绩 - 距离: ${this.sessionDistance}米, 得分: ${this.sessionScore}分`);
+    },
+    
+    updateDistance(distance) {
+      this.sessionDistance = Math.max(0, distance);
+    },
+    
+    updateScore(score) {
+      this.sessionScore = Math.max(0, score);
+    },
+    
+    addScore(points = 1) {
+      this.sessionScore += points;
+    },
+    
+    addDistance(meters) {
+      this.sessionDistance += meters;
+    },
+    
+    earnTrophy(trophyType) {
+      if (!this.earnedTrophies.includes(trophyType)) {
+        this.earnedTrophies.push(trophyType);
+        console.log(`🏆 获得奖杯: ${trophyType}`);
+      }
+    },
+    
+    resetGame() {
+      this.sessionDistance = 0;
+      this.sessionScore = 0;
+      this.gameEndReason = '';
+      this.earnedTrophies = [];
+      this.isGameActive = false;
+      this.gameStartTime = null;
+      this.gameEndTime = null;
+      console.log('🔄 游戏状态已重置');
+    }
+  }
+});
