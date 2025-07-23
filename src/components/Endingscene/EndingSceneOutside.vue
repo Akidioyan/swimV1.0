@@ -1,127 +1,192 @@
 <template>
-  <div class="ending-scene">
-    <div class="rank-container">
-      <div class="rank-desc-text">
-        <template v-if="gameStore.sessionLevelsCompleted === 0">
-          止步在第一关，赶快点击左下角再次挑战！
+  <div class="ending-scene-outside">
+    <!-- 背景容器 -->
+    <div class="background-container">
+      
+      <!-- 恭喜文字 -->
+      <div class="congratulation-text">
+        恭喜{{ currentUserData?.nickName || '您' }}获得
+      </div>
+      
+      <!-- 称号区域 -->
+      <div class="title-section">
+        <div class="user-title">
+          <div class="title-text">
+            <span 
+              v-for="(char, index) in getTitleByDistance(gameData.currentDistance).split('')" 
+              :key="index"
+              class="title-char"
+            >
+              {{ char }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 结果描述文字 -->
+      <div class="result-description">
+        <template v-if="gameData.currentDistance === 0">
+          再次挑战！
         </template>
         <template v-else>
-          成功挑战{{ gameStore.sessionLevelsCompleted }}关，超越了全网{{ currentUserData?.rankPercent }}%的球友，获得：
+          你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，{{ currentUserEntry?.rank ? '恭喜进入排行榜！' : '很遗憾没有进入排行榜。' }}
+          <br>
+          你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，已超越 <span class="number-text">{{ currentUserData?.rankPercent || '0' }}%</span> 网友！
         </template>
       </div>
-      <img :src="rankImageSrc" class="rank-image" alt="玩家称号">
-      <div class="trophy-display-area">
-        <img src="/assets/trophyBackboard.png" class="trophy-backboard-image" alt="奖杯底板">
-        <!-- 动态点亮奖杯图片 -->
-        <img v-if="litTrophies.includes('CUP_COLLECTOR_20')" src="/assets/trophy/lit/1.png" class="lit-trophy-image" alt="点亮奖杯1">
-        <img v-if="litTrophies.includes('CUP_COLLECTOR_100')" src="/assets/trophy/lit/2.png" class="lit-trophy-image" alt="点亮奖杯2">
-        <img v-if="litTrophies.includes('CUP_COLLECTOR_300')" src="/assets/trophy/lit/3.png" class="lit-trophy-image" alt="点亮奖杯3">
-        <img v-if="litTrophies.includes('METAL_BUSTER')" src="/assets/trophy/lit/4.png" class="lit-trophy-image" alt="点亮奖杯4">
-        <img v-if="litTrophies.includes('ONE_SHOT_CLEAR')" src="/assets/trophy/lit/5.png" class="lit-trophy-image" alt="点亮奖杯5">
-        <img v-if="litTrophies.includes('LEVEL_CONQUEROR_5')" src="/assets/trophy/lit/6.png" class="lit-trophy-image" alt="点亮奖杯6">
+
+      <!-- openApp 大图 -->
+      <div class="open-app-container">
+        <img 
+          src="/openApp.png" 
+          @click="handleOpenApp" 
+          class="open-app-image" 
+          alt="打开APP解锁全部关卡"
+        >
       </div>
-    </div>
-
-    <!-- Play Limit Tips Image (needShareToPlayTips.png) -->
-    <img 
-      v-if="showNeedShareTipsImage" 
-      ref="tipsImageRef" 
-      src="/assets/needShareToPlayTips.png" 
-      class="play-limit-tips-image" 
-      alt="分享提示"
-    >
-
-    <template>
-      <div class="ending-scene-outside">
-        <div class="swimming-results">
-          <h2>🏊‍♂️ 游泳挑战完成！</h2>
-          <div class="stats">
-            <div class="stat-item">
-              <span class="label">游泳距离:</span>
-              <span class="value">{{ gameData.distance }}米</span>
+      
+      <!-- 排行榜标题 -->
+      <div class="leaderboard-title">
+        <img src="/vector/RankIcon.svg" class="rank-icon" alt="排行榜图标">
+        <span class="title-text">指尖游泳排行榜</span>
+      </div>
+      
+      <!-- 排行榜容器 -->
+      <div class="leaderboard-container">
+        <!-- 表头 -->
+        <div class="leaderboard-header">
+          <span class="header-rank">排名</span>
+          <span class="header-name">名称</span>
+          <span class="header-distance">距离</span>
+          <span class="header-score">得分</span>
+        </div>
+        
+        <!-- 可滚动的排行榜列表 -->
+        <div class="leaderboard-scroll-container">
+          <!-- 我的成绩（第一位，特殊样式） -->
+          <div v-if="currentUserEntry" class="my-result-row">
+            <div class="ranking-bg-container">
+              <img src="/vector/MeRankingList.svg" class="ranking-bg" alt="我的排名背景">
             </div>
-            <div class="stat-item">
-              <span class="label">收集星星:</span>
-              <span class="value">{{ gameData.score }}个</span>
+            <div class="ranking-content">
+              <span class="rank-number my-rank">{{ currentUserEntry.rank || '未上榜' }}</span>
+              <span class="player-name my-name">我的成绩</span>
+              <span class="player-distance my-distance">{{ currentUserEntry.distance || gameData.currentDistance }}</span>
+              <span class="player-score my-score">{{ currentUserEntry.stars || gameData.stars }}</span>
+            </div>
+          </div>
+          
+          <!-- 扩展排行榜列表（50人） -->
+          <div 
+            v-for="(player, index) in extendedLeaderboard" 
+            :key="index"
+            class="ranking-row"
+          >
+            <div class="ranking-bg-container">
+              <img src="/vector/RankingList.svg" class="ranking-bg" alt="排名背景">
+            </div>
+            <div class="ranking-content">
+              <span class="rank-number">{{ player.rank }}</span>
+              <span class="player-name">{{ player.nick }}</span>
+              <span class="player-distance">{{ player.distance }}</span>
+              <span class="player-score">{{ player.stars || player.score }}</span>
             </div>
           </div>
         </div>
-        
-        <div class="app-promotion">
-          <h3>🌊 想要更多挑战？</h3>
-          <p>下载腾讯新闻APP，解锁全部游泳关卡！</p>
-          <button @click="downloadApp" class="download-btn">
-            📱 打开APP解锁全部关卡
-          </button>
-        </div>
-        
-        <div class="simple-leaderboard">
-          <h3>🏆 本次排行</h3>
-          <div class="rank-info">
-            <p>您的排名: 前{{ Math.floor(Math.random() * 30 + 10) }}%</p>
-            <p>继续努力，争取更好成绩！</p>
-          </div>
-        </div>
       </div>
-    </template>
-
-    <!-- Centered "Open App" image button -->
-    <div class="center-button-container">
-      <img src="/assets/openApp.png" @click="handleOpenApp" class="open-app-image-button" alt="打开APP解锁全部关卡">
+      
+      <!-- 底部渐变遮罩 -->
+      <div class="bottom-gradient"></div>
+      
+      <!-- 分享提示（当无法继续游戏时显示） -->
+      <div v-if="showNeedShareTipsImage" class="share-tips">
+        <img src="/needShareToPlayTips.png" alt="分享给好友，获得3次挑战机会" class="tips-background">
+      </div>
+      
+      <!-- 底部按钮 -->
+      <div class="bottom-buttons">
+        <img 
+          src="/tryAgain.png" 
+          @click="handleRestartGame" 
+          class="try-again-btn" 
+          :class="{ 'disabled': isTryAgainDisabled }" 
+          alt="再次挑战"
+        >
+        <img 
+          src="/shareToFriend.png" 
+          @click="handleShareToFriendClick" 
+          class="share-friend-btn" 
+          alt="分享给朋友"
+        >
+      </div>
     </div>
 
-    <!-- Bottom image buttons -->
-    <div class="button-container">
-      <img 
-        src="/assets/tryAgain.png" 
-        @click="handleRestartGame" 
-        class="restart-image-button" 
-        :class="{ 'disabled-button': isTryAgainDisabled }" 
-        alt="再次挑战"
-      >
-      <img src="/assets/shareToFriend.png" @click="handleShareToFriendClick" class="share-image-button" alt="分享给朋友">
-    </div>
-
-    <!-- Share overlay and arrow -->
+    <!-- 分享箭头遮罩 -->
     <div v-if="shareArrowOverlayIsVisible" class="share-overlay" @click="handleOverlayClick">
-      <img src="/assets/shareArrow.png" class="share-instruction-arrow" alt="点击此处分享">
+      <img src="/shareArrow.png" class="share-instruction-arrow" alt="点击此处分享">
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
-import { useGameStore } from '../../../../refData/stores/gameStore.js'
-import { useUserStore } from '../../../../refData/stores/userStore.js'
-import { openNativeScheme } from '../../../../refData/utils/appDownload.js'
-import { submitAndFetchRealLeaderboardData } from '../../../../refData/utils/request.js'
-import { TrophyTypes } from '../game/trophyTypes.js'
-import { clickReport } from '../../../../refData/utils/report.js';
+import { useGameStore } from '../../stores/gameStore'
+import { useGameStateStore } from '../../stores/gamestore/gameState'
+import { useUserStore } from '../../stores/userStore'
+import { openNativeScheme } from '../../utils/appDownload'
+import { reportSwimmingGameResult } from '../../utils/request'
+import { clickReport } from '../../utils/report'
 
 const gameStore = useGameStore()
+const gameStateStore = useGameStateStore()
 const userStore = useUserStore()
 
-const currentUserData = ref(null);
+const currentUserData = ref(null)
 const shareArrowOverlayIsVisible = ref(false)
-
-// Reactive state for play limits and the main "need to share" image
+const leaderboardData = ref([])
+const currentUserEntry = ref(null)
 const showNeedShareTipsImage = ref(false)
 const isTryAgainDisabled = ref(false)
-const tipsImageRef = ref(null)
-const litTrophies = ref([])
 
-const rankImageSrc = computed(() => {
-  const level = gameStore.sessionLevelsCompleted || 0;
-  if (level <= 7) return 'assets/ranks/rank0.png';
-  else if (level <= 15) return 'assets/ranks/rank1.png';
-  else if (level <= 23) return 'assets/ranks/rank2.png';
-  else if (level <= 31) return 'assets/ranks/rank3.png';
-  else if (level <= 39) return 'assets/ranks/rank4.png';
-  else if (level <= 47) return 'assets/ranks/rank5.png';
-  else return 'assets/ranks/rank6.png'; // For 48 levels and above
+// 游戏数据
+const gameData = computed(() => ({
+  currentDistance: gameStateStore.finalDistance || gameStore.distance || 0,
+  stars: gameStateStore.score || gameStore.stars || 0
+}))
+
+// 根据距离获取称号
+const getTitleByDistance = (distance) => {
+  if (distance >= 1000) return '千米冠军'
+  if (distance >= 600) return '游泳健将'
+  if (distance >= 300) return '中流砥柱'
+  if (distance >= 100) return '百米泳者'
+  return '初出茅庐'
+}
+
+// 扩展排行榜数据（50人）
+const extendedLeaderboard = computed(() => {
+  const extended = [...leaderboardData.value]
+  
+  // 如果不足50人，生成更多数据
+  while (extended.length < 50) {
+    const rank = extended.length + 1
+    const nicknames = ['游泳健将', '水中飞鱼', '蛙泳大师', '自由泳选手', '仰泳高手', '蝶泳专家', '混合泳王者', '水中精灵']
+    const baseStar = Math.max(1, 30 - rank + Math.floor(Math.random() * 5))
+    const baseDistance = Math.max(50, 800 - rank * 10 + Math.floor(Math.random() * 50))
+    
+    extended.push({
+      rank: rank,
+      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
+      distance: baseDistance,
+      stars: baseStar,
+      score: baseStar
+    })
+  }
+  
+  return extended.slice(0, 50)
 })
 
-// Watch for changes in userStore.canPlay to update UI elements
+// 监听游戏次数变化
 watch(() => userStore.canPlay, (canStillPlay) => {
   console.log(`[EndingSceneOutside] userStore.canPlay changed to: ${canStillPlay}`)
   isTryAgainDisabled.value = !canStillPlay
@@ -131,62 +196,111 @@ watch(() => userStore.canPlay, (canStillPlay) => {
 
 onMounted(async () => {
   try {
-    const realDataResponse = await submitAndFetchRealLeaderboardData();
-    if (realDataResponse && realDataResponse.code === 0 && realDataResponse.data) {
-      const apiData = realDataResponse.data;
-      litTrophies.value = Array.isArray(apiData.trophies) ? apiData.trophies : [];
-      currentUserData.value = { rankPercent: apiData.rank };
+    // 上报游戏结果
+    const gameResultData = {
+      distance: gameData.value.currentDistance,
+      score: gameData.value.stars,
+      stars: gameData.value.stars,
+      survivalTime: gameStore.survivalTime || gameStateStore.survivalTime || 0,
+      gameTime: gameStore.gameTime || gameStateStore.gameTime || 0,
+      gameEndReason: gameStore.gameEndReason || gameStateStore.gameEndReason || 'completed'
+    }
+    
+    const realDataResponse = await reportSwimmingGameResult(gameResultData)
+    if (realDataResponse && realDataResponse.data) {
+      const apiData = realDataResponse.data
+      currentUserData.value = { 
+        rankPercent: apiData.rankPercent?.replace('%', '') || '50',
+        nickName: '您' // 可以从用户数据获取
+      }
+      
+      // 设置排行榜数据
+      if (apiData.leaderboardEntries && Array.isArray(apiData.leaderboardEntries)) {
+        leaderboardData.value = apiData.leaderboardEntries.slice(0, 50).map(player => ({
+          rank: player.rank,
+          nick: (player.nick && player.nick.trim() !== '') ? player.nick : "游泳挑战者",
+          distance: player.distance,
+          stars: player.stars || player.score || 0,
+        }))
+      } else {
+        leaderboardData.value = generateMockLeaderboard()
+      }
+      
+      // 设置当前用户数据
+      currentUserEntry.value = {
+        rank: apiData.currentUserEntry?.rank || Math.floor(Math.random() * 100) + 50,
+        nick: "我",
+        distance: gameData.value.currentDistance,
+        stars: gameData.value.stars
+      }
     } else {
-      litTrophies.value = [];
-      currentUserData.value = { rankPercent: 33 };
+      // 使用模拟数据
+      leaderboardData.value = generateMockLeaderboard()
+      currentUserData.value = { rankPercent: '33', nickName: '您' }
+      currentUserEntry.value = {
+        rank: Math.floor(Math.random() * 100) + 50,
+        nick: "我",
+        distance: gameData.value.currentDistance,
+        stars: gameData.value.stars
+      }
     }
   } catch (e) {
-    litTrophies.value = [];
-    currentUserData.value = { rankPercent: 66 };
+    // 使用模拟数据
+    leaderboardData.value = generateMockLeaderboard()
+    currentUserData.value = { rankPercent: '66', nickName: '大白兔吃奶糖' }
+    currentUserEntry.value = {
+      rank: Math.floor(Math.random() * 100) + 50,
+      nick: "我",
+      distance: gameData.value.currentDistance,
+      stars: gameData.value.stars
+    }
   }
 })
+
+// 生成模拟排行榜数据
+function generateMockLeaderboard() {
+  const mockData = []
+  const nicknames = ['游泳健将', '水中飞鱼', '蛙泳大师']
+  
+  for (let i = 1; i <= 10; i++) {
+    const stars = Math.max(1, 30 - i + Math.floor(Math.random() * 5))
+    const distance = Math.max(100, 800 - i * 50 + Math.floor(Math.random() * 100))
+    
+    mockData.push({
+      rank: i,
+      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
+      distance: distance,
+      stars: stars,
+      score: stars
+    })
+  }
+  
+  return mockData
+}
 
 const handleRestartGame = () => {
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleRestartGame clicked')
   if (!userStore.canPlay) {
-    if (showNeedShareTipsImage.value && tipsImageRef.value) {
-      tipsImageRef.value.classList.add('tips-animate')
-      setTimeout(() => {
-        if (tipsImageRef.value) {
-          tipsImageRef.value.classList.remove('tips-animate')
-        }
-      }, 500)
-    }
     return
   }
-  gameStore.restartGame()
+  gameStateStore.restartGame()
 }
 
 const handleOpenApp = () => {
-  clickReport({
-    id: 'open_app',
-  })
-  openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'pingpong')
+  clickReport({ id: 'open_app' })
+  openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim')
 }
 
 const handleShareToFriendClick = () => {
-  clickReport({
-    id: 'share_in_outside',
-  })
+  clickReport({ id: 'share_in_outside' })
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleShareToFriendClick clicked')
   
-  // If already can play, perhaps the user just wants to share normally?
-  // For now, this button's primary function when plays are out is to get more plays.
-  // If plays are available, it will still show the arrow and grant bonus on timeout for consistency.
-
   shareArrowOverlayIsVisible.value = true
 
   console.log('[EndingSceneOutside] Share action initiated (showing arrow). Simulating share & starting 5s timer for bonus plays.')
   setTimeout(() => {
     console.log('[EndingSceneOutside] 5s timer elapsed. Granting bonus plays for outside-app share.')
     userStore.grantBonusPlays(3)
-    // shareArrowOverlayIsVisible.value = false // Optional: hide arrow after granting bonus
-    // The watch on userStore.canPlay will hide showNeedShareTipsImage if plays are granted.
   }, 5000)
 }
 
@@ -196,147 +310,386 @@ const handleOverlayClick = () => {
 </script>
 
 <style scoped>
-.ending-scene {
+/* 导入字体 */
+@import url('https://fonts.googleapis.com/css2?family=PingFang+SC:wght@300;400;600&display=swap');
+
+.ending-scene-outside {
+  width: 100%;
+  height: 100dvh;
+  background-color: #171717;
+  position: relative;
+  overflow: hidden;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.background-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 0 5.33vw; /* 20px at 375px width */
+  box-sizing: border-box;
+}
+
+/* 恭喜文字 */
+.congratulation-text {
+  position: absolute;
+  top: 4.15dvh; /* 30px at 723px height */
+  left: 5.33vw; /* 20px at 375px width */
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 4vw; /* 15px at 375px width */
+  line-height: 1.4;
+  color: #E7E7E7;
+}
+
+/* 称号区域 */
+.title-section {
+  position: absolute;
+  top: 6.65dvh; /* 保持与恭喜文字的间距 */
+  left: 5.33vw; /* 与open-app-image对齐 */
+  width: 89.6vw; /* 与open-app-image宽度一致，确保左右对齐 */
+  height: 11dvh; /* 调整为11dvh */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-title {
+  position: relative;
+  width: 100%;
+  height: 100%; /* 占满整个title-section */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 居中显示 */
+  /* 移除背景色和背景渐变 */
+  border-radius: 8px;
+}
+
+.title-text {
+  font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
+  font-size: 22vw; /* 放大文字 */
+  font-weight: bold;
+  color: #5CBBF9; /* 设计稿中的蓝色 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  /* 使用flex布局分散字符 */
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between; /* 字符之间均匀分布，首尾字符贴边 */
   align-items: center;
-  background-color: #121212;
-  position: relative;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow: hidden;
+  
+  /* 重置默认文字样式 */
+  letter-spacing: 0; /* 重置字符间距，由flex控制 */
+  line-height: 0.8; /* 减少行高以适应容器 */
+  text-align: left; /* 重置文字对齐 */
 }
 
-.rank-container {
+.title-char {
+  display: inline-block;
+  line-height: 0.8;
+  font-size: 22vw !important; /* 强制设置固定字体大小 */
+  color: #5CBBF9;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+  font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
+  font-weight: bold;
+}
+
+/* 结果描述 */
+.result-description {
   position: absolute;
-  top: 5vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90vw;
-  max-width: 90vw;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  top: 18.75dvh; /* 称号区域结束(6.65+11=17.65) + 1.1dvh间距 = 18.75 */
+  left: 5.33vw; /* 20px at 375px width */
+  width: 89.07vw; /* 334px at 375px width */
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600; /* 加粗字体 */
+  font-size: 4.5vw; /* 加大字号，从3.73vw增加到4.5vw */
+  line-height: 1.4;
+  color: #E7E7E7;
+  margin-bottom: 1dvh; /* 确保底部至少有1dvh的间距 */
 }
 
-.rank-desc-text {
-  font-size: 1.8vh;
-  color: #fff;
-  text-align: center;
+.number-text {
+  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
+  font-weight: bold;
+  color: #5CBBF9; /* 设计稿中的蓝色 */
+}
+
+.open-app-container {
+  position: absolute;
+  top: 25.6dvh; 
+  left: 5.33vw; /* 20px at 375px width */
+  width: 89.6vw; /* 336px at 375px width */
+  aspect-ratio: 21 / 17; /* 固定比例 21:17 */
+  /* 移除固定高度 height: 37.62dvh; */
+}
+
+.open-app-image {
   width: 100%;
-  margin-bottom: 0.5vh;
-  line-height: 1.2;
-}
-
-.rank-image {
-  display: block;
-  height: 11vh;
-  width: auto;
-  max-width: 100%;
+  height: 100%;
   object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
-.trophy-display-area {
+.open-app-image:hover {
+  transform: scale(1.02);
+}
+
+/* 排行榜标题 */
+.leaderboard-title {
+  position: absolute;
+  top: 62.32dvh; /* openApp结束(23.6+37.62=61.22) + 1.1dvh间距 = 62.32 */
+  left: 5.33vw; /* 20px at 375px width */
+  display: flex;
+  align-items: center;
+  gap: 2.13vw; /* 8px at 375px width */
+}
+
+.rank-icon {
+  width: 3.47vw; /* 13px at 375px width */
+  height: 3.47vw; /* 13px at 375px width */
+}
+
+.leaderboard-title .title-text {
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 4vw; /* 15px at 375px width */
+  line-height: 1.4;
+  color: #FFFFFF;
+}
+
+/* 排行榜容器 */
+.leaderboard-container {
+  position: absolute;
+  top: 65.82dvh; /* 排行榜标题结束(约64.32) + 1.5dvh间距 = 65.82 */
+  left: 5.33vw; /* 20px at 375px width */
+  width: 89.6vw; /* 336px at 375px width */
+  height: 28dvh; /* 增加高度，因为整体布局更紧凑 */
+}
+
+/* 表头 */
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  height: 3.32dvh; /* 24px at 723px height */
+  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  font-size: 3.2vw; /* 12px at 375px width */
+  color: #606060;
+}
+
+.header-rank {
+  width: 15.2vw; /* 57px at 375px width */
+  text-align: center;
+}
+
+.header-name {
+  width: 26.67vw; /* 100px at 375px width */
+  text-align: left;
+  padding-left: 5.33vw; /* 20px at 375px width */
+}
+
+.header-distance {
+  width: 23.73vw; /* 89px at 375px width */
+  text-align: center;
+}
+
+.header-score {
+  width: 24vw; /* 90px at 375px width */
+  text-align: center;
+}
+
+/* 可滚动的排行榜容器 */
+.leaderboard-scroll-container {
+  height: 22.13dvh; /* 160px at 723px height */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.leaderboard-scroll-container::-webkit-scrollbar {
+  width: 0;
+  background: transparent; /* Chrome/Safari/Webkit */
+}
+
+/* 我的成绩行 */
+.my-result-row {
   position: relative;
-  line-height: 0;
+  width: 89.6vw; /* 336px at 375px width */
+  height: 4.7dvh; /* 34px at 723px height */
+  margin-bottom: 1.11dvh; /* 8px at 723px height */
 }
 
-.trophy-backboard-image {
-  display: block;
-  height: 10vh;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
+/* 排行榜行 */
+.ranking-row {
+  position: relative;
+  width: 89.6vw; /* 336px at 375px width */
+  height: 4.7dvh; /* 34px at 723px height */
+  margin-bottom: 1.11dvh; /* 8px at 723px height */
 }
 
-.lit-trophy-image {
+.ranking-bg-container {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  pointer-events: none;
+  overflow: hidden; /* 防止内容溢出 */
 }
 
-.ending-content {
-  text-align: center;
-  color: white;
-  padding-top: 20%;
-  margin-bottom: 20px;
-}
-
-.env-info {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
-}
-
-.center-button-container {
+.ranking-bg {
   position: absolute;
-  left: 50%;
-  top: 60%; 
-  transform: translate(-50%, -50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 85vw;
-  padding: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 改为contain确保完整显示 */
 }
 
-.open-app-image-button {
-  display: block;
-  height: 50vh;
-  width: auto; 
-  max-width: 100%;
-  object-fit: contain;
-  cursor: pointer;
-}
-
-.button-container {
+.ranking-content {
   position: absolute;
-  bottom: 5%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
-  gap: 20px;
-  justify-content: center;
   align-items: center;
-  width: 80%;
-  max-width: 600px;
+  font-size: 4vw; /* 15px at 375px width */
+  z-index: 2;
 }
 
-.action-button {
-  padding: 15px 30px;
-  font-size: 18px;
-  background-color: white;
-  color: #39c09f;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: transform 0.2s;
-  text-decoration: none;
+.rank-number {
+  width: 15.2vw; /* 57px at 375px width */
   text-align: center;
+  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
+  font-weight: bold;
+  color: #0B0B0B;
+}
+
+.my-rank {
+  color: #0B0B0B;
+}
+
+.player-name {
+  width: 26.67vw; /* 100px at 375px width */
+  text-align: left;
+  padding-left: 5.33vw; /* 20px at 375px width */
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 600;
+  color: #E7E7E7;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.restart-image-button,
-.share-image-button {
-  height: 6vh;
-  width: auto;
-  cursor: pointer;
-  transition: transform 0.2s;
-  border-radius: 5px;
+.my-name {
+  color: #99CCFF;
 }
 
+.player-distance {
+  width: 23.73vw; /* 89px at 375px width */
+  text-align: center;
+  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
+  font-weight: bold;
+  color: #E7E7E7;
+}
 
+.my-distance {
+  color: #E7E7E7;
+}
+
+.player-score {
+  width: 24vw; /* 90px at 375px width */
+  text-align: center;
+  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
+  font-weight: bold;
+  color: #E7E7E7;
+}
+
+.my-score {
+  color: #E7E7E7;
+}
+
+/* 底部渐变 */
+.bottom-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 14.94dvh; /* 108px at 723px height */
+  background: linear-gradient(180deg, transparent 0%, rgba(23, 23, 23, 0.9) 60%, rgba(23, 23, 23, 1) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 分享提示 */
+.share-tips {
+  position: absolute;
+  bottom: 8.91dvh; /* 调整位置，让下边缘与按钮上边缘挨着 */
+  left: 5.07vw; /* 19px at 375px width */
+  width: 53.87vw; /* 202px at 375px width */
+  height: 4.56dvh; /* 33px at 723px height */
+  z-index: 2; /* 确保分享提示在遮罩层之上 */
+}
+
+.tips-background {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 确保图片内容完整显示 */
+}
+
+/* 底部按钮 */
+.bottom-buttons {
+  position: absolute;
+  bottom: 3.73dvh; /* 27px at 723px height */
+  left: 5.33vw; /* 20px at 375px width */
+  width: 89.6vw; /* 336px at 375px width */
+  height: auto; /* 改为auto，让按钮保持原始比例 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2; /* 确保按钮在遮罩层之上 */
+}
+
+.try-again-btn,
+.share-friend-btn {
+  width: 42.67vw; /* 160px at 375px width */
+  height: auto; /* 删除固定高度，保持图片原始纵横比 */
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 2; /* 确保按钮可以点击 */
+  object-fit: contain; /* 确保图片内容完整显示 */
+}
+
+.try-again-btn:hover,
+.share-friend-btn:hover {
+  transform: scale(1.05);
+}
+
+.try-again-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.try-again-btn.disabled:hover {
+  transform: none;
+}
+
+/* 底部按钮遮罩 */
+.bottom-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 9.26dvh; /* 67px at 723px height - 覆盖按钮区域 */
+  background: rgba(23, 23, 23, 0.95);
+  z-index: 0;
+}
+
+/* 分享箭头遮罩 */
 .share-overlay {
   position: absolute;
   top: 0;
@@ -351,45 +704,40 @@ const handleOverlayClick = () => {
 }
 
 .share-instruction-arrow {
-  width: 100px;
+  width: 26.67vw; /* 100px at 375px width */
   height: auto;
-  margin-top: 20px;
-  margin-right: 20px;
+  margin-top: 2.76dvh; /* 20px at 723px height */
+  margin-right: 5.33vw; /* 20px at 375px width */
 }
 
-/* Styles for Play Limit and Disabled Button (copied from EndingSceneApp.vue) */
-.disabled-button {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.play-limit-tips-image {
-  position: absolute;
-  bottom: calc(5% + 6vh + 5px);
-  left: 70%;
-  transform: translate(-50%, -50%);
-  width: 70vw;
-  max-width: 300px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.tips-animate {
-  animation: pulse-scale 0.5s ease-in-out;
-}
-
-@keyframes pulse-scale {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+/* 响应式设计 */
+@media (max-width: 414px) {
+  .background-container {
+    padding: 0 4.27vw; /* 16px at 375px equivalent */
   }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 0.7;
+  
+  .title-section {
+    left: 4.27vw;
+    width: calc(100% - 8.54vw);
   }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+  
+  .leaderboard-container {
+    left: 4.27vw;
+    width: calc(100% - 8.54vw);
+  }
+  
+  .title-text {
+    font-size: 11.2vw; /* 42px equivalent */
+  }
+}
+
+@media (max-width: 375px) {
+  .title-text {
+    font-size: 10.13vw; /* 38px equivalent */
+  }
+  
+  .result-description {
+    font-size: 3.47vw; /* 13px equivalent */
   }
 }
 </style>

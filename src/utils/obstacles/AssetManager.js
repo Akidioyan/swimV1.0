@@ -270,7 +270,7 @@ export class PowerUpAssets {
 }
 
 /**
- * 星星特效管理器
+ * 星星特效管理器 - 已禁用所有粒子效果
  */
 export class StarEffects {
   constructor() {
@@ -278,46 +278,18 @@ export class StarEffects {
   }
   
   createStarEffect(x, y) {
-    // 创建星星收集特效
-    for (let i = 0; i < 8; i++) {
-      this.particles.push({
-        x: x,
-        y: y,
-        vx: (Math.random() - 0.5) * 6,
-        vy: (Math.random() - 0.5) * 6,
-        life: 30,
-        maxLife: 30,
-        size: Math.random() * 3 + 1,
-        color: '#FFD700'
-      })
-    }
+    // 粒子效果已禁用
+    return
   }
   
   update(gameSpeed = 0) {
-    this.particles = this.particles.filter(particle => {
-      // 粒子自身的移动
-      particle.x += particle.vx
-      particle.y += particle.vy
-      
-      // 与游戏速度保持一致的向下移动
-      particle.y += gameSpeed
-      
-      particle.life--
-      particle.vy += 0.1 // 轻微重力
-      return particle.life > 0
-    })
+    // 粒子效果已禁用
+    this.particles = []
   }
   
   draw(ctx) {
-    this.particles.forEach(particle => {
-      const alpha = particle.life / particle.maxLife
-      ctx.globalAlpha = alpha
-      ctx.fillStyle = particle.color
-      ctx.beginPath()
-      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-      ctx.fill()
-    })
-    ctx.globalAlpha = 1
+    // 粒子效果已禁用
+    return
   }
 }
 

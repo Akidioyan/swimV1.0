@@ -131,17 +131,6 @@ export const useUserStore = defineStore("user", {
       this.savePlayDataToLocalStorage();
     },
     
-    grantBonusPlays() {
-      const today = new Date().toDateString();
-      if (this.lastBonusGrantDate !== today) {
-        this.bonusPlaysGrantedToday = true;
-        this.lastBonusGrantDate = today;
-        this.savePlayDataToLocalStorage();
-        return true;
-      }
-      return false;
-    },
-    
     resetPlayData() {
       this.todayPlayCount = 0;
       this.lastPlayDate = new Date().toDateString();
@@ -157,6 +146,32 @@ export const useUserStore = defineStore("user", {
         lastBonusGrantDate: this.lastBonusGrantDate
       };
       localStorage.setItem('swimGamePlayData', JSON.stringify(data));
+    },
+    
+    // 记录当前游戏次数状态
+    logCurrentPlayStats(context = '') {
+      console.log(`[${context}] 当前游戏状态:`, {
+        todayPlayCount: this.todayPlayCount,
+        maxPlaysAllowed: this.maxPlaysAllowed,
+        remainingPlays: this.remainingPlays,
+        canPlay: this.canPlay,
+        bonusPlaysGrantedToday: this.bonusPlaysGrantedToday
+      });
+    },
+    
+    // 授予奖励次数
+    grantBonusPlays(amount = 3) {
+      const today = new Date().toDateString();
+      if (this.lastBonusGrantDate !== today) {
+        this.bonusPlaysGrantedToday = true;
+        this.lastBonusGrantDate = today;
+        this.savePlayDataToLocalStorage();
+        console.log(`[userStore] 授予奖励游戏次数: ${amount}次`);
+        return true;
+      } else {
+        console.log(`[userStore] 今日已授予奖励次数`);
+        return false;
+      }
     }
   }
 });

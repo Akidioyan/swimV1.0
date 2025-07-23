@@ -231,11 +231,80 @@ const preloadObstacleImages = () => {
   })
 }
 
-// 初始化GSAP设置
+// 初始化GSAP设置 - 修改为安全检查版本
 const initGsapSettings = () => {
-  gsap.set('#obstacle-banner-up', { xPercent: -110 })
-  gsap.set('#obstacle-banner-bottom', { xPercent: 110 })
+  // 只有在元素存在时才设置GSAP属性
+  const bannerUp = document.querySelector('#obstacle-banner-up')
+  const bannerBottom = document.querySelector('#obstacle-banner-bottom')
+  
+  if (bannerUp) {
+    gsap.set('#obstacle-banner-up', { xPercent: -110 })
+  }
+  if (bannerBottom) {
+    gsap.set('#obstacle-banner-bottom', { xPercent: 110 })
+  }
 }
+
+// 监听横幅显示状态变化，执行GSAP动画
+watch(() => showObstacleBanner.value, (isVisible) => {
+  if (isVisible) {
+    // 使用nextTick确保DOM已更新
+    nextTick(() => {
+      // 每次显示时重新设置初始位置
+      const bannerUp = document.querySelector('#obstacle-banner-up')
+      const bannerBottom = document.querySelector('#obstacle-banner-bottom')
+      
+      if (bannerUp && bannerBottom) {
+        gsap.set('#obstacle-banner-up', { xPercent: -110 })
+        gsap.set('#obstacle-banner-bottom', { xPercent: 110 })
+
+        // 确保设置完初始位置后再开始动画
+        requestAnimationFrame(() => {
+          const bannerTl = gsap.timeline({
+            onComplete: () => {
+              showObstacleBanner.value = false
+              console.log('🎬 障碍物横幅动画完成')
+            }
+          });
+
+          // 阶段1：滑入动画 (0.5秒)
+          bannerTl.to(['#obstacle-banner-up', '#obstacle-banner-bottom'], {
+            xPercent: 0,
+            duration: 0.5,
+            ease: "power2.out"
+          });
+
+          // 阶段2：暂停显示 (2秒)
+          // 阶段3：滑出动画 (0.5秒) - 延迟2.5秒后开始
+          bannerTl.to('#obstacle-banner-up', {
+            xPercent: 100, 
+            duration: 0.5,
+            ease: "power2.in"
+          }, 2.5);
+
+          bannerTl.to('#obstacle-banner-bottom', {
+            xPercent: -100, 
+            duration: 0.5,
+            ease: "power2.in"
+          }, "<"); // 与上一个动画同时开始
+        });
+      } else {
+        console.warn('GSAP目标元素未找到，跳过动画')
+      }
+    })
+  } 
+});
+
+// 组件挂载时添加事件监听器和初始化
+onMounted(() => {
+  console.log('🎯 TutorialCards组件已挂载，添加障碍物提示事件监听器', {
+    isFirstTimeGame: gameStateStore.isFirstTimeGame,
+    hasShownObstacleHint: gameStateStore.hasShownObstacleHint
+  })
+  window.addEventListener('showObstacleHint', handleShowObstacleHint)
+  preloadObstacleImages() // 预加载图片
+  // 移除这里的initGsapSettings()调用，因为元素可能还不存在
+})
 
 // 如果不是首次游戏，直接开始游戏
 if (!gameStateStore.isFirstTimeGame) {

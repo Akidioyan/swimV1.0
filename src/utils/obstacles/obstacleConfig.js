@@ -111,57 +111,12 @@ export const GAME_OBJECTS_CONFIG = {
  * 0-6级难度配置表
  */
 export const DIFFICULTY_CONFIG = {
-  // 难度等级定义
+  // 难度等级定义 - 删除0级和1级，直接从3级开始
   levels: [
-    { // 0级
-      level: 0,
-      distanceRange: { min: 0, max: 20 }, // 米
-      vwRange: { min: 0, max: 400 }, // vw
-      probability: {
-        obs1: 0.1,
-        obs2: 0,
-        obs3: 0,
-        snorkel: 0.3,
-        star: 0.6
-      },
-      objectsPer100vw: { min: 6, max: 15 },
-      movementSpeed: 25, // vw/s
-      spawnInterval: { min: 40, max: 45 } // vw
-    },
-    { // 1级
-      level: 1,
-      distanceRange: { min: 20, max: 80 }, // 米
-      vwRange: { min: 400, max: 1600 }, // vw
-      probability: {
-        obs1: 0.29,
-        obs2: 0.1,
-        obs3: 0,
-        snorkel: 0.11,
-        star: 0.5
-      },
-      objectsPer100vw: { min: 8, max: 20 },
-      movementSpeed: 30, // vw/s
-      spawnInterval: { min: 30, max: 42 } // vw
-    },
-    { // 2级
-      level: 2,
-      distanceRange: { min: 80, max: 200 }, // 米
-      vwRange: { min: 1600, max: 4000 }, // vw
-      probability: {
-        obs1: 0.2,
-        obs2: 0.15,
-        obs3: 0.1,
-        snorkel: 0.05,
-        star: 0.5
-      },
-      objectsPer100vw: { min: 12, max: 22 },
-      movementSpeed: 34, // vw/s
-      spawnInterval: { min: 25, max: 39 } // vw
-    },
-    { // 3级
+    { // 3级（原第3级，现在作为起始级别）
       level: 3,
-      distanceRange: { min: 200, max: 500 }, // 米
-      vwRange: { min: 4000, max: 10000 }, // vw
+      distanceRange: { min: 0, max: 300 }, // 从0米开始
+      vwRange: { min: 0, max: 6000 }, // 从0vw开始
       probability: {
         obs1: 0.3,
         obs2: 0.2,
@@ -175,8 +130,8 @@ export const DIFFICULTY_CONFIG = {
     },
     { // 4级
       level: 4,
-      distanceRange: { min: 500, max: 900 }, // 米
-      vwRange: { min: 10000, max: 18000 }, // vw
+      distanceRange: { min: 300, max: 700 }, // 调整距离范围
+      vwRange: { min: 6000, max: 14000 }, // 调整vw范围
       probability: {
         obs1: 0.37,
         obs2: 0.25,
@@ -190,8 +145,8 @@ export const DIFFICULTY_CONFIG = {
     },
     { // 5级
       level: 5,
-      distanceRange: { min: 900, max: 1600 }, // 米
-      vwRange: { min: 18000, max: 32000 }, // vw
+      distanceRange: { min: 700, max: 1200 }, // 调整距离范围
+      vwRange: { min: 14000, max: 24000 }, // 调整vw范围
       probability: {
         obs1: 0.37,
         obs2: 0.26,
@@ -199,24 +154,24 @@ export const DIFFICULTY_CONFIG = {
         snorkel: 0.02,
         star: 0.2
       },
-      objectsPer100vw: { min: 18, max: 35 },
+      objectsPer100vw: { min: 20, max: 28 },
       movementSpeed: 46, // vw/s
-      spawnInterval: { min: 21, max: 33 } // vw
+      spawnInterval: { min: 18, max: 30 } // vw
     },
     { // 6级
       level: 6,
-      distanceRange: { min: 1600, max: Infinity }, // 米
-      vwRange: { min: 32000, max: Infinity }, // vw
+      distanceRange: { min: 1200, max: Infinity }, // 调整距离范围
+      vwRange: { min: 24000, max: Infinity }, // 调整vw范围
       probability: {
-        obs1: 0.37,
+        obs1: 0.4,
         obs2: 0.27,
         obs3: 0.15,
         snorkel: 0.01,
-        star: 0.2
+        star: 0.17
       },
-      objectsPer100vw: { min: 20, max: 40 },
-      movementSpeed: 56, // vw/s
-      spawnInterval: { min: 20, max: 33 } // vw
+      objectsPer100vw: { min: 22, max: 30 },
+      movementSpeed: 50, // vw/s
+      spawnInterval: { min: 15, max: 27 } // vw
     }
   ],
   
@@ -288,26 +243,23 @@ export function validateConversionRatio() {
 }
 
 /**
- * 根据vw距离直接计算当前难度等级（主要函数）
- * @param {number} distanceVw - 游戏距离（vw单位）
- * @returns {number} 难度等级（0-6）
+ * 根据vw距离获取当前难度等级
+ * @param {number} distanceVw - 当前距离（vw单位）
+ * @returns {number} 难度等级（3-6）
  */
 export function getDifficultyLevelFromVw(distanceVw) {
-  // 直接基于vw范围判断，无需转换
-  for (const levelConfig of DIFFICULTY_CONFIG.levels) {
-    if (distanceVw >= levelConfig.vwRange.min && 
-        distanceVw < levelConfig.vwRange.max) {
-      return levelConfig.level
-    }
-  }
-  // 如果超出所有范围，返回最高级别
-  return DIFFICULTY_CONFIG.levels[DIFFICULTY_CONFIG.levels.length - 1].level
+  // 查找对应的难度等级
+  const level = DIFFICULTY_CONFIG.levels.find(level => {
+    return distanceVw >= level.vwRange.min && distanceVw < level.vwRange.max
+  })
+  
+  return level ? level.level : DIFFICULTY_CONFIG.levels[DIFFICULTY_CONFIG.levels.length - 1].level
 }
 
 /**
  * 根据距离（米）计算当前难度等级（兼容性函数）
  * @param {number} distanceMeters - 游戏距离（米）
- * @returns {number} 难度等级（0-6）
+ * @returns {number} 难度等级（3-6）
  */
 export function getDifficultyLevel(distanceMeters) {
   // 转换为vw后使用主要函数
@@ -335,17 +287,18 @@ export function convertMetersToVw(distanceMeters) {
 
 /**
  * 获取指定等级的配置
- * @param {number} level - 难度等级（0-6）
+ * @param {number} level - 难度等级（3-6）
  * @returns {Object} 等级配置对象
  */
 export function getLevelConfig(level) {
-  return DIFFICULTY_CONFIG.levels.find(config => config.level === level) || 
-         DIFFICULTY_CONFIG.levels[DIFFICULTY_CONFIG.levels.length - 1]
+  const levelConfig = DIFFICULTY_CONFIG.levels.find(config => config.level === level)
+  return levelConfig || 
+    DIFFICULTY_CONFIG.levels[DIFFICULTY_CONFIG.levels.length - 1]
 }
 
 /**
- * 计算指定等级在100vw内应生成的对象数量
- * @param {number} level - 难度等级（0-6）
+ * 根据等级获取每100vw的对象数量
+ * @param {number} level - 难度等级（3-6）
  * @returns {number} 对象数量
  */
 export function getObjectCountPer100vw(level) {
@@ -355,9 +308,9 @@ export function getObjectCountPer100vw(level) {
 }
 
 /**
- * 获取指定等级的运动速度
- * @param {number} level - 难度等级（0-6）
- * @returns {number} 运动速度（vw/s）
+ * 根据等级获取移动速度
+ * @param {number} level - 难度等级（3-6）
+ * @returns {number} 移动速度（vw/s）
  */
 export function getMovementSpeed(level) {
   const levelConfig = getLevelConfig(level)
@@ -365,22 +318,19 @@ export function getMovementSpeed(level) {
 }
 
 /**
- * 获取指定等级的生成间隔
- * @param {number} level - 难度等级（0-6）
+ * 根据等级获取生成间隔
+ * @param {number} level - 难度等级（3-6）
  * @returns {number} 生成间隔（vw）
  */
 export function getSpawnInterval(level) {
   const levelConfig = getLevelConfig(level)
   const { min, max } = levelConfig.spawnInterval
-  const interval = min + Math.random() * (max - min)
-  
-  // 确保不低于绝对最小间隔
-  return Math.max(interval, DIFFICULTY_CONFIG.absoluteMinInterval)
+  return Math.random() * (max - min) + min
 }
 
 /**
  * 获取指定等级的概率分布
- * @param {number} level - 难度等级（0-6）
+ * @param {number} level - 难度等级（3-6）
  * @returns {Object} 概率分布对象
  */
 export function getProbabilityDistribution(level) {
@@ -390,7 +340,7 @@ export function getProbabilityDistribution(level) {
 
 /**
  * 根据概率分布生成对象类型
- * @param {number} level - 难度等级（0-6）
+ * @param {number} level - 难度等级（3-6）
  * @returns {string} 对象类型名称
  */
 export function generateRandomObjectType(level) {
@@ -411,7 +361,7 @@ export function generateRandomObjectType(level) {
 
 /**
  * 根据等级和距离生成对象类型数组
- * @param {number} level - 难度等级（0-6）
+ * @param {number} level - 难度等级（3-6）
  * @param {number} count - 要生成的对象总数
  * @returns {Array} 对象类型数组
  */
@@ -641,12 +591,9 @@ export function testNewDifficultySystem() {
  * @returns {number} 期望的等级
  */
 function getExpectedLevelForVw(vw) {
-  if (vw < 400) return 0
-  if (vw < 1600) return 1
-  if (vw < 4000) return 2
-  if (vw < 10000) return 3
-  if (vw < 18000) return 4
-  if (vw < 32000) return 5
+  if (vw < 6000) return 3
+  if (vw < 14000) return 4
+  if (vw < 24000) return 5
   return 6
 }
 

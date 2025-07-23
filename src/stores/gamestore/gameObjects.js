@@ -33,7 +33,7 @@ export const useGameObjectsStore = defineStore('gameObjects', {
     // 动态难度生成系统
     lastSpawnDistance: 0,
     forceNextSpawn: true, // 强制下次生成标志
-    currentDifficultyLevel: 1,
+    currentDifficultyLevel: 3, // 改为从第3级开始
     pendingObjectTypes: [], // 待生成的对象类型队列
     lastLevelUpdate: 0, // 上次等级更新时的距离
     
@@ -66,7 +66,7 @@ export const useGameObjectsStore = defineStore('gameObjects', {
       
       // 重置动态难度系统
       this.forceNextSpawn = true
-      this.currentDifficultyLevel = 1
+      this.currentDifficultyLevel = 3 // 改为从第3级开始
       this.pendingObjectTypes = []
       this.lastLevelUpdate = 0
     },
@@ -184,22 +184,16 @@ export const useGameObjectsStore = defineStore('gameObjects', {
 
     // 根据等级和概率确定最大生成数量
     determineMaxSpawnForLevel(availableLanesCount) {
-      // 等级1：保持原来的逻辑，最多生成可用泳道数量的对象（通常0-2个）
-      if (this.currentDifficultyLevel === 1) {
-        return Math.min(availableLanesCount, 2) // 等级1最多2个，无概率系统
+      // 等级3：作为最低级别，保持较低的生成数量（通常0-2个）
+      if (this.currentDifficultyLevel === 3) {
+        return Math.min(availableLanesCount, 2) // 等级3最多2个，相对简单
       }
       
-      // 等级2-6：根据概率决定是否生成3个对象
+      // 等级4-6：根据概率决定是否生成3个对象
       const randomValue = Math.random() * 100 // 0-100的随机数
       let threeObjectProbability = 0
       
       switch (this.currentDifficultyLevel) {
-        case 2:
-          threeObjectProbability = 2 // 2%概率生成3个
-          break
-        case 3:
-          threeObjectProbability = 5 // 5%概率生成3个
-          break
         case 4:
           threeObjectProbability = 10 // 10%概率生成3个
           break
@@ -219,7 +213,7 @@ export const useGameObjectsStore = defineStore('gameObjects', {
         console.log(`🎲 等级${this.currentDifficultyLevel} 概率触发: ${threeObjectProbability}% 概率生成3个对象，实际最多${maxSpawn}个`)
         return maxSpawn
       } else {
-        // 生成0-2个对象（和等级1一样）
+        // 生成0-2个对象（和等级3一样）
         const maxSpawn = Math.min(availableLanesCount, 2)
         console.log(`🎲 等级${this.currentDifficultyLevel} 正常生成: 最多${maxSpawn}个对象`)
         return maxSpawn
@@ -403,54 +397,6 @@ export const useGameObjectsStore = defineStore('gameObjects', {
       return false
     },
     
-    // 添加收集特效
-    addCollectEffect(x, y) {
-      for (let i = 0; i < 12; i++) {
-        this.particles.push({
-          x: x,
-          y: y,
-          vx: (Math.random() - 0.5) * 8,
-          vy: (Math.random() - 0.5) * 8,
-          life: 40,
-          maxLife: 40,
-          size: Math.random() * 3 + 1,
-          color: 'gold'
-        })
-      }
-    },
-    
-    // 添加爆炸特效
-    addExplosion(x, y) {
-      for (let i = 0; i < 15; i++) {
-        this.particles.push({
-          x: x,
-          y: y,
-          vx: (Math.random() - 0.5) * 10,
-          vy: (Math.random() - 0.5) * 10,
-          life: 30,
-          maxLife: 30,
-          size: Math.random() * 4 + 2,
-          color: 'orange'
-        })
-      }
-    },
-    
-    // 添加水花效果
-    addSplash(x, y, gameLayoutStore) {
-      for (let i = 0; i < 8; i++) {
-        this.particles.push({
-          x: x + gameLayoutStore.player.width / 2,
-          y: y + gameLayoutStore.player.height / 2,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
-          life: 30,
-          maxLife: 30,
-          size: Math.random() * 4 + 2,
-          color: 'white'
-        })
-      }
-    },
-    
     // 碰撞检测 - 使用圆形碰撞检测
     checkCollision(obj1, obj2) {
       // 获取对象1的碰撞圆信息
@@ -482,6 +428,31 @@ export const useGameObjectsStore = defineStore('gameObjects', {
       this.powerUps.forEach(powerUp => {
         powerUp.x = gameLayoutStore.getLaneX(powerUp.lane) - powerUp.width / 2
       })
+    },  // 添加这个逗号
+
+    // 粒子效果函数 - 已禁用但保留接口
+    addSplash(x, y, gameLayoutStore) {
+      // 水花效果已禁用
+      return
+    },
+
+    addCollectEffect(x, y) {
+      // 收集特效已禁用
+      return
+    },
+
+    addExplosion(x, y) {
+      // 爆炸特效已禁用
+      return
+    },
+
+    resetDifficultySystem() {
+      this.currentDifficultyLevel = 3 // 改为从第3级开始
+      this.lastSpawnDistance = 0
+      this.lastLevelUpdate = 0
+      this.pendingObjectTypes = []
+      this.forceNextSpawn = true
+      console.log('🔄 难度系统已重置到第3级')
     }
   }
-}) 
+})

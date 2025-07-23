@@ -30,7 +30,7 @@ export default defineConfig({
     proxy: {
       // 通用API端点
       '/api': {
-        target: 'https://w.inews.qq.com',
+        target: 'https://dev.inews.qq.com',
         changeOrigin: true,
         rewrite: (p) => {
           return p.replace(/^\/api/, '')
@@ -53,7 +53,7 @@ export default defineConfig({
       },
       // 活动相关API端点（专门用于活动数据）
       '/apiactivity': {
-        target: 'https://w.inews.qq.com',
+        target: 'https://dev.inews.qq.com',
         changeOrigin: true,
         rewrite: (p) => {
           return p.replace(/^\/apiactivity/, '/activity')

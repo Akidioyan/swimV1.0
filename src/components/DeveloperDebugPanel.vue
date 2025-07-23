@@ -348,6 +348,7 @@ export default {
   border-radius: 4px;
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
   cursor: pointer;
 }
 

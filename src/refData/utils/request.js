@@ -91,3 +91,18 @@ export async function submitAndFetchRealLeaderboardData() {
 
 // Allow both named and default import
 export default request;
+
+// 获取活动总人数
+export async function getPingPangPV() {
+  try {
+    console.log('开始调用 pingpong/pv API...');
+    const response = await request('/activity/pingpong/pv', {
+      method: 'GET'
+    });
+    console.log('pingpong/pv API 调用成功:', response);
+    return response;
+  } catch (error) {
+    console.error('pingpong/pv API 调用失败:', error);
+    throw error;
+  }
+}
