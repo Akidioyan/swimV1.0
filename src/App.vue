@@ -1,30 +1,24 @@
 <template>
   <div id="app">
-    <!-- 测试入口页面 -->
-    <TestEntry v-if="isTestEntryMode" />
+    <!-- 加载页面 -->
+    <LoadingView v-if="gameStateStore.currentView === 'loading'" />
     
-    <!-- 正常游戏流程 -->
-    <template v-else>
-      <!-- 加载页面 -->
-      <LoadingView v-if="gameStateStore.currentView === 'loading'" />
-      
-      <!-- 介绍页面 -->
-      <IntroView v-else-if="gameStateStore.currentView === 'intro'" />
-      
-      <!-- 过场视频页面 -->
-      <VideoView v-else-if="gameStateStore.currentView === 'video'" />
-      
-      <!-- 游戏页面 -->
-      <GameView v-else-if="gameStateStore.currentView === 'game'" />
-      
-      <!-- 结果页面 -->
-      <EndingScene v-else-if="gameStateStore.currentView === 'result'" />
-    </template>
+    <!-- 介绍页面 -->
+    <IntroView v-else-if="gameStateStore.currentView === 'intro'" />
+    
+    <!-- 过场视频页面 -->
+    <VideoView v-else-if="gameStateStore.currentView === 'video'" />
+    
+    <!-- 游戏页面 -->
+    <GameView v-else-if="gameStateStore.currentView === 'game'" />
+    
+    <!-- 结果页面 -->
+    <EndingScene v-else-if="gameStateStore.currentView === 'result'" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from './stores/gameStore'
 import { useGameStateStore } from './stores/gamestore/gameState'
 import { usePlayerControlStore } from './stores/gamestore/playerControl'
@@ -34,39 +28,18 @@ import IntroView from './components/IntroView.vue'
 import VideoView from './components/VideoView.vue'
 import GameView from './components/GameView.vue'
 import EndingScene from './components/Endingscene/EndingScene.vue'
-import TestEntry from './components/TestEntry.vue'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const playerControlStore = usePlayerControlStore()
 const userStore = useUserStore()
 
-// 检查测试模式类型
-const testMode = computed(() => {
-  if (process.env.NODE_ENV === 'development') {
-    const urlParams = new URLSearchParams(window.location.search)
-    return urlParams.get('test') || localStorage.getItem('endingSceneTestMode')
-  }
-  return null
-})
-
-const isTestEntryMode = computed(() => {
-  return testMode.value === 'entry' || testMode.value === null
-})
-
 onMounted(async () => {
-  // 如果是测试模式，跳过正常初始化
-  if (isTestEntryMode.value) {
-    console.log('🧪 进入测试模式:', testMode.value)
-    return
-  }
-  
   // 初始化用户环境
   await userStore.initEnvironment()
   
   // 上报初始环境数据
   try {
-    // 修改：从 './dataStore/request' 改为 './utils/request'
     const { reportEnvironment } = await import('./utils/request')
     await reportEnvironment()
   } catch (error) {

@@ -2,9 +2,6 @@
   "/bg-menu.png": "https://inews.gtimg.com/newsapp_bt/0/0717104622283_2897/0",
   "/intro.png": "https://inews.gtimg.com/newsapp_bt/0/071710462664_6678/0",
   "/swimer.png": "https://inews.gtimg.com/newsapp_bt/0/0717200431967_7062/0",
-  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0717201445247_5096/0",
-  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0717201445229_5077/0",
-  "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0717201445223_5072/0",
 
   "/vector/heart.svg": "https://mat1.gtimg.com/rain/apub2019/337dac63a947.heart.svg",
   "/vector/set.svg": "https://mat1.gtimg.com/rain/apub2019/42ffdddf6932.set.svg",
@@ -56,5 +53,26 @@
   "/favicon_io/site.webmanifest": "https://mat1.gtimg.com/rain/apub2019/bf31baf91bdd.site.webmanifest",
 
   "https://mat1.gtimg.com/rain/apub2019/swim-favicon.png": "https://mat1.gtimg.com/rain/apub2019/d4a9f8e09b1a.favicon.ico",
-  "https://mat1.gtimg.com/rain/apub2019/swim-music-icon.svg": "https://mat1.gtimg.com/rain/apub2019/1fdaf51775b0.music.svg"
+  "https://mat1.gtimg.com/rain/apub2019/swim-music-icon.svg": "https://mat1.gtimg.com/rain/apub2019/1fdaf51775b0.music.svg",
+   
+  "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0723223807904_4167/0",
+  "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0723223820401_6578/0",
+  "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0723223822464_8640/0",
+  "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/0723223839776_5781/0",
+  "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0723223830687_6778/0",
+  "/ContinueToChallenge.png": "https://inews.gtimg.com/newsapp_bt/0/0723223804352_615/0",
+  "/OneMore.png": "https://inews.gtimg.com/newsapp_bt/0/0723223813926_102/0",
+  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0724103013474_5440/0",
+  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0723223816180_2357/0",
+  "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0723223826583_2673/0",
+
+  "/vector/RankingList.svg": "https://mat1.gtimg.com/rain/apub2019/914ff914e2e3.RankingList.svg",
+  "/vector/MeRankingList.svg": "https://mat1.gtimg.com/rain/apub2019/cb44ca045f55.MeRankingList.svg",
+  "/vector/RankIcon.svg": "https://mat1.gtimg.com/rain/apub2019/d1fc9e02acb3.RankIcon.svg",
+  
+  "/font/MFYuanHei.ttf": "https://mat1.gtimg.com/rain/apub2019/5c04ebcd0e51.MFYuanHei.ttf",
+  "/font/RadikalW01Bold.ttf": "https://mat1.gtimg.com/rain/apub2019/4a96f9afde1b.RadikalW01Bold.ttf",
+  "/font/PingFangLight.ttf": "https://mat1.gtimg.com/rain/apub2019/30e6529b7f78.PingFangLight.ttf"
+
+  
 }

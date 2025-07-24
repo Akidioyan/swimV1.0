@@ -48,7 +48,7 @@
           <img src="/vector/Question.svg" alt="游戏规则" class="control-icon" />
         </button>
         <button class="control-btn" @click="toggleSound">
-          <img :src="isSoundOn ? '/vector/SoundOn.svg' : '/vector/Soundff.svg'" alt="声音" class="control-icon" />
+          <img :src="isSoundOn ? '/vector/SoundOn.svg' : '/vector/SoundOff.svg'" alt="声音" class="control-icon" />
         </button>
       </div>
     </div>
@@ -56,29 +56,74 @@
   <Leaderboard :isVisible="isLeaderboardVisible" @close="hideLeaderboard" />
   <div v-if="isGameRulesVisible" class="game-rules-modal" @click="hideGameRules">
     <div class="game-rules-panel" @click.stop>
+      <!-- 标题栏 -->
       <div class="rules-header">
         <div class="rules-title">
-          <img src="/vector/hint.svg" alt="规则图标" class="title-icon" />
+          <img src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
           <span>游戏规则</span>
         </div>
         <button class="close-btn" @click="hideGameRules">
           <div class="close-x"></div>
         </button>
       </div>
-      <div class="rules-content">
-        <div class="rules-text">
-          <h3>🏊 基本操作</h3>
-          <p>• 点击屏幕左右区域在四条泳道之间切换</p>
-          <p>• 长按屏幕可以加速冲刺</p>
-          <h3>🎯 游戏目标</h3>
-          <p>• 避开障碍物（石头、螃蟹、食人花）</p>
-          <p>• 收集星星获得分数</p>
-          <p>• 游泳距离越远分数越高</p>
-          <h3>💫 特殊道具</h3>
-          <p>• 呼吸管（🤿）：进入水底无敌状态</p>
-          <h3>❤️ 生命系统</h3>
-          <p>• 每位玩家有3次生命机会</p>
-          <p>• 首次分享游戏可额外获得一次生命</p>
+      
+      <!-- 规则内容区域 -->
+      <div class="rules-content-area">
+        <div class="rules-scroll-content">
+          
+          <!-- 游戏目标 -->
+          <div class="rule-section">
+            <div class="rule-title">🎯 游戏目标</div>
+            <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
+          </div>
+
+          <!-- 基本操作 -->
+          <div class="rule-section">
+            <div class="rule-title">🎮 基本操作</div>
+            <div class="operation-list">
+              <div class="operation-item">
+                <span class="operation-icon">👆</span>
+                <span class="operation-text">点击屏幕左右区域切换泳道</span>
+              </div>
+              <div class="operation-item">
+                <span class="operation-icon">⚡</span>
+                <span class="operation-text">长按能量条加速冲刺</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 游戏规则 -->
+          <div class="rule-section">
+            <div class="rule-title">⚠️ 游戏规则</div>
+            <ul class="rule-list">
+              <li>每位玩家有3次生命机会</li>
+              <li>碰到障碍物将损失一次生命</li>
+              <li>失去所有生命后游戏结束</li>
+              <li>首次分享游戏可获得额外生命</li>
+            </ul>
+          </div>
+
+          <!-- 特殊道具 -->
+          <div class="rule-section">
+            <div class="rule-title">🎁 特殊道具</div>
+            <div class="items-list">
+              <div class="item">
+                <span class="item-icon">🤿</span>
+                <span class="item-text">呼吸管：进入无敌状态</span>
+              </div>
+              <div class="item">
+                <span class="item-icon">⭐</span>
+                <span class="item-text">星星：唯一加分途径</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 排行榜规则 -->
+          <div class="rule-section">
+            <div class="rule-title">🏆 排行榜规则</div>
+            <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
+          </div>
+          
         </div>
       </div>
     </div>
@@ -128,14 +173,44 @@ export default {
       hideSettings(); 
       gameStateStore.backToMenu()  // 使用已有的方法
     }
-    const restartGame = () => {
+    const restartGame = async () => {
       hideSettings();
       
-      // 首先重置游戏商店状态（障碍物、道具等）
-      gameStore.resetGameState();
+      console.log('🔄 开始重新开始游戏...')
       
-      // 然后调用游戏状态重新开始
+      // 重置游戏状态store（主要的游戏状态和数据）
       gameStateStore.restartGame();
+      
+      // 重置游戏store（游泳游戏相关数据）
+      gameStore.resetSwimmingGame();
+      
+      // 重置其他相关store
+      try {
+        // 动态导入其他store以避免循环依赖
+        const { useGameObjectsStore } = await import('../../stores/gamestore/gameObjects')
+        const { usePlayerControlStore } = await import('../../stores/gamestore/playerControl')
+        const { useGameLayoutStore } = await import('../../stores/gamestore/gameLayout')
+        
+        const gameObjectsStore = useGameObjectsStore()
+        const playerControlStore = usePlayerControlStore()
+        const gameLayoutStore = useGameLayoutStore()
+        
+        // 重置游戏对象（障碍物、道具、粒子等）
+        gameObjectsStore.resetGameObjectState()
+        
+        // 重置难度系统
+        gameObjectsStore.resetDifficultySystem()
+        
+        // 重置玩家控制状态
+        playerControlStore.resetPlayerControl()
+        
+        // 重置玩家位置
+        gameLayoutStore.resetPlayerPosition()
+        
+        console.log('✅ 所有游戏状态已重置，游戏重新开始')
+      } catch (error) {
+        console.error('❌ 重置游戏状态时出错:', error)
+      }
     };
     const toggleSound = () => {
       console.log('切换前音效状态:', audioManager.isSoundOn)
@@ -310,7 +385,8 @@ export default {
 .close-btn {
   position: absolute;
   right: 0;
-  top: 0;
+  top: 50%; /* 统一为50%垂直居中 */
+  transform: translateY(-50%); /* 添加垂直居中变换 */
   width: 8.53dvw; /* 32px / 375px * 100 */
   height: 8.53dvw;
   background: transparent;
@@ -319,11 +395,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: auto; /* 统一添加事件处理 */
+  z-index: 10; /* 统一添加层级 */
 }
 
 .close-x {
   position: relative;
-  width: 6.4dvw; /* 24px / 375px * 100 */
+  width: 6.4dvw; /* 统一为6.4dvw */
   height: 6.4dvw;
 }
 
@@ -333,10 +411,10 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4dvw;
-  height: 0.8dvw; /* 3px / 375px * 100 */
+  width: 6.4dvw; /* 统一为6.4dvw */
+  height: 0.8dvw; /* 统一为0.8dvw */
   background: rgb(114, 51, 46);
-  border-radius: 0.4dvw;
+  border-radius: 0.4dvw; /* 统一为0.4dvw */
 }
 
 .close-x::before {
@@ -432,32 +510,48 @@ export default {
   transform: translate(0, 0);
 }
 
-/* 游戏规则弹窗 */
+/* 游戏规则弹窗 - 基于Figma设计稿 */
 .game-rules-modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100dvw;
+  width: 100%;
   height: 100dvh;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 3000; /* 提高z-index确保在最上层 */
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 2000;
+  justify-content: center;
+  padding: 5dvw;
 }
 
 .game-rules-panel {
-  width: 80dvw;
-  max-height: 70dvh;
-  background: rgb(255, 235, 210);
-  border: 0.53dvw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
-  border-radius: 5.33dvw;
+  width: 88.21vw; /* 330.8px / 375px * 100 */
+  height: 76.26vh; /* 594.06px / 779px * 100 */
+  background: rgb(255, 235, 210); /* 基于设计稿 */
+  border: 0.53vw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
+  border-radius: 5.33vw; /* 20px / 375px * 100 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  pointer-events: auto;
+  box-shadow: 0 5dvw 16dvw rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+  pointer-events: auto; /* 确保面板可以接收事件 */
 }
 
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 标题栏 */
 .rules-header {
   display: flex;
   justify-content: center;
@@ -467,6 +561,7 @@ export default {
   height: 15dvw;
   padding: 0 4dvw; /* 15px / 375px * 100 */
   border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  background: rgb(255, 235, 210);
 }
 
 .rules-title {
@@ -474,16 +569,39 @@ export default {
   align-items: center;
   gap: 2.13dvw;
   color: rgb(114, 51, 46);
-  font-size: 6.4dvw;
+  font-size: 5.33vw; /* 20px / 375px * 100 */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 800;
+  font-weight: 700;
   margin-left: -1.07dvw; /* -4px / 375px * 100 */
 }
 
-/* 游戏规则面板的X图标 */
+.title-icon {
+  width: 6.24vw; /* 23.43px / 375px * 100 */
+  height: 6.24vw;
+  object-fit: contain;
+}
+
+/* 关闭按钮 */
+.rules-header .close-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8.53dvw;
+  height: 8.53dvw;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto; /* 确保按钮可以接收点击事件 */
+  z-index: 10; /* 确保按钮在上层 */
+}
+
 .rules-header .close-x {
   position: relative;
-  width: 6.4dvw;
+  width: 6.4dvw; /* 统一为6.4dvw */
   height: 6.4dvw;
 }
 
@@ -493,10 +611,10 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4dvw;
-  height: 0.8dvw;
+  width: 6.4dvw; /* 统一为6.4dvw */
+  height: 0.8dvw; /* 统一为0.8dvw */
   background: rgb(114, 51, 46);
-  border-radius: 0.4dvw;
+  border-radius: 0.4dvw; /* 统一为0.4dvw */
 }
 
 .rules-header .close-x::before {
@@ -507,25 +625,110 @@ export default {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.rules-content {
+/* 内容区域 */
+.rules-content-area {
   flex: 1;
+  background: rgb(217, 181, 149); /* 基于设计稿 */
+  border-radius: 2.67vw; /* 10px / 375px * 100 */
+  margin: 2.13vw 3.73vw; /* 8px 14px */
+  overflow: hidden;
+}
+
+.rules-scroll-content {
+  padding: 4dvw;
+  height: 100%;
   overflow-y: auto;
-  padding: 3.2dvw;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
-.rules-text h3 {
-  color: rgb(114, 51, 46);
-  font-size: 4.8dvw; /* 18px / 375px * 100 */
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-  margin: 3.21dvh 0 1.67dvh; /* 25px 0 13px / 779px * 100 */
+.rules-scroll-content::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
 }
 
-.rules-text p {
+/* 规则章节 */
+.rule-section {
+  margin-bottom: 4dvw;
+}
+
+.rule-section:last-child {
+  margin-bottom: 2dvw;
+}
+
+.rule-title {
+  font-size: 3.73vw; /* 14px / 375px * 100 */
+  font-weight: 700;
   color: rgb(114, 51, 46);
-  font-size: 4dvw; /* 15px / 375px * 100 */
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-bottom: 2.13dvw;
+  display: flex;
+  align-items: center;
+  gap: 1.6dvw;
+}
+
+.rule-description {
+  font-size: 3.2vw; /* 12px / 375px * 100 */
+  color: rgb(114, 51, 46);
   line-height: 1.5;
-  margin: 0.64dvh 0; /* 5px 0 / 779px * 100 */
+  margin: 0;
+  margin-top: 1.33vw;
+}
+
+/* 规则列表 */
+.rule-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.33vw 0 0 0;
+}
+
+.rule-list li {
+  padding: 1.07dvw 0;
+  padding-left: 4.27dvw;
+  position: relative;
+  font-size: 3.2vw;
+  color: rgb(114, 51, 46);
+  line-height: 1.4;
+}
+
+.rule-list li::before {
+  content: '•';
+  color: rgb(114, 51, 46);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  top: 1.07dvw;
+}
+
+/* 操作和道具列表 */
+.operation-list,
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6dvw;
+  margin-top: 1.33vw;
+}
+
+.operation-item,
+.item {
+  display: flex;
+  align-items: center;
+  gap: 2.13dvw;
+  padding: 1.6dvw 2.67vw;
+  background: rgba(255, 235, 207, 0.8);
+  border: 0.27vw solid rgba(114, 51, 46, 0.2);
+  border-radius: 1.6dvw;
+  font-size: 3.2vw;
+}
+
+.operation-icon,
+.item-icon {
+  font-size: 3.73vw;
+  flex-shrink: 0;
+}
+
+.operation-text,
+.item-text {
+  font-size: 3.2vw;
+  color: rgb(114, 51, 46);
+  line-height: 1.3;
 }
 </style>

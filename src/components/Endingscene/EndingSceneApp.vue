@@ -150,7 +150,7 @@ import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useUserStore } from '../../stores/userStore';
 import { setShareInfo, showShareMenu } from '@tencent/qqnews-jsapi'
-import { reportSwimmingGameResult } from '../../utils/request';
+import { reportSwimmingGameResult, getActivityPV } from '../../utils/request';
 import { clickReport } from '../../utils/report';
 
 const gameStore = useGameStore()
@@ -187,12 +187,29 @@ const gameData = computed(() => ({
   stars: gameStateStore.score || gameStore.stars || 0
 }))
 
+// 解析score为星星数和距离的函数
+const parseScoreToStarsAndDistance = (score) => {
+  const stars = Math.floor(score / 100000)
+  const distance = score % 100000
+  return { stars, distance }
+}
+
+// 计算击败百分比的函数
+const calculateDefeatPercentage = (lessScoreCount, totalPV) => {
+  if (!totalPV || totalPV === 0) return '0'
+  return Math.round((lessScoreCount / totalPV) * 100)
+}
+
 // 根据距离获取称号
 const getTitleByDistance = (distance) => {
-  if (distance >= 1000) return '千米冠军'
-  if (distance >= 600) return '游泳健将'
-  if (distance >= 300) return '中流砥柱'
-  if (distance >= 100) return '百米泳者'
+  if (distance >= 320) return '泳坛传奇'
+  if (distance >= 280) return '泳坛王者'
+  if (distance >= 240) return '水中蛟龙'
+  if (distance >= 200) return '浪里白条'
+  if (distance >= 160) return '浪里飞鱼'
+  if (distance >= 120) return '泳池新星'
+  if (distance >= 80) return '水中精灵'
+  if (distance >= 40) return '泳池新手'
   return '初出茅庐'
 }
 
@@ -290,7 +307,23 @@ onMounted(async () => {
   isLoadingApi.value = true;
   apiError.value = null;
   try {
-    // 上报游戏结果并获取排行榜数据
+    // 1. 首先获取真实的PV数据
+    let realCurrentPV = 100; // 默认值
+    try {
+      console.log('[EndingSceneApp] 获取真实PV数据...');
+      const pvResponse = await getActivityPV();
+      if (pvResponse && pvResponse.data && pvResponse.data.current_pv) {
+        realCurrentPV = parseInt(pvResponse.data.current_pv);
+        console.log('[EndingSceneApp] 获取到真实current_pv:', realCurrentPV);
+      } else if (pvResponse && pvResponse.current_pv) {
+        realCurrentPV = parseInt(pvResponse.current_pv);
+        console.log('[EndingSceneApp] 获取到真实current_pv:', realCurrentPV);
+      }
+    } catch (pvError) {
+      console.error('[EndingSceneApp] 获取PV数据失败，使用默认值:', pvError);
+    }
+
+    // 2. 上报游戏结果并获取排行榜数据
     const gameResultData = {
       distance: gameData.value.currentDistance,
       score: gameData.value.stars,
@@ -308,31 +341,54 @@ onMounted(async () => {
     const realDataResponse = await reportSwimmingGameResult(gameResultData)
     console.log('[EndingSceneApp] Real data received from API:', JSON.parse(JSON.stringify(realDataResponse)));
 
-    if (realDataResponse && realDataResponse.data) {
+    if (realDataResponse && realDataResponse.code === 0 && realDataResponse.data) {
       const apiData = realDataResponse.data;
 
-      // 设置当前用户数据
-      currentUserEntry.value = {
-        rank: apiData.currentUserEntry?.rank || Math.floor(Math.random() * 100) + 50,
-        nick: displayNick.value,
-        distance: gameData.value.currentDistance,
-        stars: gameData.value.stars
-      };
+      // 3. 使用正确的公式计算击败百分比：rankPercent = Math.round((less_score_count / current_pv) * 100)
+      const defeatPercentage = calculateDefeatPercentage(
+        apiData.less_score_count || 0,
+        realCurrentPV  // 使用真实的PV数据，而不是ranking_size
+      )
+      
+      console.log(`[EndingSceneApp] 战胜比例计算: ${apiData.less_score_count || 0} / ${realCurrentPV} = ${defeatPercentage}%`);
 
-      // 设置排行榜数据
-      if (apiData.leaderboardEntries && Array.isArray(apiData.leaderboardEntries)) {
-        leaderboardData.value = apiData.leaderboardEntries.map(player => ({
-          rank: player.rank,
-          nick: (player.nick && player.nick.trim() !== '') ? player.nick : "游泳挑战者",
-          distance: player.distance,
-          stars: player.stars || player.score || 0,
-        }));
+      // 设置当前用户数据 - 使用best_rank信息
+      if (apiData.best_rank) {
+        const { stars, distance } = parseScoreToStarsAndDistance(apiData.best_rank.score)
+        currentUserEntry.value = {
+          rank: apiData.best_rank.rank,
+          nick: displayNick.value,
+          distance: distance,
+          stars: stars
+        }
       } else {
-        console.warn('[EndingSceneApp] API response missing or invalid leaderboardEntries');
+        currentUserEntry.value = {
+          rank: '未上榜',
+          nick: displayNick.value,
+          distance: gameData.value.currentDistance,
+          stars: gameData.value.stars
+        }
+      }
+
+      // 设置排行榜数据 - 适配新的API格式
+      if (apiData.ranking_board && Array.isArray(apiData.ranking_board)) {
+        leaderboardData.value = apiData.ranking_board.map(entry => {
+          const { stars, distance } = parseScoreToStarsAndDistance(entry.ranking.score)
+          return {
+            rank: entry.ranking.rank,
+            nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
+            distance: distance,
+            stars: stars,
+            score: stars,
+            head_url: entry.user_info.head_url || ''
+          }
+        })
+      } else {
+        console.warn('[EndingSceneApp] API response missing or invalid ranking_board');
         leaderboardData.value = generateMockLeaderboard();
       }
       
-      currentUserData.value = { rankPercent: apiData.rankPercent?.replace('%', '') || '50' };
+      currentUserData.value = { rankPercent: defeatPercentage };
       
       console.log('[EndingSceneApp] Parsed currentUserEntry:', currentUserEntry.value);
       console.log('[EndingSceneApp] Parsed leaderboardData:', leaderboardData.value);
@@ -694,7 +750,7 @@ const closeLeaderboardChallenge = () => {
 }
 
 .number-text {
-  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
+  font-family: 'RadikalW01Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
   color: #5CBBF9; /* 设计稿中的蓝色 */
 }

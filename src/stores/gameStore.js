@@ -3,13 +3,6 @@ import { useUserStore } from './userStore' // 新增
 
 export const useGameStore = defineStore('game', {
   state: () => ({
-    // 服务器数据相关
-    activityData: {
-      totalParticipants: 81151, // 更真实的精确参与人数（基于设计稿中的数字）
-      isLoading: false,
-      lastUpdated: null
-    },
-    
     // 游泳游戏状态
     swimming: {
       distance: 0,           // 游泳距离（米）
@@ -34,19 +27,6 @@ export const useGameStore = defineStore('game', {
   }),
   
   getters: {
-    // 格式化参与人数显示 - 显示精确数字
-    formattedParticipants: (state) => {
-      const total = state.activityData.totalParticipants;
-      // 使用toLocaleString()来添加千分位分隔符，显示精确数字
-      return total.toLocaleString('zh-CN');
-    },
-    
-    // 参与人数文本
-    participantText: (state) => {
-      const formatted = state.formattedParticipants;
-      return `—— 已有${formatted}人参与过挑战 ——`;
-    },
-    
     // 游泳游戏相关getters
     distance: (state) => state.swimming.distance,
     score: (state) => state.swimming.score,
@@ -86,44 +66,6 @@ export const useGameStore = defineStore('game', {
   },
   
   actions: {
-    // 获取活动参与人数
-    // 修改第68行和第109行的动态导入路径
-    async fetchActivityPV() {
-      if (this.activityData.isLoading) return;
-      
-      this.activityData.isLoading = true;
-      
-      try {
-        console.log('正在获取活动参与人数...');
-        // 修改：从 '../dataStore/request' 改为 '../utils/request'
-        const { getActivityPV } = await import('../utils/request');
-        const response = await getActivityPV();
-        
-        // 支持多种API响应格式
-        if (response && typeof response === 'object') {
-          // 优先使用新格式的 current_pv 字段，其次是 total 字段，最后是 pv 字段
-          const participantCount = response.current_pv || response.total || response.pv;
-          if (participantCount && typeof participantCount === 'number') {
-            this.activityData.totalParticipants = participantCount;
-            this.activityData.lastUpdated = new Date();
-            console.log('活动参与人数更新成功:', participantCount, '显示为:', this.formattedParticipants);
-            
-            // 如果有next_no字段，可以保存下次编号（可选）
-            if (response.next_no) {
-              console.log('下一个用户编号:', response.next_no);
-            }
-          } else {
-            console.warn('API返回数据中未找到有效的参与人数字段:', response);
-          }
-        }
-      } catch (error) {
-        console.error('获取活动参与人数失败:', error);
-        // 保持默认值
-      } finally {
-        this.activityData.isLoading = false;
-      }
-    },
-    
     // 游泳游戏相关actions
     startSwimmingGame() {
       this.swimming.isGameActive = true;

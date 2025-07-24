@@ -60,8 +60,8 @@
       <div class="challenge-section">
         <button class="challenge-button" @click="handleStartGame">
           <span class="challenge-text">立即挑战</span>
-          <p class="participant-count" v-if="!gameStore.activityData.isLoading">
-            {{ gameStore.participantText }}
+          <p class="participant-count" v-if="!participantData.isLoading">
+            {{ participantText }}
           </p>
           <p class="participant-count loading" v-else>
             —— 正在获取参与人数... ——
@@ -83,64 +83,85 @@
 
     <!-- 规则说明浮层 -->
     <Transition name="slide-up">
-      <div v-if="isRuleModalVisible" class="modal-backdrop" @click="handleCloseRuleModal">
-        <div class="rule-modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>游戏规则说明</h2>
-            <button class="close-button" @click="handleCloseRuleModal">×</button>
+      <div v-if="isRuleModalVisible" class="game-rules-modal" @click="handleCloseRuleModal">
+        <div class="game-rules-panel" @click.stop>
+          <!-- 标题栏 -->
+          <div class="rules-header">
+            <div class="rules-title">
+              <img src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
+              <span>游戏规则</span>
+            </div>
+            <button class="close-btn" @click="handleCloseRuleModal">
+              <div class="close-x"></div>
+            </button>
           </div>
           
-          <div class="rules-content">
-            <div class="rule-section">
-              <div class="rule-title">🎯 游戏目标</div>
-              <p>控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
-            </div>
+          <!-- 规则内容区域 -->
+          <div class="rules-content-area">
+            <div class="rules-scroll-content">
+              
+              <!-- 游戏目标 -->
+              <div class="rule-section">
+                <div class="rule-title">🎯 游戏目标</div>
+                <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
+              </div>
 
-            <div class="rule-section">
-              <div class="rule-title">🎮 基本操作</div>
-              <div class="operation-list">
-                <div class="operation-item">
-                  <span class="operation-icon">👆</span>
-                  <span>点击屏幕左右区域切换泳道</span>
-                </div>
-                <div class="operation-item">
-                  <span class="operation-icon">⚡</span>
-                  <span>长按能量条加速冲刺</span>
+              <!-- 基本操作 -->
+              <div class="rule-section">
+                <div class="rule-title">🎮 基本操作</div>
+                <div class="operation-list">
+                  <div class="operation-item">
+                    <span class="operation-icon">👆</span>
+                    <span class="operation-text">点击屏幕左右区域切换泳道</span>
+                  </div>
+                  <div class="operation-item">
+                    <span class="operation-icon">⚡</span>
+                    <span class="operation-text">长按能量条加速冲刺</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="rule-section">
-              <div class="rule-title">⚠️ 游戏规则</div>
-              <ul class="rule-list">
-                <li>每位玩家有3次生命机会</li>
-                <li>碰到障碍物将损失一次生命</li>
-                <li>失去所有生命后游戏结束</li>
-                <li>首次分享游戏可获得额外生命</li>
-              </ul>
-            </div>
+              <!-- 游戏规则 -->
+              <div class="rule-section">
+                <div class="rule-title">⚠️ 游戏规则</div>
+                <ul class="rule-list">
+                  <li>每位玩家有3次生命机会</li>
+                  <li>碰到障碍物将损失一次生命</li>
+                  <li>失去所有生命后游戏结束</li>
+                  <li>首次分享游戏可获得额外生命</li>
+                </ul>
+              </div>
 
-            <div class="rule-section">
-              <div class="rule-title">🎁 特殊道具</div>
-              <div class="items-list">
-                <div class="item">
-                  <span class="item-icon">🤿</span>
-                  <span>呼吸管：进入无敌状态</span>
-                </div>
-                <div class="item">
-                  <span class="item-icon">⭐</span>
-                  <span>星星：唯一加分途径</span>
+              <!-- 特殊道具 -->
+              <div class="rule-section">
+                <div class="rule-title">🎁 特殊道具</div>
+                <div class="items-list">
+                  <div class="item">
+                    <span class="item-icon">🤿</span>
+                    <span class="item-text">呼吸管：进入无敌状态</span>
+                  </div>
+                  <div class="item">
+                    <span class="item-icon">⭐</span>
+                    <span class="item-text">星星：唯一加分途径</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div class="rule-section">
-              <div class="rule-title">🏆 排行榜规则</div>
-              <p>根据星星总数排名，星星相同时按游泳距离排序。</p>
+              <!-- 排行榜规则 -->
+              <div class="rule-section">
+                <div class="rule-title">🏆 排行榜规则</div>
+                <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
+              </div>
+              
             </div>
           </div>
         </div>
       </div>
+    </Transition>
+
+    <!-- 排行榜浮层 -->
+    <Transition name="slide-up">
+      <Leaderboard :isVisible="isLeaderboardVisible" @close="handleCloseLeaderboard" />
     </Transition>
   </div>
 </template>
@@ -158,19 +179,110 @@ import {
   registerDeviceDetectionCallbacks,
   initDeviceDetectionListener 
 } from '../utils/deviceDetection'
+import Leaderboard from './Leaderboard.vue'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const userStore = useUserStore()
 const isRuleModalVisible = ref(false)
+const isLeaderboardVisible = ref(false)
 
 // 设备检测弹窗状态
 const showDeviceModal = ref(false)
+
+// PV 参与人数相关状态
+const participantData = ref({
+  currentPv: 26851, // 显示的最终参与人数（基数 + API返回值×3）
+  nextNo: 26852,    // 下一个用户编号
+  isLoading: false, // 加载状态
+  lastUpdated: null, // 最后更新时间
+  apiCurrentPv: 0   // 从API获取的原始current_pv值
+})
 
 // 登录提示显示条件：在QQ新闻App内且未登录
 const shouldShowLoginPrompt = computed(() => {
   return userStore.isInQQNewsApp && !userStore.hasLogin;
 });
+
+// 格式化参与人数显示 - 显示精确数字
+const formattedParticipants = computed(() => {
+  // 使用toLocaleString()来添加千分位分隔符，显示精确数字
+  return participantData.value.currentPv.toLocaleString('zh-CN');
+});
+
+// 参与人数文本
+const participantText = computed(() => {
+  return `—— 已有${formattedParticipants.value}人参与过挑战 ——`;
+});
+
+// 获取活动参与人数
+const fetchActivityPV = async () => {
+  if (participantData.value.isLoading) return;
+  
+  participantData.value.isLoading = true;
+  
+  try {
+    console.log('正在获取活动参与人数...');
+    const { getActivityPV } = await import('../utils/request');
+    const response = await getActivityPV();
+    
+    console.log('API返回的完整数据:', response);
+    
+    // 支持多种API响应格式
+    if (response && typeof response === 'object') {
+      let participantCount = null;
+      let nextNo = null;
+      
+      // 检查是否有data字段（新的API格式）
+      if (response.data && typeof response.data === 'object') {
+        console.log('使用response.data格式解析');
+        participantCount = response.data.current_pv || response.data.total || response.data.pv;
+        nextNo = response.data.next_no;
+      } else {
+        console.log('使用response直接格式解析');
+        // 兼容旧格式：直接在response根级别
+        participantCount = response.current_pv || response.total || response.pv;
+        nextNo = response.next_no;
+      }
+      
+      // 转换为数字（API可能返回字符串）
+      if (participantCount) {
+        const numParticipants = parseInt(participantCount, 10);
+        if (!isNaN(numParticipants)) {
+          participantData.value.apiCurrentPv = numParticipants;
+          // PV计算公式：基数26851 + current_pv × 3
+          const calculatedPv = 26851 + numParticipants * 3;
+          participantData.value.currentPv = calculatedPv;
+          participantData.value.lastUpdated = new Date();
+          console.log('PV计算详情:');
+          console.log(`  API返回的current_pv: ${numParticipants}`);
+          console.log(`  计算公式: 26851 + ${numParticipants} × 3 = ${calculatedPv}`);
+          console.log(`  最终显示: ${formattedParticipants.value}`);
+        } else {
+          console.warn('参与人数不是有效数字:', participantCount);
+        }
+      }
+      
+      // 处理next_no字段
+      if (nextNo) {
+        const numNextNo = parseInt(nextNo, 10);
+        if (!isNaN(numNextNo)) {
+          participantData.value.nextNo = numNextNo;
+          console.log('下一个用户编号:', numNextNo);
+        }
+      }
+      
+      if (!participantCount) {
+        console.warn('API返回数据中未找到有效的参与人数字段:', response);
+      }
+    }
+  } catch (error) {
+    console.error('获取活动参与人数失败:', error);
+    // 保持默认值
+  } finally {
+    participantData.value.isLoading = false;
+  }
+};
 
 // 组件挂载时获取参与人数数据并初始化设备检测
 onMounted(async () => {
@@ -195,9 +307,10 @@ onMounted(async () => {
   // 检查设备兼容性
   checkDeviceCompatibility()
   
+  // 获取活动参与人数
   try {
-    await gameStore.fetchActivityPV()
-    console.log('✅ 参与人数数据获取成功:', gameStore.formattedParticipants)
+    await fetchActivityPV()
+    console.log('✅ 参与人数数据获取成功:', formattedParticipants.value)
   } catch (error) {
     console.error('❌ 参与人数数据获取失败:', error)
   }
@@ -216,8 +329,16 @@ const handleCloseRuleModal = () => {
 }
 
 const handleShowRanking = () => {
-  // TODO: 实现排行榜功能
-  console.log('显示排行榜')
+  console.log('🔍 排行榜按钮被点击了！')
+  console.log('当前 isLeaderboardVisible 状态:', isLeaderboardVisible.value)
+  
+  isLeaderboardVisible.value = true
+  
+  console.log('设置后 isLeaderboardVisible 状态:', isLeaderboardVisible.value)
+}
+
+const handleCloseLeaderboard = () => {
+  isLeaderboardVisible.value = false
 }
 
 const handleLogin = async () => {
@@ -615,8 +736,8 @@ const handleDeviceModalAction = () => {
   }
 }
 
-/* 模态框样式 */
-.modal-backdrop {
+/* 游戏规则弹窗 - 基于Figma设计稿 */
+.game-rules-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -631,114 +752,211 @@ const handleDeviceModalAction = () => {
   padding: 5dvw;
 }
 
-.rule-modal-content {
-  background: white;
-  border-radius: 5dvw;
-  width: 100%;
-  max-width: 133dvw;
-  max-height: 85dvh;
-  overflow: hidden;
-  box-shadow: 0 5dvw 16dvw rgba(0, 0, 0, 0.3);
+.game-rules-panel {
+  width: 88.21vw; /* 330.8px / 375px * 100 */
+  height: 76.26vh; /* 594.06px / 779px * 100 */
+  background: rgb(255, 235, 210); /* 基于设计稿 */
+  border: 0.53vw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
+  border-radius: 5.33vw; /* 20px / 375px * 100 */
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 5dvw 16dvw rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
 }
 
-.rule-modal-content .modal-header {
-  background: linear-gradient(135deg, #FF9E5D, #FF6B35);
-  color: white;
-  padding: 5.3dvw;
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 标题栏 */
+.rules-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  margin-bottom: -2.13dvw; /* -8px / 375px * 100 */
+  position: relative;
+  height: 15dvw;
+  padding: 0 4dvw; /* 15px / 375px * 100 */
+  border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  background: rgb(255, 235, 210);
 }
 
-.rule-modal-content .modal-header h2 {
-  margin: 0;
-  font-size: 4dvw;
-  font-weight: 700;
+.rules-title {
+  display: flex;
+  align-items: center;
+  gap: 2.13dvw;
+  color: rgb(114, 51, 46);
+  font-size: 5.33vw; /* 20px / 375px * 100 */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 改为与排行榜标题一致 */
+  margin-left: -1.07dvw; /* -4px / 375px * 100 */
 }
 
-.close-button {
-  background: rgba(255, 255, 255, 0.2);
+.title-icon {
+  width: 6.24vw; /* 23.43px / 375px * 100 */
+  height: 6.24vw;
+  object-fit: contain;
+}
+
+/* 关闭按钮 */
+.rules-header .close-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8.53dvw;
+  height: 8.53dvw;
+  background: transparent;
   border: none;
-  color: white;
-  font-size: 4dvw;
-  width: 9.3dvw;
-  height: 9.3dvw;
-  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s ease;
+  pointer-events: auto; /* 统一添加事件处理 */
+  z-index: 10; /* 统一添加层级 */
 }
 
-.close-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+.rules-header .close-x {
+  position: relative;
+  width: 6.4dvw; /* 统一为6.4dvw */
+  height: 6.4dvw;
 }
 
-.rules-content {
-  padding: 5.3dvw;
-  overflow-y: auto;
+.rules-header .close-x::before,
+.rules-header .close-x::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6.4dvw; /* 统一为6.4dvw */
+  height: 0.8dvw; /* 统一为0.8dvw */
+  background: rgb(114, 51, 46);
+  border-radius: 0.4dvw; /* 统一为0.4dvw */
+}
+
+.rules-header .close-x::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.rules-header .close-x::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* 内容区域 */
+.rules-content-area {
   flex: 1;
+  background: rgb(217, 181, 149); /* 基于设计稿 */
+  border-radius: 2.67vw; /* 10px / 375px * 100 */
+  margin: 2.13vw 3.73vw; /* 8px 14px */
+  overflow: hidden;
 }
 
+.rules-scroll-content {
+  padding: 4dvw;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.rules-scroll-content::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
+}
+
+/* 规则章节 */
 .rule-section {
-  margin-bottom: 5.3dvw;
+  margin-bottom: 4dvw;
+}
+
+.rule-section:last-child {
+  margin-bottom: 2dvw;
 }
 
 .rule-title {
-  font-size: 3.2dvw;
-  font-weight: 700;
-  color: #72332E;
-  margin-bottom: 2.7dvw;
+  font-size: 3.73vw; /* 14px / 375px * 100 */
+  font-weight: 400; /* 改为与排行榜正文一致 */
+  color: rgb(114, 51, 46);
+  margin-bottom: 2.13dvw;
   display: flex;
   align-items: center;
-  gap: 2.1dvw;
+  gap: 1.6dvw;
 }
 
+.rule-description {
+  font-size: 3.2vw; /* 12px / 375px * 100 */
+  color: rgb(114, 51, 46);
+  font-weight: 400; /* 添加字体权重与排行榜正文一致 */
+  line-height: 1.5;
+  margin: 0;
+  margin-top: 1.33vw;
+}
+
+/* 规则列表 */
 .rule-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 1.33vw 0 0 0;
 }
 
 .rule-list li {
-  padding: 1.3dvw 0;
-  padding-left: 5.3dvw;
+  padding: 1.07dvw 0;
+  padding-left: 4.27dvw;
   position: relative;
-  font-size: 2.7dvw;
+  font-size: 3.2vw;
+  color: rgb(114, 51, 46);
+  font-weight: 400; /* 添加字体权重与排行榜正文一致 */
+  line-height: 1.4;
 }
 
 .rule-list li::before {
   content: '•';
-  color: #FF9E5D;
+  color: rgb(114, 51, 46);
   font-weight: bold;
   position: absolute;
   left: 0;
+  top: 1.07dvw;
 }
 
+/* 操作和道具列表 */
 .operation-list,
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 2.1dvw;
+  gap: 1.6dvw;
+  margin-top: 1.33vw;
 }
 
 .operation-item,
 .item {
   display: flex;
   align-items: center;
-  gap: 2.7dvw;
-  padding: 2.1dvw 3.2dvw;
-  background: rgba(255, 158, 93, 0.1);
-  border-radius: 2.1dvw;
-  font-size: 2.7dvw;
+  gap: 2.13dvw;
+  padding: 1.6dvw 2.67vw;
+  background: rgba(255, 235, 207, 0.8);
+  border: 0.27vw solid rgba(114, 51, 46, 0.2);
+  border-radius: 1.6dvw;
+  font-size: 3.2vw;
 }
 
 .operation-icon,
 .item-icon {
-  font-size: 3.2dvw;
+  font-size: 3.73vw;
+  flex-shrink: 0;
+}
+
+.operation-text,
+.item-text {
+  font-size: 3.2vw;
+  color: rgb(114, 51, 46);
+  line-height: 1.3;
 }
 
 /* 过渡动画 */
@@ -751,6 +969,22 @@ const handleDeviceModalAction = () => {
 .slide-up-leave-to {
   opacity: 0;
   transform: scale(0.9);
+}
+
+/* 游戏规则弹窗 - 基于Figma设计稿 */
+.game-rules-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5dvw;
 }
 
 /* 登录提示样式 - 基于IntroScene.vue */

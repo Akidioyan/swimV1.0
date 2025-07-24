@@ -8,13 +8,24 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['vue'],
-          gsap: ['gsap'],
-          lottie: ['vue3-lottie']
+        // 强制将所有代码合并成单个文件
+        manualChunks: () => 'everything.js',
+        // 自定义文件名格式
+        entryFileNames: 'assets/js/[name].js',
+        chunkFileNames: 'assets/js/[name].js',
+        assetFileNames: (assetInfo) => {
+          // CSS文件
+          if (assetInfo.name?.endsWith('.css')) {
+            return 'assets/css/[name].[ext]'
+          }
+          // 其他资源文件
+          return 'assets/[name].[ext]'
         }
       }
-    }
+    },
+    // 额外的构建优化选项
+    cssCodeSplit: false, // 禁用CSS代码分割
+    chunkSizeWarningLimit: 3000 // 增加chunk大小警告限制
   },
   server: {
     port: 3000,

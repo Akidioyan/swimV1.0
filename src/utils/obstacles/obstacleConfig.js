@@ -111,12 +111,12 @@ export const GAME_OBJECTS_CONFIG = {
  * 0-6级难度配置表
  */
 export const DIFFICULTY_CONFIG = {
-  // 难度等级定义 - 删除0级和1级，直接从3级开始
+  // 难度等级定义 - 重新调整为4个等级
   levels: [
-    { // 3级（原第3级，现在作为起始级别）
-      level: 3,
-      distanceRange: { min: 0, max: 300 }, // 从0米开始
-      vwRange: { min: 0, max: 6000 }, // 从0vw开始
+    { // 1级（0-60m）
+      level: 1,
+      distanceRange: { min: 0, max: 60 },
+      vwRange: { min: 0, max: 1200 }, // 60m * 20vw/m = 1200vw
       probability: {
         obs1: 0.3,
         obs2: 0.2,
@@ -128,10 +128,10 @@ export const DIFFICULTY_CONFIG = {
       movementSpeed: 38, // vw/s
       spawnInterval: { min: 21, max: 36 } // vw
     },
-    { // 4级
-      level: 4,
-      distanceRange: { min: 300, max: 700 }, // 调整距离范围
-      vwRange: { min: 6000, max: 14000 }, // 调整vw范围
+    { // 2级（60-150m）
+      level: 2,
+      distanceRange: { min: 60, max: 150 },
+      vwRange: { min: 1200, max: 3000 }, // 150m * 20vw/m = 3000vw
       probability: {
         obs1: 0.37,
         obs2: 0.25,
@@ -143,10 +143,10 @@ export const DIFFICULTY_CONFIG = {
       movementSpeed: 42, // vw/s
       spawnInterval: { min: 21, max: 33 } // vw
     },
-    { // 5级
-      level: 5,
-      distanceRange: { min: 700, max: 1200 }, // 调整距离范围
-      vwRange: { min: 14000, max: 24000 }, // 调整vw范围
+    { // 3级（150-240m）
+      level: 3,
+      distanceRange: { min: 150, max: 240 },
+      vwRange: { min: 3000, max: 4800 }, // 240m * 20vw/m = 4800vw
       probability: {
         obs1: 0.37,
         obs2: 0.26,
@@ -158,10 +158,10 @@ export const DIFFICULTY_CONFIG = {
       movementSpeed: 46, // vw/s
       spawnInterval: { min: 18, max: 30 } // vw
     },
-    { // 6级
-      level: 6,
-      distanceRange: { min: 1200, max: Infinity }, // 调整距离范围
-      vwRange: { min: 24000, max: Infinity }, // 调整vw范围
+    { // 4级（大于240m）
+      level: 4,
+      distanceRange: { min: 240, max: Infinity },
+      vwRange: { min: 4800, max: Infinity }, // 从4800vw开始
       probability: {
         obs1: 0.4,
         obs2: 0.27,
@@ -175,14 +175,12 @@ export const DIFFICULTY_CONFIG = {
     }
   ],
   
-  // 距离转换常数 - 根据表格数据重新计算
-  // 20m = 400vw, 80m = 1600vw, 200m = 4000vw
-  // 换算：1m = 20vw，所以 1vw = 0.05m
+  // 距离转换常数保持不变
   vwToMeterRatio: 0.05, // 1vw = 0.05m
   meterToVwRatio: 20,   // 1m = 20vw
   
   // 最小间隔保证
-  absoluteMinInterval: 19 // vw - 所有生成都不能低于这个间隔
+  absoluteMinInterval: 19 // vw
 }
 
 /**
