@@ -24,7 +24,7 @@ function replaceInFile(filePath, assetMap) {
     const doReplace = (pathKeyToReplace, cdnUrl, isDerived = false) => {
       // Regex to match the path when it's likely a full asset path string
       // Looks for paths enclosed in quotes, parentheses, or followed/preceded by space or common path-ending characters
-      const regex = new RegExp('(["\'\(\s])' + escapeRegExp(pathKeyToReplace) + '(["\'\)\s\?#])', 'g');
+      const regex = new RegExp('(["\'\'(\s])' + escapeRegExp(pathKeyToReplace) + '(["\'\'\)\s\?#])', 'g');
       let madeChangeThisCall = false;
       if (regex.test(content)) {
         content = content.replace(regex, (match, p1, p2) => {
@@ -34,6 +34,115 @@ function replaceInFile(filePath, assetMap) {
     with: "${cdnUrl}"`);
         madeChangeThisCall = true;
       }
+      return madeChangeThisCall;
+    };
+
+    // 新增：专门处理数组配置中的相对路径替换
+    const doReplaceInArrayConfig = (pathKeyToReplace, cdnUrl, configType = 'unknown') => {
+      let madeChangeThisCall = false;
+      
+      // 1. 匹配 src: 'path' 格式（用于 powerUpImages 等配置）
+      const srcRegex = new RegExp(`(src:\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"])`, 'g');
+      if (srcRegex.test(content)) {
+        content = content.replace(srcRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (array config src): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 2. 匹配 variants: ['path'] 格式（用于 obstacleConfig 等配置）
+      const variantsRegex = new RegExp(`(variants:\\s*\\[[^\\]]*['"])${escapeRegExp(pathKeyToReplace)}(['"][^\\]]*\\])`, 'g');
+      if (variantsRegex.test(content)) {
+        content = content.replace(variantsRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (array config variants): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 3. 匹配数组中的简单字符串格式 ['path']
+      const arrayStringRegex = new RegExp(`(\\[[^\\]]*['"])${escapeRegExp(pathKeyToReplace)}(['"][^\\]]*\\])`, 'g');
+      if (arrayStringRegex.test(content)) {
+        content = content.replace(arrayStringRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (array string): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 4. 新增：匹配对象格式 {name:"tipRight",src:"/card/tip1-right.png"}
+      const objectSrcRegex = new RegExp(`(\\{[^}]*src:\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"][^}]*\\})`, 'g');
+      if (objectSrcRegex.test(content)) {
+        content = content.replace(objectSrcRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (object src): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 5. 新增：匹配更灵活的对象格式，支持不同的属性顺序
+      const flexibleObjectRegex = new RegExp(`(src:\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"])`, 'g');
+      if (flexibleObjectRegex.test(content)) {
+        content = content.replace(flexibleObjectRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (flexible object): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 6. 新增：匹配直接路径引用（如 /swimer.png）
+      const directPathRegex = new RegExp(`(['"\`])${escapeRegExp(pathKeyToReplace)}(['"\`])`, 'g');
+      if (directPathRegex.test(content)) {
+        content = content.replace(directPathRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (direct path): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 7. 新增：匹配 img.src = 'path' 格式
+      const imgSrcRegex = new RegExp(`(\\.src\\s*=\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"])`, 'g');
+      if (imgSrcRegex.test(content)) {
+        content = content.replace(imgSrcRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (img.src): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 8. 新增：匹配 new Audio('path') 格式
+      const audioRegex = new RegExp(`(new\\s+Audio\\s*\\(\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"]\\s*\\))`, 'g');
+      if (audioRegex.test(content)) {
+        content = content.replace(audioRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (new Audio): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 在 doReplaceInArrayConfig 函数中，audioRegex 之后添加：
+      
+      // 9. 新增：匹配对象属性格式 propertyName: '/path'
+      const objectPropertyRegex = new RegExp(`(\\w+:\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"])`, 'g');
+      if (objectPropertyRegex.test(content)) {
+        content = content.replace(objectPropertyRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (object property): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
+      // 10. 新增：匹配更宽泛的属性赋值格式 property: 'path'
+      const propertyAssignRegex = new RegExp(`(:\\s*['"])${escapeRegExp(pathKeyToReplace)}(['"])`, 'g');
+      if (propertyAssignRegex.test(content)) {
+        content = content.replace(propertyAssignRegex, (match, p1, p2) => {
+          return p1 + cdnUrl + p2;
+        });
+        console.log(`  Replaced (property assign): "${pathKeyToReplace}" with: "${cdnUrl}"`);
+        madeChangeThisCall = true;
+      }
+      
       return madeChangeThisCall;
     };
 
@@ -50,7 +159,12 @@ function replaceInFile(filePath, assetMap) {
           pathReplacedInLoop = true;
         }
 
-        // 2. If originalMapKey starts with "/pingpang/", also try to replace its bare version (e.g., "assets/image.png")
+        // 新增：2. 尝试替换数组配置中的路径
+        if (doReplaceInArrayConfig(originalMapKey, cdnUrl)) {
+          pathReplacedInLoop = true;
+        }
+
+        // 3. If originalMapKey starts with "/pingpang/", also try to replace its bare version (e.g., "assets/image.png")
         //    but only if no explicit mapping already exists in assetMap for that bare version.
         const pingpangPrefix = "/pingpang/";
         if (originalMapKey.startsWith(pingpangPrefix)) {
@@ -70,6 +184,29 @@ function replaceInFile(filePath, assetMap) {
             else if (doReplace(derivedBarePath, cdnUrl, true)) { 
               pathReplacedInLoop = true;
             }
+            
+            // 新增：也尝试在数组配置中替换派生路径
+            if (doReplaceInArrayConfig(pathPotentiallyInCode, cdnUrl)) {
+              pathReplacedInLoop = true;
+            }
+            if (doReplaceInArrayConfig(derivedBarePath, cdnUrl)) {
+              pathReplacedInLoop = true;
+            }
+          }
+        }
+        
+        // 新增：处理相对路径（不以 / 开头的路径）
+        // 例如：'props/snorkel.png' 应该匹配 '/props/snorkel.png'
+        if (!originalMapKey.startsWith('/')) {
+          // 如果 asset-map.json 中的键不是以 / 开头，尝试匹配相对路径
+          if (doReplaceInArrayConfig(originalMapKey, cdnUrl)) {
+            pathReplacedInLoop = true;
+          }
+        } else {
+          // 如果 asset-map.json 中的键是以 / 开头，也尝试匹配去掉 / 的相对路径
+          const relativePath = originalMapKey.substring(1); // 去掉开头的 /
+          if (doReplaceInArrayConfig(relativePath, cdnUrl)) {
+            pathReplacedInLoop = true;
           }
         }
         
@@ -143,4 +280,4 @@ function main() {
 // --- 运行脚本 ---
 // 您可以通过在终端中运行 `node src/utils/replaceAssetPaths.js` 来执行此脚本
 // 确保在运行前已经构建了项目 (npm run build) 并且 asset-map.json 文件已准备好
-main(); 
+main();

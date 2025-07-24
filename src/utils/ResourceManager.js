@@ -40,38 +40,49 @@ export class ResourceManager {
     // 资源列表
     this.resources = {
       images: [
-        { name: 'background', src: '/bg-menu.png' },
-        { name: 'intro', src: '/intro.png' },
-        { name: 'loadingImage', src: '/loading/loading.png' }
+        { name: "background", src: "/bg-menu.png" },
+        { name: "intro", src: "/intro.png" },
+        { name: "loadingImage", src: "/loading/loading.png" },
+        // 添加 obs 目录下的障碍物图片
+        { name: "obs", src: "/obs/obs.png" },
+        { name: "obs3-1", src: "/obs/obs3-1.png" },   
+        { name: "obs3-2", src: "/obs/obs3-2.png" }, 
+        // 添加 props 目录下的道具图片
+        { name: "bubble", src: "/props/bubble.png" },
+        { name: "snorkel", src: "/props/snorkel.png" },
+        { name: "snorkelGlow", src: "/props/snorkel-glow.png" },
+        { name: "star", src: "/props/star.png" },
+        { name: "starGlow", src: "/props/star-glow.png" }
+      ],
+      fonts: [
+        { name: "FZLTCH", src: "/font/FZLTCH.ttf" },
+        { name: "MFYuanHei", src: "/font/MFYuanHei.ttf" },
+        { name: "PingFangLight", src: "/font/PingFangLight.ttf" },
+        { name: "RadikalW01Bold", src: "/font/RadikalW01Bold.ttf" }
       ],
       tutorialCards: [
-        { name: 'mainCard', src: '/card/tur_card.png' },
-        { name: 'tipLeft', src: '/card/tip1-left.png' },
-        { name: 'tipRight', src: '/card/tip1-right.png' }
+        { name: "mainCard", src: "/card/tur_card.png" },
+        { name: "tipLeft", src: "/card/tip1-left.png" },
+        { name: "tipRight", src: "/card/tip1-right.png" }
       ],
       svgIcons: [
         // UI-top.vue 中的SVG图标
-        { name: 'heart', src: '/vector/heart.svg' },
-        { name: 'star', src: '/vector/Star.svg' },
-        { name: 'distance', src: '/vector/Distance.svg' },
-        { name: 'set', src: '/vector/set.svg' },
-        { name: 'gold', src: '/vector/gold.svg' },
-        { name: 'restart', src: '/vector/restart.svg' },
-        { name: 'question', src: '/vector/Question.svg' },
-        { name: 'soundOn', src: '/vector/SoundOn.svg' },
-        { name: 'soundOff', src: '/vector/SoundOff.svg' },
-        { name: 'hint', src: '/vector/hint.svg' },
-        { name: 'vecLeft', src: '/vector/left.svg' },
-        { name: 'vecRight', src: '/vector/right.svg' },
-        // LoadingView.vue 中的SVG图标
-        { name: 'music', src: '/vector/music.svg' }
-      ],
-      fonts: [
-        { name: 'FZLTCH', src: '/font/FZLTCH.ttf' },
-        { name: 'HPQDGS', src: '/font/HPQDGS.ttf' }
+        { name: "heart", src: "/vector/heart.svg" },
+        { name: "star", src: "/vector/Star.svg" },
+        { name: "distance", src: "/vector/Distance.svg" },
+        { name: "set", src: "/vector/set.svg" },
+        { name: "gold", src: "/vector/gold.svg" },
+        { name: "restart", src: "/vector/restart.svg" },
+        { name: "question", src: "/vector/Question.svg" },
+        { name: "soundOn", src: "/vector/SoundOn.svg" },
+        { name: "soundOff", src: "/vector/SoundOff.svg" },
+        { name: "hint", src: "/vector/hint.svg" },
+        { name: "vecLeft", src: "/vector/left.svg" },
+        { name: "vecRight", src: "/vector/right.svg" }
+     
       ],
       videos: [
-        { name: 'opening', src: '/video/OpeningVideo.mp4' }
+        { name: "opening", src: "/video/OpeningVideo.mp4" }
       ]
     }
   }

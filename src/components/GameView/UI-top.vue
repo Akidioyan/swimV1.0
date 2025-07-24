@@ -640,6 +640,9 @@ export default {
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .rules-scroll-content::-webkit-scrollbar {

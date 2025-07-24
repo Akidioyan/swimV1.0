@@ -378,6 +378,9 @@ export default {
   margin: 0 3.2vw;
   padding: 1.28vh 0;
   border: 1px solid rgb(182, 157, 134);
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .player-row {

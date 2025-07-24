@@ -93,6 +93,54 @@
         </div>
       </div>
       
+      <!-- 震动功能测试 -->
+      <div class="vibration-section">
+        <h4>震动功能测试</h4>
+        <div class="vibration-status">
+          <span class="status-label">震动支持状态:</span>
+          <span class="status-value" :class="{ supported: vibrationSupported, unsupported: !vibrationSupported }">
+            {{ vibrationSupported ? '✅ 支持' : '❌ 不支持' }}
+          </span>
+        </div>
+        <div class="vibration-status">
+          <span class="status-label">音频同步状态:</span>
+          <span class="status-value" :class="{ supported: audioEnabled, unsupported: !audioEnabled }">
+            {{ audioEnabled ? '🔊 音频开启' : '🔇 音频关闭' }}
+          </span>
+        </div>
+        <div class="vibration-info">
+          <p class="info-text">💡 震动功能会自动跟随音频状态：</p>
+          <ul class="info-list">
+            <li>🔊 音频开启时 → 震动启用</li>
+            <li>🔇 音频关闭/静音时 → 震动禁用</li>
+            <li>🎚️ 音量为0时 → 震动禁用</li>
+          </ul>
+        </div>
+        <div class="vibration-toggle">
+          <label>
+            <input type="checkbox" v-model="vibrationEnabled" @change="toggleVibration">
+            手动控制震动（覆盖音频同步）
+          </label>
+        </div>
+        <div class="vibration-buttons">
+          <button @click="testLightVibration" class="vibration-btn light" :disabled="!vibrationSupported || !vibrationEnabled">
+            轻微震动 (收集星星)
+          </button>
+          <button @click="testMediumVibration" class="vibration-btn medium" :disabled="!vibrationSupported || !vibrationEnabled">
+            中等震动 (收集道具)
+          </button>
+          <button @click="testHeavyVibration" class="vibration-btn heavy" :disabled="!vibrationSupported || !vibrationEnabled">
+            重度震动 (碰撞障碍物)
+          </button>
+          <button @click="testGameOverVibration" class="vibration-btn gameover" :disabled="!vibrationSupported || !vibrationEnabled">
+            游戏结束震动
+          </button>
+          <button @click="testAllVibrations" class="vibration-btn all" :disabled="!vibrationSupported || !vibrationEnabled">
+            📳 全功能测试
+          </button>
+        </div>
+      </div>
+      
       <!-- 游戏状态信息 -->
       <div class="game-status">
         <h4>游戏状态</h4>
@@ -130,6 +178,8 @@
 import { ref, computed, watch } from 'vue'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { getCurrentDifficultyInfo, convertMetersToVw, convertVwToMeters, getLevelConfig } from '../utils/obstacles/obstacleConfig'
+import vibrationManager from '../utils/vibration.js'
+import audioManager from '../utils/audio-manager.js'
 
 export default {
   name: 'DeveloperDebugPanel',
@@ -143,6 +193,15 @@ export default {
   setup(props, { emit }) {
     const gameStateStore = useGameStateStore()
     const selectedLevel = ref(0)
+    
+    // 震动相关状态
+    const vibrationSupported = ref(vibrationManager.isSupported)
+    const vibrationEnabled = ref(vibrationManager.isEnabled)
+    
+    // 音频状态
+    const audioEnabled = computed(() => {
+      return audioManager.musicEnabled && audioManager.soundEnabled && !audioManager.musicPaused && audioManager.masterVolume > 0
+    })
     
     // 计算当前距离的vw值
     const currentDistanceVw = computed(() => {
@@ -217,10 +276,81 @@ export default {
       return `${vwRange.min}-${vwRange.max}vw`
     }
     
+    // 震动功能方法
+    const toggleVibration = () => {
+      // 使用手动控制模式
+      vibrationManager.setEnabled(vibrationEnabled.value, true)
+      console.log(`震动功能${vibrationEnabled.value ? '已启用' : '已禁用'} (手动控制)`)
+    }
+    
+    const testLightVibration = () => {
+      vibrationManager.lightVibration()
+      console.log('🧪 测试轻微震动 (收集星星)')
+    }
+    
+    const testMediumVibration = () => {
+      vibrationManager.mediumVibration()
+      console.log('🧪 测试中等震动 (收集道具)')
+    }
+    
+    const testHeavyVibration = () => {
+      vibrationManager.heavyVibration()
+      console.log('🧪 测试重度震动 (碰撞障碍物)')
+    }
+    
+    const testGameOverVibration = () => {
+      vibrationManager.gameOverVibration()
+      console.log('🧪 测试游戏结束震动')
+    }
+
+    const testAllVibrations = () => {
+      console.log('🧪 开始全功能震动测试...')
+      console.log('📳 轻微震动 (收集星星) - 1秒后开始')
+      
+      // 立即开始第一个测试
+      vibrationManager.lightVibration()
+      console.log('✅ 轻微震动测试完成')
+      
+      // 2秒后测试中等震动
+      setTimeout(() => {
+        console.log('📳 中等震动 (收集道具)')
+        vibrationManager.mediumVibration()
+        console.log('✅ 中等震动测试完成')
+      }, 1500)
+      
+      // 4秒后测试重度震动
+      setTimeout(() => {
+        console.log('📳 重度震动 (碰撞障碍物)')
+        vibrationManager.heavyVibration()
+        console.log('✅ 重度震动测试完成')
+      }, 3000)
+      
+      // 6秒后测试游戏结束震动
+      setTimeout(() => {
+        console.log('📳 游戏结束震动')
+        vibrationManager.gameOverVibration()
+        console.log('✅ 游戏结束震动测试完成')
+        console.log('🎉 全功能震动测试完成！')
+      }, 5000)
+    }
+    
     // 监听面板显示状态，自动同步当前等级
     watch(() => props.visible, (newVisible) => {
       if (newVisible) {
         selectedLevel.value = gameStateStore.currentDifficultyLevel
+        // 同步震动状态
+        vibrationEnabled.value = vibrationManager.isEnabled
+        
+        // 开始监听音频状态变化
+        const audioCheckInterval = setInterval(() => {
+          if (!props.visible) {
+            clearInterval(audioCheckInterval)
+            return
+          }
+          
+          // 实时更新震动状态显示
+          vibrationEnabled.value = vibrationManager.isEnabled
+        }, 500) // 每500ms检查一次
       }
     })
     
@@ -235,7 +365,18 @@ export default {
       jumpToLevel,
       resetToCurrentLevel,
       closePanel,
-      formatDistanceRange
+      formatDistanceRange,
+      // 震动相关
+      vibrationSupported,
+      vibrationEnabled,
+      toggleVibration,
+      testLightVibration,
+      testMediumVibration,
+      testHeavyVibration,
+      testGameOverVibration,
+      testAllVibrations,
+      // 音频状态
+      audioEnabled
     }
   }
 }
@@ -268,6 +409,9 @@ export default {
   overflow-y: auto;
   color: #ffffff;
   font-family: 'Monaco', 'Consolas', monospace;
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .debug-header {
@@ -555,6 +699,163 @@ export default {
 .game-status {
   border-top: 1px solid rgba(0, 255, 255, 0.3);
   padding-top: 20px;
+}
+
+/* 震动功能测试区域 */
+.vibration-section {
+  border-top: 1px solid rgba(0, 255, 255, 0.3);
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+.vibration-section h4 {
+  color: #00ffff;
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+  padding-bottom: 8px;
+}
+
+.vibration-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.status-label {
+  color: #b8e6ff;
+}
+
+.status-value {
+  font-weight: bold;
+}
+
+.status-value.supported {
+  color: #4ade80;
+}
+
+.status-value.unsupported {
+  color: #f87171;
+}
+
+.vibration-info {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.info-text {
+  margin-bottom: 8px;
+  color: #b8e6ff;
+  font-size: 13px;
+}
+
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.info-list li {
+  margin-bottom: 4px;
+}
+
+.vibration-toggle {
+  margin-bottom: 15px;
+}
+
+.vibration-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b8e6ff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.vibration-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #00ffff;
+}
+
+.vibration-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vibration-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: 1px solid;
+  color: white;
+}
+
+.vibration-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vibration-btn.light {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  border-color: #16a34a;
+}
+
+.vibration-btn.light:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+}
+
+.vibration-btn.medium {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: #1d4ed8;
+}
+
+.vibration-btn.medium:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.vibration-btn.heavy {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: #b45309;
+}
+
+.vibration-btn.heavy:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.vibration-btn.gameover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: #b91c1c;
+}
+
+.vibration-btn.gameover:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.vibration-btn.all {
+  grid-column: 1 / -1; /* 让全功能测试按钮占据整行 */
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border-color: #4f46e5;
+}
+
+.vibration-btn.all:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
 }
 
 .status-grid {

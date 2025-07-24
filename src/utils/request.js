@@ -3,6 +3,9 @@
 import { useGameStore } from '../stores/gameStore';
 import { useUserStore } from '../stores/userStore';
 
+// 活动ID常量
+const activity_id = 'swim_game';
+
 // 基础请求函数
 export async function request(path, options = {}) {
   const u = useUserStore();
@@ -64,8 +67,11 @@ export async function request(path, options = {}) {
 export async function getActivityPV() {
   try {
     console.log('开始调用活动PV API...');
-    const response = await request('/activity/pv?activity_id=swim_game', {
-      method: 'GET'
+    const response = await request('/activity/pv', {
+      method: 'POST',
+      body: JSON.stringify({
+        activity_id: activity_id
+      })
     });
     console.log('活动PV API 调用成功:', response);
     return response;
@@ -175,7 +181,7 @@ export async function submitGameResultAndGetRanking(gameData) {
     const finalScore = (gameData.score || 0) * 100000 + (gameData.distance || 0);
     
     const requestBody = {
-      // activity_id 现在通过URL参数传递，不在请求体中
+      activity_id: activity_id,
       ranking_size: 50,
       score: finalScore
       // user_id 不需要传，确保登录即可
@@ -184,8 +190,8 @@ export async function submitGameResultAndGetRanking(gameData) {
     console.log('排行榜提交数据:', requestBody);
     console.log(`得分计算: ${gameData.score || 0} * 100000 + ${gameData.distance || 0} = ${finalScore}`);
     
-    // 修改API路径，将activity_id作为URL参数
-    const response = await request('/activity/ranking?activity_id=swim_game', {
+    // 修改API路径，将activity_id放在请求体中
+    const response = await request('/activity/ranking', {
       method: 'POST',
       body: JSON.stringify(requestBody)
     });
@@ -212,15 +218,15 @@ export async function getRankingOnly() {
     console.log('获取排行榜数据...');
     
     const requestBody = {
-      // activity_id 现在通过URL参数传递，不在请求体中
+      activity_id: activity_id,
       ranking_size: 50
       // user_id 不需要传，确保登录即可
     };
     
     console.log('排行榜查询请求:', requestBody);
     
-    // 修改API路径，将activity_id作为URL参数
-    const response = await request('/activity/ranking?activity_id=swim_game', {   
+    // 修改API路径，将activity_id放在请求体中
+    const response = await request('/activity/ranking', {   
       method: 'POST',
       body: JSON.stringify(requestBody)
     });

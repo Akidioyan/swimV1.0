@@ -29,9 +29,16 @@
           再次挑战！
         </template>
         <template v-else>
-          你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，{{ currentUserEntry?.rank ? '恭喜进入排行榜！' : '很遗憾没有进入排行榜。' }}
-          <br>
-          你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，已超越 <span class="number-text">{{ currentUserData?.rankPercent || '0' }}%</span> 网友！
+          <div class="score-line">
+            你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，
+            <span v-if="gameData.currentDistance > 100">{{ getRandomLoginText() }}</span>
+            <span v-else-if="currentUserEntry?.rank === '未上榜'">{{ getRandomEncouragementText() }}</span>
+            <span v-else>{{ getRandomLoginText() }}</span>
+          </div>
+          <div class="distance-line">
+            你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，
+            已超越 <span class="number-text">{{ currentUserData?.rankPercent || '0' }}%</span> 网友！
+          </div>
         </template>
       </div>
 
@@ -115,6 +122,8 @@
         <img 
           src="/shareToFriend.png" 
           @click="handleShareToFriendClick" 
+          @touchstart="handleShareToFriendClick"
+          @touchend.prevent
           class="share-friend-btn" 
           alt="分享给朋友"
         >
@@ -134,8 +143,7 @@ import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useUserStore } from '../../stores/userStore'
 import { openNativeScheme } from '../../utils/appDownload'
-// 在import部分添加（约第130行）
-import { reportSwimmingGameResult, getActivityPV } from '../../utils/request'
+import { clickReport } from '../../utils/report'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
@@ -165,6 +173,55 @@ const getTitleByDistance = (distance) => {
   if (distance >= 80) return '水中精灵'
   if (distance >= 40) return '泳池新手'
   return '初出茅庐'
+}
+
+// 未上榜提示词数组 - 根据游戏规则和游泳主题设计
+const getRandomEncouragementText = () => {
+  const encouragementTexts = [
+    '继续挑战，冲击排行榜！',
+    '再接再厉，向高分进发！',
+    '加油，突破极限！',
+    '勇敢前行，下次必上榜！',
+    '练好技巧，排行榜等你！',
+    '收集更多星星，冲击高分！',
+    '掌握节奏，再创佳绩！',
+    '继续训练，成为达人！',
+    '排行榜在向你招手！',
+    '提升技能，下回称王！',
+    '点左屏左移，点右屏右移！',
+    '星星是关键，多收集冲高分！',
+    '坚持，总有上榜的一天！',
+    '挑战极限，超越更多网友！',
+    '高手就是你，再来一局！',
+    '水中冲浪，再创奇迹！',
+    '样样精通才能上榜！',
+    '姿势很重要，练好再来！',
+    '呼吸管是神器，不怕障碍就是冲！',
+    '游出风采，游出精彩人生！',
+    '水花四溅，梦想在前方等你！',
+    '每一次划水都是进步的开始！',
+    '世上无捷径，只有肯攀登！',
+    '乘风破浪，游向更远！'
+  ]
+  
+  return encouragementTexts[Math.floor(Math.random() * encouragementTexts.length)]
+}
+
+// 登录提示词数组 - 针对端外用户
+const getRandomLoginText = () => {
+  const loginTexts = [
+    '登录腾讯新闻，进排行榜！',
+    '登录解锁排行榜，看看你的实力！',
+    '登录腾讯新闻，与全网高手竞技！',
+    '登录获取官方排名，证明实力！',
+    '登录腾讯新闻，挑战全国指尖达人！',
+    '登录查看真实排行，展现指尖天赋！',
+    '登录腾讯新闻，成为排行榜传奇！',
+    '登录解锁更多功能，称霸游泳界！',
+    '登录腾讯新闻，与千万玩家同台竞技！'
+  ]
+  
+  return loginTexts[Math.floor(Math.random() * loginTexts.length)]
 }
 
 // 扩展排行榜数据（50人）
@@ -200,116 +257,79 @@ watch(() => userStore.canPlay, (canStillPlay) => {
 
 // 在script setup部分，修改数据处理逻辑
 
-// 解析score为星星数和距离的函数
-const parseScoreToStarsAndDistance = (score) => {
-  const stars = Math.floor(score / 100000)
-  const distance = score % 100000
-  return { stars, distance }
+// 计算击败百分比的函数（端外使用假数据）
+const calculateDefeatPercentage = (distance) => {
+  // 基于距离推算排名和战胜百分比，更符合逻辑
+  if (distance >= 300) {
+    // 超长距离：排名很靠前，战胜90-99%
+    return Math.min(90 + Math.floor((distance - 300) / 10), 99);
+  } else if (distance >= 200) {
+    // 长距离：排名中上，战胜70-89%
+    return 70 + Math.floor((distance - 200) / 5);
+  } else if (distance >= 100) {
+    // 中等距离：排名中等，战胜40-69%
+    return 40 + Math.floor((distance - 100) / 3.33);
+  } else if (distance >= 50) {
+    // 短距离：排名中下，战胜20-39%
+    return 20 + Math.floor((distance - 50) / 2.5);
+  } else if (distance >= 20) {
+    // 很短距离：排名较低，战胜5-19%
+    return 5 + Math.floor((distance - 20) / 2);
+  } else {
+    // 极短距离：排名很低，战胜0-4%
+    return Math.floor(distance / 5);
+  }
 }
 
-// 计算击败百分比的函数
-const calculateDefeatPercentage = (lessScoreCount, totalPV) => {
-  if (!totalPV || totalPV === 0) return '0'
-  return Math.round((lessScoreCount / totalPV) * 100)
+// 基于距离推算合理的排名
+const calculateRankByDistance = (distance) => {
+  if (distance >= 320) return Math.floor(Math.random() * 3) + 1; // 1-3名
+  else if (distance >= 280) return Math.floor(Math.random() * 5) + 1; // 1-5名
+  else if (distance >= 240) return Math.floor(Math.random() * 10) + 1; // 1-10名
+  else if (distance >= 200) return Math.floor(Math.random() * 20) + 5; // 5-25名
+  else if (distance >= 160) return Math.floor(Math.random() * 30) + 10; // 10-40名
+  else if (distance >= 120) return Math.floor(Math.random() * 50) + 20; // 20-70名
+  else if (distance >= 80) return Math.floor(Math.random() * 100) + 50; // 50-150名
+  else if (distance >= 40) return Math.floor(Math.random() * 200) + 100; // 100-300名
+  else return '未上榜'; // 距离太短，未上榜
 }
 
 // 修改onMounted函数（约第212行）
 onMounted(async () => {
   try {
-    // 1. 首先获取真实的PV数据
-    let realCurrentPV = 100; // 默认值
-    try {
-      console.log('获取真实PV数据...');
-      const pvResponse = await getActivityPV();
-      if (pvResponse && pvResponse.data && pvResponse.data.current_pv) {
-        realCurrentPV = parseInt(pvResponse.data.current_pv);
-        console.log('获取到真实current_pv:', realCurrentPV);
-      } else if (pvResponse && pvResponse.current_pv) {
-        realCurrentPV = parseInt(pvResponse.current_pv);
-        console.log('获取到真实current_pv:', realCurrentPV);
-      }
-    } catch (pvError) {
-      console.error('获取PV数据失败，使用默认值:', pvError);
+    // 端外环境使用基于距离的假数据算法
+    const currentDistance = gameData.value.currentDistance
+    const defeatPercentage = calculateDefeatPercentage(currentDistance)
+    const estimatedRank = calculateRankByDistance(currentDistance)
+    
+    console.log(`[EndingSceneOutside] 战胜比例计算(假数据): 距离${currentDistance}m -> 推算排名${estimatedRank} -> 战胜${defeatPercentage}%`);
+    
+    currentUserData.value = { 
+      rankPercent: defeatPercentage.toString(),
+      nickName: '您'
     }
     
-    // 2. 上报游戏结果
-    const gameResultData = {
-      distance: gameData.value.currentDistance,
-      score: gameData.value.stars,
-      stars: gameData.value.stars,
-      survivalTime: gameStore.survivalTime || gameStateStore.survivalTime || 0,
-      gameTime: gameStore.gameTime || gameStateStore.gameTime || 0,
-      gameEndReason: gameStore.gameEndReason || gameStateStore.gameEndReason || 'completed'
-    }
-    
-    const realDataResponse = await reportSwimmingGameResult(gameResultData)
-    if (realDataResponse && realDataResponse.code === 0 && realDataResponse.data) {
-      const apiData = realDataResponse.data
-      
-      // 3. 使用真实的current_pv计算击败百分比
-      const defeatPercentage = calculateDefeatPercentage(
-        apiData.less_score_count || 0,
-        realCurrentPV  // 使用真实的PV数据
-      )
-      
-      console.log(`战胜比例计算: ${apiData.less_score_count || 0} / ${realCurrentPV} = ${defeatPercentage}%`);
-      
-      currentUserData.value = { 
-        rankPercent: defeatPercentage,
-        nickName: '您'
-      }
-      
-      // 设置排行榜数据 - 适配新的API格式
-      if (apiData.ranking_board && Array.isArray(apiData.ranking_board)) {
-        leaderboardData.value = apiData.ranking_board.slice(0, 50).map(entry => {
-          const { stars, distance } = parseScoreToStarsAndDistance(entry.ranking.score)
-          return {
-            rank: entry.ranking.rank,
-            nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
-            distance: distance,
-            stars: stars,
-            score: stars,
-            head_url: entry.user_info.head_url || ''
-          }
-        })
-      } else {
-        leaderboardData.value = generateMockLeaderboard()
-      }
-      
-      // 设置当前用户数据 - 使用best_rank信息
-      if (apiData.best_rank) {
-        const { stars, distance } = parseScoreToStarsAndDistance(apiData.best_rank.score)
-        currentUserEntry.value = {
-          rank: apiData.best_rank.rank,
-          nick: "我",
-          distance: distance,
-          stars: stars
-        }
-      } else {
-        currentUserEntry.value = {
-          rank: '未上榜',
-          nick: "我",
-          distance: gameData.value.currentDistance,
-          stars: gameData.value.stars
-        }
-      }
-    } else {
-      // 使用模拟数据
-      leaderboardData.value = generateMockLeaderboard()
-      currentUserData.value = { rankPercent: '33', nickName: '您' }
-      currentUserEntry.value = {
-        rank: Math.floor(Math.random() * 100) + 50,
-        nick: "我",
-        distance: gameData.value.currentDistance,
-        stars: gameData.value.stars
-      }
-    }
-  } catch (e) {
-    // 使用模拟数据
+    // 生成模拟排行榜数据
     leaderboardData.value = generateMockLeaderboard()
-    currentUserData.value = { rankPercent: '66', nickName: '大白兔吃奶糖' }
+    
+    // 设置当前用户数据
     currentUserEntry.value = {
-      rank: Math.floor(Math.random() * 100) + 50,
+      rank: estimatedRank, // 使用推算的排名
+      nick: "我",
+      distance: currentDistance,
+      stars: gameData.value.stars
+    }
+    
+    console.log('[EndingSceneOutside] 使用假数据，推算排名:', estimatedRank, '战胜百分比:', defeatPercentage);
+  } catch (e) {
+    console.error('[EndingSceneOutside] 计算假数据失败:', e);
+    // 降级处理
+    const defeatPercentage = calculateDefeatPercentage(gameData.value.currentDistance)
+    const estimatedRank = calculateRankByDistance(gameData.value.currentDistance)
+    currentUserData.value = { rankPercent: defeatPercentage.toString(), nickName: '您' }
+    leaderboardData.value = generateMockLeaderboard()
+    currentUserEntry.value = {
+      rank: estimatedRank,
       nick: "我",
       distance: gameData.value.currentDistance,
       stars: gameData.value.stars
@@ -352,10 +372,19 @@ const handleOpenApp = () => {
 }
 
 const handleShareToFriendClick = () => {
-  clickReport({ id: 'share_in_outside' })
+  console.log('[EndingSceneOutside] handleShareToFriendClick called! 分享按钮被点击了');
+  
+  try {
+    clickReport({ id: 'share_in_outside' })
+    console.log('[EndingSceneOutside] clickReport called successfully');
+  } catch (error) {
+    console.error('[EndingSceneOutside] clickReport error:', error);
+  }
+  
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleShareToFriendClick clicked')
   
   shareArrowOverlayIsVisible.value = true
+  console.log('[EndingSceneOutside] shareArrowOverlayIsVisible set to true');
 
   console.log('[EndingSceneOutside] Share action initiated (showing arrow). Simulating share & starting 5s timer for bonus plays.')
   setTimeout(() => {
@@ -378,40 +407,50 @@ const handleOverlayClick = () => {
   height: 100dvh;
   background-color: #171717;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto; /* 添加垂直滚动 */
+  overflow-x: hidden; /* 隐藏水平滚动 */
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .background-container {
   width: 100%;
-  height: 100%;
+  min-height: 100%; /* 改为最小高度，允许内容超出视窗 */
   position: relative;
   padding: 0 5.33vw; /* 20px at 375px width */
   box-sizing: border-box;
+  /* 计算实际内容高度，确保有足够空间 */
+  height: auto;
+  padding-bottom: 35vh; /* 从25vh增加到35vh，适应增加的排行榜高度 */
 }
 
 /* 恭喜文字 */
 .congratulation-text {
-  position: absolute;
-  top: 4.15dvh; /* 30px at 723px height */
-  left: 5.33vw; /* 20px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 2vh; /* 保持顶部间距 */
+  left: 0; /* 移除left定位，使用padding控制 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 4vw; /* 15px at 375px width */
   line-height: 1.4;
   color: #E7E7E7;
+  /* 预估高度: 4vw * 1.4 ≈ 5.6vw ≈ 2.1vh */
 }
 
 /* 称号区域 */
 .title-section {
-  position: absolute;
-  top: 6.65dvh; /* 保持与恭喜文字的间距 */
-  left: 5.33vw; /* 与open-app-image对齐 */
-  width: 89.6vw; /* 与open-app-image宽度一致，确保左右对齐 */
-  height: 11dvh; /* 调整为11dvh */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.6vw; /* 保持宽度不变 */
+  height: 11vh; /* 保持高度不变 */
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: auto; /* 居中对齐 */
+  margin-right: auto; /* 居中对齐 */
 }
 
 .user-title {
@@ -458,16 +497,21 @@ const handleOverlayClick = () => {
 
 /* 结果描述 */
 .result-description {
-  position: absolute;
-  top: 18.75dvh; /* 称号区域结束(6.65+11=17.65) + 1.1dvh间距 = 18.75 */
-  left: 5.33vw; /* 20px at 375px width */
-  width: 89.07vw; /* 334px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.07vw; /* 保持宽度不变 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600; /* 加粗字体 */
-  font-size: 4.5vw; /* 加大字号，从3.73vw增加到4.5vw */
+  font-size: 4.5vw; /* 加大字号 */
   line-height: 1.4;
   color: #E7E7E7;
-  margin-bottom: 1dvh; /* 确保底部至少有1dvh的间距 */
+  /* 预估高度: 4.5vw * 1.4 * 2行 ≈ 12.6vw ≈ 4.7vh */
+}
+
+.score-line,
+.distance-line {
+  margin-bottom: 1.33vw; /* 5px at 375px width */
 }
 
 .number-text {
@@ -477,12 +521,14 @@ const handleOverlayClick = () => {
 }
 
 .open-app-container {
-  position: absolute;
-  top: 25.6dvh; 
-  left: 5.33vw; /* 20px at 375px width */
-  width: 89.6vw; /* 336px at 375px width */
-  aspect-ratio: 21 / 17; /* 固定比例 21:17 */
-  /* 移除固定高度 height: 37.62dvh; */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.6vw; /* 保持宽度不变 */
+  aspect-ratio: 21 / 17; /* 保持比例不变 */
+  margin-left: auto; /* 居中对齐 */
+  margin-right: auto; /* 居中对齐 */
+  /* 计算高度: 89.6vw * (17/21) ≈ 72.5vw ≈ 27.2vh */
 }
 
 .open-app-image {
@@ -499,12 +545,14 @@ const handleOverlayClick = () => {
 
 /* 排行榜标题 */
 .leaderboard-title {
-  position: absolute;
-  top: 62.32dvh; /* openApp结束(23.6+37.62=61.22) + 1.1dvh间距 = 62.32 */
-  left: 5.33vw; /* 20px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
   display: flex;
   align-items: center;
+  justify-content: center; /* 居中对齐 */
   gap: 2.13vw; /* 8px at 375px width */
+  /* 预估高度: 约3vh */
 }
 
 .rank-icon {
@@ -522,19 +570,21 @@ const handleOverlayClick = () => {
 
 /* 排行榜容器 */
 .leaderboard-container {
-  position: absolute;
-  top: 65.82dvh; /* 排行榜标题结束(约64.32) + 1.5dvh间距 = 65.82 */
-  left: 5.33vw; /* 20px at 375px width */
-  width: 89.6vw; /* 336px at 375px width */
-  height: 28dvh; /* 增加高度，因为整体布局更紧凑 */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.6vw; /* 保持宽度不变 */
+  height: 45vh; /* 从35vh增加到45vh，增加10vh可显示高度 */
+  margin-left: auto; /* 居中对齐 */
+  margin-right: auto; /* 居中对齐 */
 }
 
 /* 表头 */
 .leaderboard-header {
   display: flex;
   align-items: center;
-  height: 3.32dvh; /* 24px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 3.5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 3.2vw; /* 12px at 375px width */
@@ -564,10 +614,17 @@ const handleOverlayClick = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  height: 22.13dvh; /* 160px at 723px height */
+  height: 65vh; 
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  /* 添加居中对齐 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .leaderboard-scroll-container::-webkit-scrollbar {
@@ -579,16 +636,20 @@ const handleOverlayClick = () => {
 .my-result-row {
   position: relative;
   width: 89.6vw; /* 336px at 375px width */
-  height: 4.7dvh; /* 34px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
+  /* 确保在flex容器中保持宽度 */
+  flex-shrink: 0;
 }
 
 /* 排行榜行 */
 .ranking-row {
   position: relative;
   width: 89.6vw; /* 336px at 375px width */
-  height: 4.7dvh; /* 34px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
+  /* 确保在flex容器中保持宽度 */
+  flex-shrink: 0;
 }
 
 .ranking-bg-container {
@@ -675,11 +736,11 @@ const handleOverlayClick = () => {
 
 /* 底部渐变 */
 .bottom-gradient {
-  position: absolute;
+  position: fixed; /* 改为固定定位 */
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 14.94dvh; /* 108px at 723px height */
+  height: 15vh; /* 调整高度 */
   background: linear-gradient(180deg, transparent 0%, rgba(23, 23, 23, 0.9) 60%, rgba(23, 23, 23, 1) 100%);
   pointer-events: none;
   z-index: 1;
@@ -687,11 +748,11 @@ const handleOverlayClick = () => {
 
 /* 分享提示 */
 .share-tips {
-  position: absolute;
-  bottom: 8.91dvh; /* 调整位置，让下边缘与按钮上边缘挨着 */
+  position: fixed; /* 改为固定定位 */
+  bottom: 9vh; /* 相对于视窗底部定位 */
   left: 5.07vw; /* 19px at 375px width */
   width: 53.87vw; /* 202px at 375px width */
-  height: 4.56dvh; /* 33px at 723px height */
+  height: 4.5vh; /* 调整高度 */
   z-index: 2; /* 确保分享提示在遮罩层之上 */
 }
 
@@ -703,8 +764,8 @@ const handleOverlayClick = () => {
 
 /* 底部按钮 */
 .bottom-buttons {
-  position: absolute;
-  bottom: 3.73dvh; /* 27px at 723px height */
+  position: fixed; /* 改为固定定位 */
+  bottom: 3.5vh; /* 相对于视窗底部定位 */
   left: 5.33vw; /* 20px at 375px width */
   width: 89.6vw; /* 336px at 375px width */
   height: auto; /* 改为auto，让按钮保持原始比例 */
@@ -722,6 +783,10 @@ const handleOverlayClick = () => {
   transition: transform 0.2s ease, opacity 0.2s ease;
   z-index: 2; /* 确保按钮可以点击 */
   object-fit: contain; /* 确保图片内容完整显示 */
+  /* 添加移动端触摸支持 */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .try-again-btn:hover,
@@ -768,36 +833,5 @@ const handleOverlayClick = () => {
   height: auto;
   margin-top: 2.76dvh; /* 20px at 723px height */
   margin-right: 5.33vw; /* 20px at 375px width */
-}
-
-/* 响应式设计 */
-@media (max-width: 414px) {
-  .background-container {
-    padding: 0 4.27vw; /* 16px at 375px equivalent */
-  }
-  
-  .title-section {
-    left: 4.27vw;
-    width: calc(100% - 8.54vw);
-  }
-  
-  .leaderboard-container {
-    left: 4.27vw;
-    width: calc(100% - 8.54vw);
-  }
-  
-  .title-text {
-    font-size: 11.2vw; /* 42px equivalent */
-  }
-}
-
-@media (max-width: 375px) {
-  .title-text {
-    font-size: 10.13vw; /* 38px equivalent */
-  }
-  
-  .result-description {
-    font-size: 3.47vw; /* 13px equivalent */
-  }
 }
 </style>

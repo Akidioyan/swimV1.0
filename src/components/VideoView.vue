@@ -66,7 +66,7 @@ onMounted(() => {
         }).catch(error => {
           console.warn('⚠️ 视频播放失败:', error)
           handleVideoError()
-        })2
+        })
         
       } catch (error) {
         console.error('❌ 视频设置失败:', error)

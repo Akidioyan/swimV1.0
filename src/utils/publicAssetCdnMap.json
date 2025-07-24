@@ -15,7 +15,6 @@
   "/vector/Question.svg": "httpsXXX",
   "/vector/gold.svg": "httpsXXX",
   "/vector/hint.svg": "httpsXXX",
-  "/vector/music.svg": "httpsXXX",
   
   "/card/tur_card.png": "httpsXXX",
   "/card/tip1-left.png": "httpsXXX",
@@ -49,17 +48,15 @@
   "/favicon_io/android-chrome-512x512.png": "httpsXXX",
   "/favicon_io/apple-touch-icon.png": "httpsXXX",
   "/favicon_io/favicon-16x16.png": "httpsXXX",
-  "/favicon_io/favicon-32x32.png": "httpsXXX",
-  "/favicon_io/site.webmanifest": "httpsXXX",
+  "/favicon_io/favicon-32x32.png": "https://inews.gtimg.com/newsapp_bt/0/071721335992_8435/0",
 
-  "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0723223807904_4167/0",
+
+  "/openApp.png": "https://mat1.gtimg.com/rain/apub2019/a4264a329054.openApp.png",
   "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0723223820401_6578/0",
   "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0723223822464_8640/0",
   "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/0723223839776_5781/0",
   "/favicon.ico": "httpsXXX",
-  "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0723223830687_6778/0",
-  "/ContinueToChallenge.png": "https://inews.gtimg.com/newsapp_bt/0/0723223804352_615/0",
-  "/OneMore.png": "https://inews.gtimg.com/newsapp_bt/0/0723223813926_102/0",
+  "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0717213470531_5952/0",
 
 
   "/vector/RankingList.svg": "https://mat1.gtimg.com/rain/apub2019/914ff914e2e3.RankingList.svg",
@@ -72,7 +69,8 @@
   
   "/video/OpeningVideo.mp4": "httpsXXX",
 
-  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0724103013474_5440/0",
-  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0723223816180_2357/0",
-  "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0723223826583_2673/0"
+  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0723223786095_2436/0",
+  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0717213410797_7644/0",
+  "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0717213425968_2346/0",
+  "/shareArrowIcon.png": "https://inews.gtimg.com/newsapp_bt/0/0717213455406_5952/0"
 }

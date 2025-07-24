@@ -262,6 +262,9 @@ body {
   animation: popupScale 0.3s ease-out;
   max-height: 80vh;
   overflow-y: auto;
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 @keyframes popupScale {

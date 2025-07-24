@@ -1,6 +1,7 @@
 // 游戏状态管理模块
 import { defineStore } from 'pinia'
 import audioManager from '../../utils/audio-manager'
+import vibrationManager from '../../utils/vibration.js'
 import { getDifficultyLevelFromVw, getMovementSpeed, convertMetersToVw } from '../../utils/obstacles/obstacleConfig.js'
 
 export const useGameStateStore = defineStore('gameState', {
@@ -198,6 +199,10 @@ export const useGameStateStore = defineStore('gameState', {
     async gameOver() {
       this.gameState = 'gameOver'
       
+      // 游戏结束时触发游戏结束震动
+      vibrationManager.gameOverVibration()
+      console.log('🎮 游戏结束，触发游戏结束震动')
+      
       // 计算游戏时长
       const gameEndTime = Date.now()
       const gameTime = Math.floor((gameEndTime - this.gameStartTime) / 1000) // 秒
@@ -351,6 +356,10 @@ export const useGameStateStore = defineStore('gameState', {
         console.log('✅ 障碍物提示事件已触发')
       }
       
+      // 碰撞障碍物时触发重度震动
+      vibrationManager.heavyVibration()
+      console.log('💥 碰撞障碍物，触发重度震动')
+      
       this.lives--
       if (this.lives <= 0) {
         this.gameOver()
@@ -489,6 +498,11 @@ export const useGameStateStore = defineStore('gameState', {
       this.musicEnabled = audioManager.musicEnabled
       this.soundEnabled = audioManager.soundEnabled
       this.musicPaused = audioManager.musicPaused
+      
+      // 同步震动状态
+      if (vibrationManager && vibrationManager.syncWithAudioManager) {
+        vibrationManager.syncWithAudioManager(audioManager)
+      }
     },
     
     // 获取设备ID（用于用户识别）

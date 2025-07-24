@@ -21,6 +21,9 @@ class AudioManager {
     this.musicPaused = false
     this.masterVolume = 1.0
     
+    // 震动管理器引用
+    this.vibrationManager = null
+    
     // 音频文件路径配置
     this.audioConfig = {
       backgroundMusic: '/Sound/BackgroundSound.mp3',
@@ -41,6 +44,11 @@ class AudioManager {
     this.isInitialized = false
     
     this.init()
+    
+    // 延迟初始化震动管理器引用，避免循环依赖
+    setTimeout(() => {
+      this.initVibrationSync()
+    }, 100)
   }
   
   /**
@@ -195,6 +203,9 @@ class AudioManager {
     }
     
     console.log(`音效状态切换为: ${shouldEnable ? '开启' : '关闭'}`)
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -210,6 +221,9 @@ class AudioManager {
     }
     
     console.log(`音乐状态切换为: ${this.musicPaused ? '暂停' : '播放'}`)
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -230,6 +244,9 @@ class AudioManager {
     }
     
     console.log(`音效状态切换为: ${this.soundEnabled ? '开启' : '关闭'}`)
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -253,6 +270,9 @@ class AudioManager {
     })
     
     console.log(`主音量设置为: ${this.masterVolume}`)
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -263,6 +283,9 @@ class AudioManager {
     if (this.backgroundMusic) {
       this.backgroundMusic.volume = this.volumeConfig.backgroundMusic * this.masterVolume
     }
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -273,6 +296,9 @@ class AudioManager {
     if (this.swimmingSound) {
       this.swimmingSound.volume = this.volumeConfig.swimmingSound * this.masterVolume
     }
+    
+    // 同步震动状态
+    this.syncVibrationState()
   }
   
   /**
@@ -340,6 +366,34 @@ class AudioManager {
     AudioManager.instance = null
     
     console.log('音频管理器已销毁')
+  }
+
+  /**
+   * 初始化震动同步
+   */
+  initVibrationSync() {
+    try {
+      // 动态导入震动管理器，避免循环依赖
+      import('./vibration.js').then((vibrationModule) => {
+        this.vibrationManager = vibrationModule.default
+        console.log('🔗 音频管理器已连接震动管理器')
+        // 立即同步一次状态
+        this.syncVibrationState()
+      }).catch((error) => {
+        console.log('震动管理器导入失败:', error)
+      })
+    } catch (error) {
+      console.log('震动同步初始化失败:', error)
+    }
+  }
+
+  /**
+   * 同步震动状态
+   */
+  syncVibrationState() {
+    if (this.vibrationManager && this.vibrationManager.syncWithAudioManager) {
+      this.vibrationManager.syncWithAudioManager(this)
+    }
   }
 }
 

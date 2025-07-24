@@ -7,22 +7,19 @@ export class ObstacleAssets {
     this.obstacleVariants = {}
     this.isLoaded = false
     
-    // 障碍物图片配置
+    // 障碍物图片配置 - 直接使用本地路径
     this.obstacleConfig = [
       {
         name: 'obs1',
-        folder: '/obs/',
-        variants: ['obs.png']
+        variants: ['/obs/obs.png']
       },
       {
         name: 'obs2',
-        folder: '/obs/',
-        variants: ['obs.png']
+        variants: ['/obs/obs.png']
       },
       {
         name: 'obs3',
-        folder: '/obs/',
-        variants: ['obs3-1.png', 'obs3-2.png']
+        variants: ['/obs/obs3-1.png', '/obs/obs3-2.png']
       }
     ]
     
@@ -47,7 +44,7 @@ export class ObstacleAssets {
       
       config.variants.forEach(variant => {
         const img = new Image()
-        img.src = config.folder + variant
+        img.src = variant // 直接使用配置中的完整路径
         img.onload = () => {
           this.obstacleVariants[config.name].push(img)
           loadedImages++

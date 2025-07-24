@@ -20,6 +20,8 @@ import {
   getDynamicSpawnIntervalFromDistance,
   convertMetersToVw
 } from '../../utils/obstacles/obstacleConfig.js'
+import audioManager from '../../utils/audio-manager'
+import vibrationManager from '../../utils/vibration.js'
 
 export const useGameObjectsStore = defineStore('gameObjects', {
   state: () => ({
@@ -348,6 +350,10 @@ export const useGameObjectsStore = defineStore('gameObjects', {
         gameStateStore.rushTime = 180
         gameStateStore.invulnerable = true
         gameStateStore.invulnerableTime = 180
+        
+        // 收集呼吸管道具时触发中等震动
+        vibrationManager.mediumVibration()
+        console.log('🏊‍♀️ 收集呼吸管道具，触发中等震动')
       } else if (powerUp.type === 'star') {
         // 调用gameStateStore的collectStar方法，同时增加stars和score
         gameStateStore.collectStar()
@@ -357,6 +363,10 @@ export const useGameObjectsStore = defineStore('gameObjects', {
           gameStateStore.bestScore = gameStateStore.score
           localStorage.setItem('bestScore', gameStateStore.bestScore.toString())
         }
+        
+        // 收集星星时触发轻微震动
+        vibrationManager.lightVibration()
+        console.log('⭐ 收集星星，触发轻微震动')
       }
       
       // 添加收集特效

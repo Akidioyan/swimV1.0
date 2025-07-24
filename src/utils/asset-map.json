@@ -15,7 +15,6 @@
   "/vector/Question.svg": "https://mat1.gtimg.com/rain/apub2019/d112212ca9e4.Question.svg",
   "/vector/gold.svg": "https://mat1.gtimg.com/rain/apub2019/4d3394708700.gold.svg",
   "/vector/hint.svg": "https://mat1.gtimg.com/rain/apub2019/d4f9dbfaf619.hint.svg",
-  "/vector/music.svg": "https://mat1.gtimg.com/rain/apub2019/1fdaf51775b0.music.svg",
   
   "/card/tur_card.png": "https://inews.gtimg.com/newsapp_bt/0/0717110840637_9899/0",
   "/card/tip1-left.png": "https://inews.gtimg.com/newsapp_bt/0/0717110840542_9805/0",
@@ -23,14 +22,10 @@
   
   "/Sound/swimming.MP3": "https://mat1.gtimg.com/rain/apub2019/bb61bef70721.swimming.MP3",
   "/Sound/BackgroundSound.mp3": "https://mat1.gtimg.com/rain/apub2019/b98dc04c4992.BackgroundSound.mp3",
+  "/video/OpeningVideo.mp4": "https://mat1.gtimg.com/rain/apub2019/efa67d79e04f.OpeningVideo.mp4",
   
   "/loading/loading.png": "https://inews.gtimg.com/newsapp_bt/0/0717201228919_9972/0",
   
-  "/ranks/rank0.png": "https://inews.gtimg.com/newsapp_bt/0/0717201410200_306/0",
-  "/ranks/rank1.png": "https://inews.gtimg.com/newsapp_bt/0/0717201410155_261/0",
-  "/ranks/rank2.png": "https://inews.gtimg.com/newsapp_bt/0/0717201410139_245/0",
-  "/ranks/rank3.png": "https://inews.gtimg.com/newsapp_bt/0/071720141078_184/0",
-  "/ranks/rank4.png": "https://inews.gtimg.com/newsapp_bt/0/071720141065_171/0",
   
   "/obs/obs.png": "https://inews.gtimg.com/newsapp_bt/0/0717201254324_5118/0",
   "/obs/obs3-1.png": "https://inews.gtimg.com/newsapp_bt/0/0717201254410_5204/0",
@@ -42,7 +37,7 @@
   "/props/star.png": "https://inews.gtimg.com/newsapp_bt/0/0717201337371_7821/0",
   "/props/star-glow.png": "https://inews.gtimg.com/newsapp_bt/0/0717201337352_7802/0",
   
-  "/font/FZLTCH.ttf": "https://mat1.gtimg.com/rain/apub2019/8da63957c108.HPQDGS.ttf",
+  "/font/FZLTCH.ttf": "https://mat1.gtimg.com/rain/apub2019/f343f3739d3f.FZLTCH.ttf",
   
   "/favicon_io/favicon.ico": "https://mat1.gtimg.com/rain/apub2019/d4a9f8e09b1a.favicon.ico",
   "/favicon_io/android-chrome-192x192.png": "https://inews.gtimg.com/newsapp_bt/0/0717213312323_2009/0",
@@ -50,18 +45,13 @@
   "/favicon_io/apple-touch-icon.png": "https://inews.gtimg.com/newsapp_bt/0/0717213340138_9653/0",
   "/favicon_io/favicon-16x16.png": "https://inews.gtimg.com/newsapp_bt/0/0717213349968_9396/0",
   "/favicon_io/favicon-32x32.png": "https://inews.gtimg.com/newsapp_bt/0/071721335992_8435/0",
-  "/favicon_io/site.webmanifest": "https://mat1.gtimg.com/rain/apub2019/bf31baf91bdd.site.webmanifest",
 
-  "https://mat1.gtimg.com/rain/apub2019/swim-favicon.png": "https://mat1.gtimg.com/rain/apub2019/d4a9f8e09b1a.favicon.ico",
-  "https://mat1.gtimg.com/rain/apub2019/swim-music-icon.svg": "https://mat1.gtimg.com/rain/apub2019/1fdaf51775b0.music.svg",
-   
+  "/favicon.ico": "https://mat1.gtimg.com/rain/apub2019/d4a9f8e09b1a.favicon.ico",
   "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0723223807904_4167/0",
   "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0723223820401_6578/0",
   "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0723223822464_8640/0",
   "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/0723223839776_5781/0",
   "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0723223830687_6778/0",
-  "/ContinueToChallenge.png": "https://inews.gtimg.com/newsapp_bt/0/0723223804352_615/0",
-  "/OneMore.png": "https://inews.gtimg.com/newsapp_bt/0/0723223813926_102/0",
   "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0724103013474_5440/0",
   "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0723223816180_2357/0",
   "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0723223826583_2673/0",

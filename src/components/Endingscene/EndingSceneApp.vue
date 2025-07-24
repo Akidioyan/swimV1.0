@@ -31,8 +31,9 @@
         <template v-else>
           <div class="score-line">
             你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，
-            <span v-if="currentUserEntry?.rank > 50">很遗憾没有进入排行榜。</span>
-            <span v-else>排名第 <span class="number-text">{{ currentUserEntry?.rank || '未上榜' }}</span> 名！</span>
+            <span v-if="currentUserEntry?.rank > 50">{{ getRandomRankingText() }}</span>
+            <span v-else-if="currentUserEntry?.rank === '未上榜'">{{ getRandomEncouragementText() }}</span>
+            <span v-else>排名第 <span class="number-text">{{ currentUserEntry?.rank }}</span> 名！</span>
           </div>
           <div class="distance-line">
             你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，
@@ -109,36 +110,12 @@
           <img src="/tryAgain.png" alt="再挑战一次" class="btn-image">
         </button>
         
-        <!-- 如果已使用过分享加命机会，显示第二个再挑战按钮 -->
         <button 
-          v-if="hasUsedReviveChance"
-          @click="handleShareWithoutRevive" 
-          class="try-again-btn"
-        >
-          <img src="/tryAgain.png" alt="分享给朋友" class="btn-image">
-        </button>
-        
-        <!-- 如果未使用过分享加命机会，显示分享加命按钮 -->
-        <button 
-          v-else
           @click="handleShareInApp" 
-          class="share-add-live-btn"
+          class="share-btn"
         >
-          <img src="/OneMore.png" alt="分享加命" class="btn-image">
+          <img src="/shareToFriend.png" alt="分享给朋友" class="btn-image">
         </button>
-      </div>
-    </div>
-    
-    <!-- 冲击排行榜弹窗 -->
-    <div v-if="showLeaderboardChallenge" class="leaderboard-challenge-modal" @click.self="closeLeaderboardChallenge">
-      <div class="challenge-content" @click="continueGame">
-        <img src="/ContinueToChallenge.png" alt="继续挑战" class="challenge-bg-image">
-        <div class="challenge-overlay">
-          <!-- 用户数据叠加在设计稿的指定位置 -->
-          <div class="user-rank-data">{{ savedGameState.rank !== '未上榜' ? savedGameState.rank : '-' }}</div>
-          <div class="user-distance-data">{{ savedGameState.distance }}米</div>
-          <div class="user-score-data">{{ savedGameState.score }}分</div>
-        </div>
       </div>
     </div>
   </div>
@@ -169,18 +146,6 @@ const showPlayLimitOverlay = ref(false);
 const isTryAgainDisabled = ref(false);
 const tipsImageRef = ref(null);
 
-// 分享加命相关状态
-const showLeaderboardChallenge = ref(false);
-const savedGameState = ref({
-  distance: 0,
-  score: 0,
-  lives: 0,
-  stars: 0
-});
-const hasPendingRevive = ref(false); // 是否有待复活的状态
-const hasUsedReviveChance = ref(false); // 是否已使用过分享加命机会
-let focusListenerCleanup = null; // 焦点事件监听器清理函数
-
 // 游戏数据
 const gameData = computed(() => ({
   currentDistance: gameStateStore.finalDistance || gameStore.distance || 0,
@@ -195,9 +160,22 @@ const parseScoreToStarsAndDistance = (score) => {
 }
 
 // 计算击败百分比的函数
-const calculateDefeatPercentage = (lessScoreCount, totalPV) => {
-  if (!totalPV || totalPV === 0) return '0'
-  return Math.round((lessScoreCount / totalPV) * 100)
+const calculateDefeatPercentage = (userRank, lessScoreCount, totalPV) => {
+  // 如果用户有明确排名，基于排名计算战胜百分比
+  if (userRank && typeof userRank === 'number' && userRank > 0) {
+    if (userRank === 1) {
+      return 100; // 排名第一，战胜100%
+    } else {
+      // 基于排名计算：假设总参与人数为totalPV，排名为rank的用户战胜了(totalPV - rank) / totalPV的人
+      const totalParticipants = Math.max(totalPV || 1000, userRank * 2); // 确保总人数合理
+      const defeatedCount = totalParticipants - userRank;
+      return Math.min(Math.round((defeatedCount / totalParticipants) * 100), 99);
+    }
+  }
+  
+  // 如果没有排名，使用原始的less_score_count计算方式
+  if (!totalPV || totalPV === 0) return 0;
+  return Math.min(Math.round((lessScoreCount / totalPV) * 100), 99);
 }
 
 // 根据距离获取称号
@@ -211,6 +189,58 @@ const getTitleByDistance = (distance) => {
   if (distance >= 80) return '水中精灵'
   if (distance >= 40) return '泳池新手'
   return '初出茅庐'
+}
+
+// 未上榜提示词数组 - 根据游戏规则和游泳主题设计
+const getRandomEncouragementText = () => {
+  const encouragementTexts = [
+    '继续挑战，冲击排行榜！',
+    '再接再厉，向高分进发！',
+    '加油游泳，突破自我极限！',
+    '勇敢前行，下次必上榜！',
+    '练好游泳技巧，排行榜等你！',
+    '收集更多星星，冲击高分！',
+    '掌握游泳节奏，再创佳绩！',
+    '继续训练，成为游泳达人！',
+    '不要放弃，排行榜在向你招手！',
+    '提升游泳技能，下回称王！',
+    '熟练切换泳道，避开更多障碍！',
+    '星星是关键，多收集冲高分！',
+    '坚持游泳，总有上榜的一天！',
+    '挑战极限，超越更多网友！',
+    '游泳高手就是你，再来一局！',
+    '水中冲浪，再创游泳奇迹！',
+    '蛙泳蝶泳，样样精通才能上榜！',
+    '游泳姿势很重要，练好再来！',
+    '呼吸管是神器，多多收集！',
+    '游出风采，游出精彩人生！',
+    '水花四溅，梦想在前方等你！',
+    '每一次划水都是进步的开始！',
+    '游泳路上无捷径，坚持就是胜利！',
+    '乘风破浪，游向更高的山峰！'
+  ]
+  
+  return encouragementTexts[Math.floor(Math.random() * encouragementTexts.length)]
+}
+
+// 排名不佳提示词数组 - 针对排名超过50的情况
+const getRandomRankingText = () => {
+  const rankingTexts = [
+    '继续挑战，冲击排行榜！',
+    '再接再厉，排名还能提升！',
+    '努力游泳，向前50名进发！',
+    '坚持练习，排行榜在等你！',
+    '提升技巧，下次冲击更高排名！',
+    '收集更多星星，排名自然上升！',
+    '游泳技能待提升，加油冲榜！',
+    '不要气馁，高排名指日可待！',
+    '前50名不是梦，继续努力！',
+    '游泳达人之路，从现在开始！',
+    '每次进步一点点，排名自然往前冲！',
+    '熟能生巧，排行榜等你来征服！'
+  ]
+  
+  return rankingTexts[Math.floor(Math.random() * rankingTexts.length)]
 }
 
 // 显示的排行榜数据（前50名）
@@ -273,36 +303,6 @@ onMounted(async () => {
   // 获取用户名
   await getUserName();
   
-  // 检查是否有待复活的状态（用户可能从分享返回）
-  const pendingReviveState = localStorage.getItem('pendingReviveState');
-  if (pendingReviveState && userStore.isInQQNewsApp) {
-    try {
-      const reviveData = JSON.parse(pendingReviveState);
-      // 确保数据完整性，补充可能缺失的字段
-      savedGameState.value = {
-        distance: reviveData.distance || 0,
-        score: reviveData.score || 0,
-        lives: reviveData.lives || 2,
-        stars: reviveData.stars || 0,
-        rank: reviveData.rank || '未上榜',
-        rankPercent: reviveData.rankPercent || '0'
-      };
-      hasPendingRevive.value = true;
-      
-      // 延迟显示弹窗，确保组件完全加载
-      setTimeout(() => {
-        showLeaderboardChallenge.value = true;
-      }, 800); // 增加到800ms确保页面完全渲染
-      
-      // 清除localStorage中的数据
-      localStorage.removeItem('pendingReviveState');
-      console.log('[EndingSceneApp] Restored pending revival state:', savedGameState.value);
-    } catch (error) {
-      console.warn('[EndingSceneApp] Failed to parse pending revive state:', error);
-      localStorage.removeItem('pendingReviveState');
-    }
-  }
-
   console.log('[EndingSceneApp] Attempting to fetch swimming game leaderboard data...');
   isLoadingApi.value = true;
   apiError.value = null;
@@ -344,13 +344,15 @@ onMounted(async () => {
     if (realDataResponse && realDataResponse.code === 0 && realDataResponse.data) {
       const apiData = realDataResponse.data;
 
-      // 3. 使用正确的公式计算击败百分比：rankPercent = Math.round((less_score_count / current_pv) * 100)
+      // 3. 使用正确的公式计算击败百分比，优先使用排名逻辑
+      const userRank = apiData.best_rank?.rank;
       const defeatPercentage = calculateDefeatPercentage(
+        userRank, // 传递用户排名
         apiData.less_score_count || 0,
         realCurrentPV  // 使用真实的PV数据，而不是ranking_size
       )
       
-      console.log(`[EndingSceneApp] 战胜比例计算: ${apiData.less_score_count || 0} / ${realCurrentPV} = ${defeatPercentage}%`);
+      console.log(`[EndingSceneApp] 战胜比例计算: 排名${userRank} -> 战胜${defeatPercentage}%`);
 
       // 设置当前用户数据 - 使用best_rank信息
       if (apiData.best_rank) {
@@ -457,110 +459,16 @@ const handleRestartGame = () => {
     return;
   }
   
-  // 重置分享加命机会状态，每次新游戏都有一次机会
-  hasUsedReviveChance.value = false;
-  console.log('[EndingSceneApp] Restarting game, hasUsedReviveChance reset to false');
-  
   // 使用gameStateStore的重启方法
   gameStateStore.restartGame()
 }
 
 const handleShareInApp = () => {
   userStore.logCurrentPlayStats('[EndingSceneApp] handleShareInApp clicked');
-  console.log('[EndingSceneApp] Initiating share for extra life...');
-  
-  // 检查是否在端内APP环境
-  if (!userStore.isInQQNewsApp) {
-    console.warn('[EndingSceneApp] Revival feature only available in QQ News App');
-    return;
-  }
+  console.log('[EndingSceneApp] Initiating share...');
   
   clickReport({
     id: 'share_for_life',
-  })
-
-  // 保存当前游戏状态
-  savedGameState.value = {
-    distance: gameData.value.currentDistance,
-    score: gameData.value.stars,
-    lives: gameStateStore.lives || 2, // 当前生命数（死亡前）
-    stars: gameData.value.stars,
-    rank: currentUserEntry.value?.rank || '未上榜',
-    rankPercent: currentUserData.value?.rankPercent || '0'
-  };
-  
-  // 将复活状态保存到localStorage，防止用户分享后返回时丢失状态
-  localStorage.setItem('pendingReviveState', JSON.stringify(savedGameState.value));
-  
-  hasPendingRevive.value = true;
-  console.log('[EndingSceneApp] Game state saved for revival:', savedGameState.value);
-
-  const distance = gameData.value.currentDistance;
-  const rankPercent = currentUserData.value?.rankPercent || 0;
-  let shareContent = '';
-
-  if (distance === 0) {
-    shareContent = '用指尖与全网游泳高手对决，一起来游泳挑战！';
-  } else {
-    shareContent = '我在指尖游泳中游了' + distance + 'm，挑战失败了！分享助我复活，继续冲击排行榜！';
-  }
-
-  setShareInfo({
-    title: '指尖游泳挑战赛_腾讯新闻',
-    longTitle: shareContent,
-    content: shareContent,
-    url: 'https://view.inews.qq.com/a/LNK2025052211684300?no-redirect=1',
-    imgUrl: 'https://mat1.gtimg.com/rain/apub2019/42bd7e299fc4.shareimg.png', 
-  });
-
-  // 监听分享完成事件
-  console.log('[EndingSceneApp] Share menu shown. Waiting for share completion...');
-  
-  // 设置分享完成监听
-  const handleShareComplete = () => {
-    console.log('[EndingSceneApp] Share completed. Showing leaderboard challenge modal.');
-    if (hasPendingRevive.value) {
-      showLeaderboardChallenge.value = true;
-    }
-  };
-
-  // 由于腾讯新闻JSAPI可能没有直接的完成回调，我们监听页面的focus事件
-  // 当用户从分享页面返回时触发
-  const handlePageFocus = () => {
-    setTimeout(() => {
-      if (hasPendingRevive.value && !showLeaderboardChallenge.value) {
-        console.log('[EndingSceneApp] User returned from share, showing revival modal.');
-        showLeaderboardChallenge.value = true;
-      }
-    }, 500); // 延迟500ms确保页面完全聚焦
-  };
-
-  // 添加页面焦点事件监听
-  window.addEventListener('focus', handlePageFocus);
-  
-  // 创建清理函数
-  focusListenerCleanup = () => {
-    window.removeEventListener('focus', handlePageFocus);
-  };
-  
-  // 5秒后清理监听器，避免长期监听
-  setTimeout(() => {
-    if (focusListenerCleanup) {
-      focusListenerCleanup();
-      focusListenerCleanup = null;
-    }
-  }, 5000);
-  
-  showShareMenu();
-}
-
-// 分享但不复活（已使用过加命机会后的分享）
-const handleShareWithoutRevive = () => {
-  userStore.logCurrentPlayStats('[EndingSceneApp] handleShareWithoutRevive clicked');
-  console.log('[EndingSceneApp] Initiating share without revival...');
-  
-  clickReport({
-    id: 'share_without_revive',
   })
 
   const distance = gameData.value.currentDistance;
@@ -580,70 +488,9 @@ const handleShareWithoutRevive = () => {
     url: 'https://view.inews.qq.com/a/LNK2025052211684300?no-redirect=1',
     imgUrl: 'https://mat1.gtimg.com/rain/apub2019/42bd7e299fc4.shareimg.png', 
   });
-  
+
   showShareMenu();
-  console.log('[EndingSceneApp] Share completed without revival.');
-}
-
-// 继续游戏（复活）
-const continueGame = () => {
-  console.log('[EndingSceneApp] Player chose to continue game with extra life');
-  
-  // 恢复游戏状态并加一条命
-  gameStateStore.lives = savedGameState.value.lives + 1;
-  gameStateStore.distance = savedGameState.value.distance;
-  gameStateStore.score = savedGameState.value.score;
-  gameStateStore.stars = savedGameState.value.stars;
-  
-  // 重置游戏状态为playing
-  gameStateStore.gameState = 'playing';
-  gameStateStore.currentView = 'game';
-  
-  // 标记已使用过分享加命机会
-  hasUsedReviveChance.value = true;
-  
-  // 清理复活状态和localStorage
-  hasPendingRevive.value = false;
-  showLeaderboardChallenge.value = false;
-  localStorage.removeItem('pendingReviveState');
-  
-  // 清理事件监听器
-  if (focusListenerCleanup) {
-    focusListenerCleanup();
-    focusListenerCleanup = null;
-  }
-  
-  console.log('[EndingSceneApp] Game resumed with extra life. Lives:', gameStateStore.lives);
-  console.log('[EndingSceneApp] Revive chance used, hasUsedReviveChance set to true');
-}
-
-// 放弃挑战
-const giveUpChallenge = () => {
-  console.log('[EndingSceneApp] Player chose to give up challenge');
-  
-  // 清理复活状态和localStorage
-  hasPendingRevive.value = false;
-  showLeaderboardChallenge.value = false;
-  localStorage.removeItem('pendingReviveState');
-  
-  // 清理事件监听器
-  if (focusListenerCleanup) {
-    focusListenerCleanup();
-    focusListenerCleanup = null;
-  }
-  
-  // 重置分享加命机会状态，重新开始游戏时获得新机会
-  hasUsedReviveChance.value = false;
-  console.log('[EndingSceneApp] Giving up challenge, hasUsedReviveChance reset to false');
-  
-  // 重新开始游戏
-  gameStateStore.restartGame();
-}
-
-// 关闭冲击排行榜弹窗
-const closeLeaderboardChallenge = () => {
-  // 点击背景关闭时相当于放弃挑战
-  giveUpChallenge();
+  console.log('[EndingSceneApp] Share menu shown.');
 }
 </script>
 
@@ -656,40 +503,50 @@ const closeLeaderboardChallenge = () => {
   height: 100dvh;
   background-color: #171717;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto; /* 添加垂直滚动 */
+  overflow-x: hidden; /* 隐藏水平滚动 */
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .background-container {
   width: 100%;
-  height: 100%;
+  min-height: 100%; /* 改为最小高度，允许内容超出视窗 */
   position: relative;
   padding: 0 5.33vw; /* 20px at 375px width */
   box-sizing: border-box;
+  /* 计算实际内容高度，确保有足够空间 */
+  height: auto;
+  padding-bottom: 40vh; /* 从30vh增加到40vh，适应增加的排行榜高度 */
 }
 
 /* 恭喜文字 */
 .congratulation-text {
-  position: absolute;
-  top: 4.15dvh; /* 30px at 723px height */
-  left: 5.33vw; /* 20px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 2vh; /* 保持顶部间距 */
+  left: 0; /* 移除left定位，使用padding控制 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 4vw; /* 15px at 375px width */
   line-height: 1.4;
   color: #E7E7E7;
+  /* 预估高度: 4vw * 1.4 ≈ 5.6vw ≈ 2.1vh */
 }
 
 /* 称号区域 */
 .title-section {
-  position: absolute;
-  top: 8.15dvh; /* 59px at 723px height - 端内布局稍微紧凑 */
-  left: 5.33vw; /* 与其他元素对齐 */
-  width: 89.6vw; /* 与其他元素宽度一致 */
-  height: 10.65dvh; /* 77px at 723px height */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.6vw; /* 保持宽度不变 */
+  height: 10.5vh; /* 保持高度不变 */
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: auto; /* 居中对齐 */
+  margin-right: auto; /* 居中对齐 */
 }
 
 .user-title {
@@ -733,15 +590,16 @@ const closeLeaderboardChallenge = () => {
 
 /* 结果描述 */
 .result-description {
-  position: absolute;
-  top: 19.64dvh; /* 142px at 723px height */
-  left: 5.33vw; /* 20px at 375px width */
-  width: 89.07vw; /* 334px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.07vw; /* 保持宽度不变 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600; /* 加粗字体 */
   font-size: 5.33vw; /* 20px at 375px width - 端内字体更大 */
   line-height: 1.4;
   color: #E7E7E7;
+  /* 预估高度: 5.33vw * 1.4 * 2行 ≈ 14.9vw ≈ 5.6vh */
 }
 
 .score-line,
@@ -757,12 +615,14 @@ const closeLeaderboardChallenge = () => {
 
 /* 排行榜标题 */
 .leaderboard-title {
-  position: absolute;
-  top: 27.66dvh; /* 200px at 723px height */
-  left: 5.33vw; /* 20px at 375px width */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
   display: flex;
   align-items: center;
+  justify-content: center; /* 居中对齐 */
   gap: 2.13vw; /* 8px at 375px width */
+  /* 预估高度: 约3vh */
 }
 
 .rank-icon {
@@ -780,19 +640,21 @@ const closeLeaderboardChallenge = () => {
 
 /* 排行榜容器 */
 .leaderboard-container {
-  position: absolute;
-  top: 31.39dvh; /* 227px at 723px height */
-  left: 5.33vw; /* 20px at 375px width */
-  width: 89.6vw; /* 336px at 375px width */
-  height: 61.41dvh; /* 444px at 723px height - 更大的排行榜空间 */
+  position: relative; /* 从absolute改为relative */
+  margin-top: 1vh; /* 统一改为1vh间距 */
+  left: 0; /* 移除left定位 */
+  width: 89.6vw; /* 保持宽度不变 */
+  height: 75vh; /* 从65vh增加到75vh，增加10vh可显示高度 */
+  margin-left: auto; /* 居中对齐 */
+  margin-right: auto; /* 居中对齐 */
 }
 
 /* 表头 */
 .leaderboard-header {
   display: flex;
   align-items: center;
-  height: 3.32dvh; /* 24px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 3.5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 3.2vw; /* 12px at 375px width */
@@ -822,10 +684,17 @@ const closeLeaderboardChallenge = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  height: 56.98dvh; /* 412px at 723px height */
+  height: 70.5vh; /* 75vh - 3.5vh - 1vh = 70.5vh，增加10vh可滚动高度 */
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
+  /* 添加移动端触摸滚动支持 */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  /* 添加居中对齐 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .leaderboard-scroll-container::-webkit-scrollbar {
@@ -837,16 +706,20 @@ const closeLeaderboardChallenge = () => {
 .my-result-row {
   position: relative;
   width: 89.6vw; /* 336px at 375px width */
-  height: 4.7dvh; /* 34px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
+  /* 确保在flex容器中保持宽度 */
+  flex-shrink: 0;
 }
 
 /* 排行榜行 */
 .ranking-row {
   position: relative;
   width: 89.6vw; /* 336px at 375px width */
-  height: 4.7dvh; /* 34px at 723px height */
-  margin-bottom: 1.11dvh; /* 8px at 723px height */
+  height: 5vh; /* 调整为vh单位 */
+  margin-bottom: 1vh; /* 调整为vh单位 */
+  /* 确保在flex容器中保持宽度 */
+  flex-shrink: 0;
 }
 
 .ranking-bg-container {
@@ -933,11 +806,11 @@ const closeLeaderboardChallenge = () => {
 
 /* 底部渐变 */
 .bottom-gradient {
-  position: absolute;
+  position: fixed; /* 改为固定定位 */
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 14.94dvh; /* 108px at 723px height */
+  height: 15vh; /* 调整高度 */
   background: linear-gradient(180deg, transparent 0%, rgba(23, 23, 23, 0.9) 60%, rgba(23, 23, 23, 1) 100%);
   pointer-events: none;
   z-index: 1;
@@ -945,11 +818,11 @@ const closeLeaderboardChallenge = () => {
 
 /* 分享提示 */
 .share-tips {
-  position: absolute;
-  bottom: 13.69dvh; /* 99px at 723px height */
+  position: fixed; /* 改为固定定位 */
+  bottom: 9vh; /* 相对于视窗底部定位 */
   left: 5.07vw; /* 19px at 375px width */
   width: 53.87vw; /* 202px at 375px width */
-  height: 4.56dvh; /* 33px at 723px height */
+  height: 4.5vh; /* 调整高度 */
   z-index: 2; /* 确保分享提示在遮罩层之上 */
 }
 
@@ -962,11 +835,11 @@ const closeLeaderboardChallenge = () => {
 
 /* 底部按钮 */
 .bottom-buttons {
-  position: absolute;
-  bottom: 8.91dvh; /* 644px from top = 79px from bottom at 723px height */
+  position: fixed; /* 改为固定定位 */
+  bottom: 3.5vh; /* 相对于视窗底部定位 */
   left: 5.33vw; /* 20px at 375px width */
   width: 89.6vw; /* 336px at 375px width */
-  height: 5.53dvh; /* 40px at 723px height */
+  height: 5.5vh; /* 40px at 723px height */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -974,9 +847,9 @@ const closeLeaderboardChallenge = () => {
 }
 
 .try-again-btn,
-.share-add-live-btn {
+.share-btn {
   width: 42.67vw; /* 160px at 375px width */
-  height: 5.53dvh; /* 40px at 723px height */
+  height: 5.5vh; /* 保持与底部按钮容器一致的高度 */
   background: none;
   border: none;
   cursor: pointer;
@@ -989,7 +862,7 @@ const closeLeaderboardChallenge = () => {
 }
 
 .try-again-btn:hover,
-.share-add-live-btn:hover {
+.share-btn:hover {
   transform: scale(1.05);
 }
 
@@ -1022,129 +895,6 @@ const closeLeaderboardChallenge = () => {
   }
   100% {
     transform: scale(1);
-  }
-}
-
-/* 冲击排行榜弹窗 */
-.leaderboard-challenge-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.challenge-content {
-  background: transparent; /* 移除背景，使用图片 */
-  border: none; /* 移除边框 */
-  border-radius: 0; /* 移除圆角 */
-  padding: 0; /* 移除内边距 */
-  width: 85vw; /* 320px at 375px width - 稍微增大 */
-  max-width: 90vw;
-  text-align: center;
-  box-shadow: none; /* 移除阴影 */
-  animation: modalSlideIn 0.3s ease-out;
-  position: relative;
-  cursor: pointer; /* 添加指针样式表示可点击 */
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.challenge-bg-image {
-  width: 100%;
-  height: auto; /* 保持图片比例 */
-  object-fit: contain;
-  display: block;
-  pointer-events: none; /* 防止图片阻止点击事件 */
-}
-
-.challenge-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* 数据层不阻止点击事件 */
-}
-
-/* 根据设计稿定位用户数据 */
-.user-rank-data {
-  position: absolute;
-  bottom: 13.5%; /* 调整到设计稿中"我的排名"文字下方 */
-  left: 15%; /* 左侧排名区域 */
-  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
-  font-size: 4.8vw; /* 18px at 375px width */
-  font-weight: bold;
-  color: #5CBBF9;
-  text-align: center;
-}
-
-.user-distance-data {
-  position: absolute;
-  bottom: 13.5%; /* 与排名对齐 */
-  left: 50%; /* 中间距离区域 */
-  transform: translateX(-50%); /* 居中对齐 */
-  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
-  font-size: 4.8vw; /* 18px at 375px width */
-  font-weight: bold;
-  color: #5CBBF9;
-  text-align: center;
-}
-
-.user-score-data {
-  position: absolute;
-  bottom: 13.5%; /* 与其他数据对齐 */
-  right: 15%; /* 右侧得分区域 */
-  font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
-  font-size: 4.8vw; /* 18px at 375px width */
-  font-weight: bold;
-  color: #5CBBF9;
-  text-align: center;
-}
-
-/* 响应式设计 */
-@media (max-width: 414px) {
-  .background-container {
-    padding: 0 4.27vw; /* 16px at 375px equivalent */
-  }
-  
-  .title-section {
-    left: 4.27vw;
-    width: calc(100% - 8.54vw);
-  }
-  
-  .leaderboard-container {
-    left: 4.27vw;
-    width: calc(100% - 8.54vw);
-  }
-  
-  .title-text {
-    font-size: 18vw; /* 稍微小一点 */
-  }
-}
-
-@media (max-width: 375px) {
-  .title-text {
-    font-size: 16vw; /* 更小的屏幕 */
-  }
-  
-  .result-description {
-    font-size: 4.8vw; /* 18px equivalent */
   }
 }
 </style>
