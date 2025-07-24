@@ -59,20 +59,6 @@ export async function request(path, options = {}) {
   }
 }
 
-// 获取活动总人数
-export async function getSwimGamePV() {
-  try {
-    console.log('开始调用 /activity/pv API...');
-    const response = await request('/activity/pv?activity_id=swim_game', {
-      method: 'GET'
-    });
-    console.log('/activity/pv API 调用成功:', response);
-    return response;
-  } catch (error) {
-    console.error('/activity/pv API 调用失败:', error);
-    throw error;
-  }
-}
 
 // 兼容性函数：获取活动总人数（适配游泳游戏）
 export async function getActivityPV() {
