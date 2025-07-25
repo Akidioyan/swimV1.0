@@ -52,7 +52,6 @@
     </div>
 
 
-    
     <!-- 教学卡片组件 -->
     <TutorialCards 
       v-if="gameStateStore.gameState === 'waiting' || gameStateStore.isFirstTimeGame || gameStateStore.gameState === 'paused'"
@@ -228,23 +227,31 @@ export default {
       }
     }
     
-    // 处理能量条触摸开始事件
+    // 处理能量按钮触摸开始事件
     const handleEnergyBarTouchStart = () => {
       // 清除之前的定时器
       if (energyBarHoldTimer.value) {
         clearTimeout(energyBarHoldTimer.value)
       }
       
-      // 设置延时启动，避免意外短按
-      energyBarHoldTimer.value = setTimeout(() => {
-        if (gameStateStore.gameState === 'playing' && gameStateStore.sprintEnergy > 5) {
-          gameStateStore.startActiveSprint()
+      // 立即响应：先预测加速状态，然后立即启动冲刺
+      if (gameStateStore.gameState === 'playing' && gameStateStore.sprintEnergy > 5) {
+        // 预测加速后的状态
+        const predictedSprintState = {
+          isActiveSprinting: true,
+          sprintKeyHeld: true,
+          energyDraining: true
         }
-        energyBarHoldTimer.value = null
-      }, 150) // 150毫秒后才开始冲刺
+        
+        // 立即启动冲刺，无延迟
+        gameStateStore.startActiveSprint()
+        
+        // 可选：立即更新UI状态以提供视觉反馈
+        // 这样用户能立即看到按钮被激活的效果
+      }
     }
     
-    // 处理能量条触摸结束事件
+    // 处理能量按钮触摸结束事件
     const handleEnergyBarTouchEnd = () => {
       // 清除定时器，防止误触发
       if (energyBarHoldTimer.value) {

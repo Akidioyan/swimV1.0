@@ -116,7 +116,7 @@
                   </div>
                   <div class="operation-item">
                     <span class="operation-icon">⚡</span>
-                    <span class="operation-text">长按能量条加速冲刺</span>
+                    <span class="operation-text">长按能量按钮加速冲刺</span>
                   </div>
                 </div>
               </div>
@@ -128,7 +128,6 @@
                   <li>每位玩家有3次生命机会</li>
                   <li>碰到障碍物将损失一次生命</li>
                   <li>失去所有生命后游戏结束</li>
-                  <li>首次分享游戏可获得额外生命</li>
                 </ul>
               </div>
 
