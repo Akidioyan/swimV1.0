@@ -134,7 +134,9 @@
 import { ref, computed } from 'vue'
 import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
+import { useUserStore } from '../../stores/userStore'
 import audioManager from '../../utils/audio-manager'
+import { clickReport } from '../../utils/report'
 import Leaderboard from '../Leaderboard.vue'
 
 export default {
@@ -143,6 +145,7 @@ export default {
   setup() {
     const gameStore = useGameStore()
     const gameStateStore = useGameStateStore()
+    const userStore = useUserStore()
     const isSettingsVisible = ref(false)
     const isLeaderboardVisible = ref(false)
     const isGameRulesVisible = ref(false)
@@ -176,7 +179,24 @@ export default {
     const restartGame = async () => {
       hideSettings();
       
+      // 检查端内APP用户是否已登录
+      if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+        console.log('🚫 端内APP用户未登录，无法重新开始游戏');
+        
+        // 上报点击事件
+        clickReport({
+          id: 'restart_game_settings_login_required',
+        });
+        
+        return; // 阻止重新开始游戏
+      }
+      
       console.log('🔄 开始重新开始游戏...')
+      
+      // 上报重新开始游戏事件
+      clickReport({
+        id: 'restart_game_settings',
+      });
       
       // 重置游戏状态store（主要的游戏状态和数据）
       gameStateStore.restartGame();

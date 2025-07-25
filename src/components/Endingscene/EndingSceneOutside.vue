@@ -144,6 +144,7 @@ import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useUserStore } from '../../stores/userStore'
 import { openNativeScheme } from '../../utils/appDownload'
 import { clickReport } from '../../utils/report'
+import { getRankingBoard } from '../../utils/request'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
@@ -297,22 +298,20 @@ const calculateRankByDistance = (distance) => {
 // 修改onMounted函数（约第212行）
 onMounted(async () => {
   try {
-    // 端外环境使用基于距离的假数据算法
+    // 端外环境：用户数据使用基于距离的假数据算法，排行榜数据使用真实API
     const currentDistance = gameData.value.currentDistance
     const defeatPercentage = calculateDefeatPercentage(currentDistance)
     const estimatedRank = calculateRankByDistance(currentDistance)
     
     console.log(`[EndingSceneOutside] 战胜比例计算(假数据): 距离${currentDistance}m -> 推算排名${estimatedRank} -> 战胜${defeatPercentage}%`);
     
+    // 用户数据仍使用假数据
     currentUserData.value = { 
       rankPercent: defeatPercentage.toString(),
       nickName: '您'
     }
     
-    // 生成模拟排行榜数据
-    leaderboardData.value = generateMockLeaderboard()
-    
-    // 设置当前用户数据
+    // 设置当前用户数据（假数据）
     currentUserEntry.value = {
       rank: estimatedRank, // 使用推算的排名
       nick: "我",
@@ -320,10 +319,39 @@ onMounted(async () => {
       stars: gameData.value.stars
     }
     
-    console.log('[EndingSceneOutside] 使用假数据，推算排名:', estimatedRank, '战胜百分比:', defeatPercentage);
+    // 获取真实排行榜数据
+    console.log('[EndingSceneOutside] 开始获取真实排行榜数据...');
+    try {
+      const rankingResponse = await getRankingBoard();
+      console.log('[EndingSceneOutside] 获取排行榜数据成功:', rankingResponse);
+      
+      if (rankingResponse && rankingResponse.data && rankingResponse.data.ranking_board) {
+        // 解析真实排行榜数据
+        leaderboardData.value = rankingResponse.data.ranking_board.map(entry => {
+          // 数据已经在formatRankingData中解析过了
+          return {
+            rank: entry.ranking.rank,
+            nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
+            distance: entry.ranking.distance || 0,
+            stars: entry.ranking.stars || 0,
+            score: entry.ranking.stars || 0,
+            head_url: entry.user_info.head_url || ''
+          };
+        });
+        console.log('[EndingSceneOutside] 解析排行榜数据完成，共', leaderboardData.value.length, '条记录');
+      } else {
+        console.warn('[EndingSceneOutside] 排行榜API返回数据格式异常，使用模拟数据');
+        leaderboardData.value = generateMockLeaderboard();
+      }
+    } catch (rankingError) {
+      console.error('[EndingSceneOutside] 获取排行榜数据失败，使用模拟数据:', rankingError);
+      leaderboardData.value = generateMockLeaderboard();
+    }
+    
+    console.log('[EndingSceneOutside] 数据准备完成 - 用户数据(假数据):', estimatedRank, '战胜百分比:', defeatPercentage, '排行榜数据:', leaderboardData.value.length, '条');
   } catch (e) {
-    console.error('[EndingSceneOutside] 计算假数据失败:', e);
-    // 降级处理
+    console.error('[EndingSceneOutside] 初始化失败:', e);
+    // 完全降级处理
     const defeatPercentage = calculateDefeatPercentage(gameData.value.currentDistance)
     const estimatedRank = calculateRankByDistance(gameData.value.currentDistance)
     currentUserData.value = { rankPercent: defeatPercentage.toString(), nickName: '您' }
@@ -360,9 +388,31 @@ function generateMockLeaderboard() {
 
 const handleRestartGame = () => {
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleRestartGame clicked')
+  
+  // 检查端内APP用户是否已登录
+  if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+    console.log('🚫 端内APP用户未登录，无法重新开始游戏');
+    
+    // 上报点击事件
+    clickReport({
+      id: 'restart_game_login_required',
+    });
+    
+    return; // 阻止重新开始游戏
+  }
+  
+  // 检查剩余游戏次数
   if (!userStore.canPlay) {
     return
   }
+  
+  console.log('✅ 用户验证通过，重新开始游戏');
+  
+  // 上报重新开始游戏事件
+  clickReport({
+    id: 'restart_game',
+  });
+  
   gameStateStore.restartGame()
 }
 
@@ -407,23 +457,19 @@ const handleOverlayClick = () => {
   height: 100dvh;
   background-color: #171717;
   position: relative;
-  overflow-y: auto; /* 添加垂直滚动 */
-  overflow-x: hidden; /* 隐藏水平滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
 }
 
 .background-container {
   width: 100%;
-  min-height: 100%; /* 改为最小高度，允许内容超出视窗 */
+  min-height: 100vh;
   position: relative;
   padding: 0 5.33vw; /* 20px at 375px width */
   box-sizing: border-box;
-  /* 计算实际内容高度，确保有足够空间 */
   height: auto;
-  padding-bottom: 35vh; /* 从25vh增加到35vh，适应增加的排行榜高度 */
+  padding-bottom: 25vh;
 }
 
 /* 恭喜文字 */
@@ -614,22 +660,21 @@ const handleOverlayClick = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  height: 65vh; 
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  max-height: 45vh; /* 限制最大高度为视口高度的45% */
+  overflow-y: auto; /* 启用垂直滚动 */
+  /* 隐藏滚动条 - Firefox */
+  scrollbar-width: none;
+  /* 隐藏滚动条 - IE/Edge */
+  -ms-overflow-style: none;
   /* 添加居中对齐 */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* 隐藏滚动条 - Webkit浏览器 */
 .leaderboard-scroll-container::-webkit-scrollbar {
-  width: 0;
-  background: transparent; /* Chrome/Safari/Webkit */
+  display: none;
 }
 
 /* 我的成绩行 */
@@ -783,10 +828,6 @@ const handleOverlayClick = () => {
   transition: transform 0.2s ease, opacity 0.2s ease;
   z-index: 2; /* 确保按钮可以点击 */
   object-fit: contain; /* 确保图片内容完整显示 */
-  /* 添加移动端触摸支持 */
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .try-again-btn:hover,

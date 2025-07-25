@@ -445,8 +445,22 @@ function generateMockLeaderboard() {
   return mockData
 }
 
-const handleRestartGame = () => {
+const handleRestartGame = async () => {
   userStore.logCurrentPlayStats('[EndingSceneApp] handleRestartGame clicked');
+  
+  // 检查端内APP用户是否已登录
+  if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+    console.log('🚫 端内APP用户未登录，无法重新开始游戏');
+    
+    // 上报点击事件
+    clickReport({
+      id: 'restart_game_login_required',
+    });
+    
+    return; // 阻止重新开始游戏
+  }
+  
+  // 检查剩余游戏次数
   if (!userStore.canPlay) {
     if (tipsImageRef.value) {
       tipsImageRef.value.classList.add('tips-animate');
@@ -458,6 +472,13 @@ const handleRestartGame = () => {
     }
     return;
   }
+  
+  console.log('✅ 用户验证通过，重新开始游戏');
+  
+  // 上报重新开始游戏事件
+  clickReport({
+    id: 'restart_game',
+  });
   
   // 使用gameStateStore的重启方法
   gameStateStore.restartGame()
@@ -503,23 +524,19 @@ const handleShareInApp = () => {
   height: 100dvh;
   background-color: #171717;
   position: relative;
-  overflow-y: auto; /* 添加垂直滚动 */
-  overflow-x: hidden; /* 隐藏水平滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
 }
 
 .background-container {
   width: 100%;
-  min-height: 100%; /* 改为最小高度，允许内容超出视窗 */
+  min-height: 100vh;
   position: relative;
   padding: 0 5.33vw; /* 20px at 375px width */
   box-sizing: border-box;
-  /* 计算实际内容高度，确保有足够空间 */
   height: auto;
-  padding-bottom: 40vh; /* 从30vh增加到40vh，适应增加的排行榜高度 */
+  padding-bottom: 30vh;
 }
 
 /* 恭喜文字 */
@@ -684,22 +701,21 @@ const handleShareInApp = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  height: 70.5vh; /* 75vh - 3.5vh - 1vh = 70.5vh，增加10vh可滚动高度 */
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  max-height: 45vh; /* 限制最大高度为视口高度的45% */
+  overflow-y: auto; /* 启用垂直滚动 */
+  /* 隐藏滚动条 - Firefox */
+  scrollbar-width: none;
+  /* 隐藏滚动条 - IE/Edge */
+  -ms-overflow-style: none;
   /* 添加居中对齐 */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* 隐藏滚动条 - Webkit浏览器 */
 .leaderboard-scroll-container::-webkit-scrollbar {
-  width: 0;
-  background: transparent; /* Chrome/Safari/Webkit */
+  display: none;
 }
 
 /* 我的成绩行 */

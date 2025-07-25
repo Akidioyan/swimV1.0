@@ -316,8 +316,35 @@ onMounted(async () => {
   }
 })
 
-const handleStartGame = () => {
-  gameStateStore.startGame()
+const handleStartGame = async () => {
+  // 检查端内APP用户是否已登录
+  if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+    console.log('🚫 端内APP用户未登录，无法开始游戏，自动触发登录');
+    
+    // 上报点击事件
+    clickReport({
+      id: 'game_start_login_required',
+    });
+    
+    try {
+      // 自动触发登录流程
+      await handleLogin();
+      return; // 登录后需要重新加载页面，所以直接返回
+    } catch (error) {
+      console.error('🚫 登录失败，无法开始游戏:', error);
+      // 登录失败时也返回，不开始游戏
+      return;
+    }
+  }
+  
+  console.log('✅ 用户验证通过，开始游戏');
+  
+  // 上报游戏开始事件
+  clickReport({
+    id: 'game_start',
+  });
+  
+  gameStateStore.startGame();
 }
 
 const handleShowRuleModal = () => {
@@ -863,15 +890,15 @@ const handleDeviceModalAction = () => {
   padding: 4dvw;
   height: 100%;
   overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  /* 隐藏滚动条 - Firefox */
+  scrollbar-width: none;
+  /* 隐藏滚动条 - IE/Edge */
+  -ms-overflow-style: none;
 }
 
+/* 隐藏滚动条 - Webkit浏览器 */
 .rules-scroll-content::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Webkit */
+  display: none;
 }
 
 /* 规则章节 */

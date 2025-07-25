@@ -172,6 +172,39 @@ export function formatRankingData(apiResponse) {
 // Allow both named and default import
 export default request;
 
+// 获取排行榜前50名（端外用户专用）
+export async function getRankingBoard() {
+  try {
+    console.log('获取排行榜前50名数据...');
+    
+    const requestBody = {
+      activity_id: activity_id,
+      ranking_size: 50
+    };
+    
+    console.log('排行榜查询请求:', requestBody);
+    
+    const response = await request('/activity/ranking_board', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+    
+    console.log('排行榜前50名查询成功:', response);
+    
+    // 格式化排行榜数据，添加解析后的星星数和距离
+    const formattedResponse = formatRankingData(response);
+    console.log('格式化后的排行榜数据:', formattedResponse);
+    
+    return formattedResponse;
+    
+  } catch (error) {
+    console.error('排行榜前50名查询失败:', error);
+    // 返回模拟数据作为降级处理
+    const mockData = generateMockRankingData();
+    return formatRankingData(mockData);
+  }
+}
+
 // 提交游戏结果并获取排行榜
 export async function submitGameResultAndGetRanking(gameData) {
   try {

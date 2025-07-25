@@ -69,7 +69,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useUserStore } from '../stores/userStore'
-import { getRankingOnly, parseScoreToStarsAndDistance } from '../utils/request'
+import { getRankingOnly, getRankingBoard, parseScoreToStarsAndDistance } from '../utils/request'
 
 export default {
   name: 'Leaderboard',
@@ -112,7 +112,18 @@ export default {
       
       try {
         console.log('开始获取排行榜数据...')
-        const response = await getRankingOnly()
+        
+        // 根据用户是否在端内选择不同的接口
+        let response
+        if (userStore.isInQQNewsApp) {
+          // 端内用户使用getRankingOnly（获取个人排名+排行榜）
+          console.log('[Leaderboard] 端内用户，使用getRankingOnly接口')
+          response = await getRankingOnly()
+        } else {
+          // 端外用户使用getRankingBoard（仅获取排行榜前50）
+          console.log('[Leaderboard] 端外用户，使用getRankingBoard接口')
+          response = await getRankingBoard()
+        }
         
         if (response && response.code === 0 && response.data) {
           const apiData = response.data
@@ -137,14 +148,17 @@ export default {
             hasError.value = true
           }
           
-          // 处理用户最佳排名
-          if (apiData.best_rank) {
+          // 处理用户最佳排名（仅端内用户有效）
+          if (userStore.isInQQNewsApp && apiData.best_rank) {
             const { stars, distance } = parseScoreToStarsAndDistance(apiData.best_rank.score)
             bestRank.value = {
               rank: apiData.best_rank.rank,
               stars: stars,
               distance: distance
             }
+          } else if (!userStore.isInQQNewsApp) {
+            // 端外用户没有个人排名数据
+            bestRank.value = null
           }
           
           console.log('排行榜数据获取成功:', leaderboardData.value)
@@ -378,9 +392,15 @@ export default {
   margin: 0 3.2vw;
   padding: 1.28vh 0;
   border: 1px solid rgb(182, 157, 134);
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  /* 隐藏滚动条 - Firefox */
+  scrollbar-width: none;
+  /* 隐藏滚动条 - IE/Edge */
+  -ms-overflow-style: none;
+}
+
+/* 隐藏滚动条 - Webkit浏览器 */
+.leaderboard-content::-webkit-scrollbar {
+  display: none;
 }
 
 .player-row {
