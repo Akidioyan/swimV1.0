@@ -1,5 +1,5 @@
 <template>
-  <div class="game-view">
+  <div class="game-view" @touchstart="handleTouchStart" @touchmove="handleTouchMove">
     <!-- 游戏画布组件 -->
     <GameCanvas />
     
@@ -258,6 +258,40 @@ export default {
       }
     }
     
+    // 防止水平滑动退出页面的触摸事件处理
+    let startX = null
+    let startY = null
+    
+    const handleTouchStart = (event) => {
+      // 记录触摸起始位置
+      if (event.touches && event.touches.length > 0) {
+        startX = event.touches[0].clientX
+        startY = event.touches[0].clientY
+      }
+    }
+    
+    const handleTouchMove = (event) => {
+      // 如果没有起始位置，直接返回
+      if (startX === null || startY === null) return
+      
+      // 获取当前触摸位置
+      if (event.touches && event.touches.length > 0) {
+        const currentX = event.touches[0].clientX
+        const currentY = event.touches[0].clientY
+        
+        // 计算滑动距离
+        const deltaX = Math.abs(currentX - startX)
+        const deltaY = Math.abs(currentY - startY)
+        
+        // 如果水平滑动距离大于垂直滑动距离，且水平滑动距离超过阈值
+        if (deltaX > deltaY && deltaX > 50) {
+          // 阻止默认的浏览器左滑右滑行为
+          event.preventDefault()
+          event.stopPropagation()
+        }
+      }
+    }
+    
     return {
       gameStore,
       gameStateStore,
@@ -272,6 +306,8 @@ export default {
       handleEnergyBarMouseUp,
       handleEnergyBarTouchStart,
       handleEnergyBarTouchEnd,
+      handleTouchStart,
+      handleTouchMove,
     }
   }
 }
@@ -293,6 +329,10 @@ export default {
   height: 100vh;
   overflow: hidden;
   background: #000;
+  /* 防止水平滑动退出页面 */
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 游戏UI覆盖层 */

@@ -347,13 +347,17 @@ export class ResourceManager {
    * 监控资源管理器加载状态
    */
   monitorAssetManager(assetManager, resourceCount, onComplete) {
+    // iOS设备使用更短的检查间隔
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const checkInterval = isIOS ? 50 : 100 // iOS设备50ms，其他100ms
+    
     const checkLoaded = () => {
       if (assetManager.isLoaded) {
         this.loadedResources += resourceCount
         this.updateProgress()
         onComplete()
       } else {
-        setTimeout(checkLoaded, 100)
+        setTimeout(checkLoaded, checkInterval)
       }
     }
     checkLoaded()
@@ -366,14 +370,18 @@ export class ResourceManager {
    * @param {Function} onComplete - 完成回调
    */
   monitorSpriteAssetManager(spriteAssets, expectedCount, onComplete) {
+    // iOS设备使用更短的检查间隔
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const checkInterval = isIOS ? 50 : 100 // iOS设备50ms，其他100ms
+    
     const checkProgress = () => {
       if (spriteAssets.checkAllLoaded()) {
         this.loadedResources += expectedCount
         this.updateProgress()
         if (onComplete) onComplete()
       } else {
-        // 每100ms检查一次进度
-        setTimeout(checkProgress, 100)
+        // 使用动态检查间隔
+        setTimeout(checkProgress, checkInterval)
       }
     }
     
@@ -385,13 +393,17 @@ export class ResourceManager {
    * 监控游泳者动画加载状态
    */
   monitorSwimmerAnimation(onComplete) {
+    // iOS设备使用更短的检查间隔
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const checkInterval = isIOS ? 50 : 100 // iOS设备50ms，其他100ms
+    
     const checkLoaded = () => {
       if (this.swimmerAnimation.animations.swim && this.swimmerAnimation.animations.swim.isLoaded) {
         this.loadedResources++
         this.updateProgress()
         onComplete()
       } else {
-        setTimeout(checkLoaded, 100)
+        setTimeout(checkLoaded, checkInterval)
       }
     }
     checkLoaded()
@@ -410,6 +422,10 @@ export class ResourceManager {
       
       let resolved = false
       
+      // 检测是否为iOS设备
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      const timeoutDuration = isIOS ? 2000 : 5000 // iOS设备2秒超时，其他5秒
+      
       // 增加更详细的加载事件监听
       video.onloadstart = () => {
         console.log('🎬 开始加载视频...')
@@ -421,6 +437,15 @@ export class ResourceManager {
       
       video.oncanplay = () => {
         console.log('🎬 视频可以播放')
+        // iOS设备上，oncanplay就足够了，不需要等待完全加载
+        if (isIOS && !resolved) {
+          console.log('🎬 iOS设备：视频可播放，立即继续')
+          this.videoElement = video
+          this.loadedResources++
+          this.updateProgress()
+          resolved = true
+          resolve()
+        }
       }
       
       video.oncanplaythrough = () => {
@@ -436,7 +461,7 @@ export class ResourceManager {
       
       video.onloadeddata = () => {
         console.log('🎬 视频数据加载完成')
-        // 如果 canplaythrough 事件没有触发，使用 loadeddata 作为备选
+        // 如果其他事件没有触发，使用 loadeddata 作为备选
         if (!resolved) {
           setTimeout(() => {
             if (!resolved) {
@@ -447,7 +472,7 @@ export class ResourceManager {
               resolved = true
               resolve()
             }
-          }, 1000)
+          }, 500) // 减少等待时间
         }
       }
       
@@ -465,13 +490,13 @@ export class ResourceManager {
       // 设置超时处理，避免无限等待
       setTimeout(() => {
         if (!resolved) {
-          console.warn('⏰ 视频加载超时，继续游戏流程')
+          console.warn(`⏰ 视频加载超时(${timeoutDuration}ms)，继续游戏流程`)
           this.loadedResources++
           this.updateProgress()
           resolved = true
           resolve()
         }
-      }, 10000) // 10秒超时
+      }, timeoutDuration) // 动态超时时间
       
       // 开始加载视频
       video.src = '/video/OpeningVideo.mp4'

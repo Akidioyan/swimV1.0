@@ -234,10 +234,13 @@ export default {
     };
     const toggleSound = () => {
       console.log('切换前音效状态:', audioManager.isSoundOn)
-      audioManager.toggleAllSound()
       
-      // 手动更新响应式状态
-      isSoundOn.value = audioManager.isSoundOn
+      // 先预测切换后的状态并立即更新UI
+      const willBeOn = !audioManager.isSoundOn
+      isSoundOn.value = willBeOn
+      
+      // 然后执行实际的音频切换
+      audioManager.toggleAllSound()
       
       console.log('切换后音效状态:', audioManager.isSoundOn)
       console.log('UI状态:', isSoundOn.value)
@@ -505,21 +508,27 @@ export default {
 }
 
 .control-btn {
-  width: 14.67dvw; /* 55px / 375px * 100 */
+  width: 14.67dvw;
   height: 14.67dvw;
   background: rgb(255, 235, 207);
-  border: 0.53dvw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
+  border: 0.53dvw solid rgb(114, 51, 46);
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 添加这些属性来重置浏览器默认样式 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
 }
 
 .control-btn:active {
-  transform: scale(0.95);
-  background: rgb(255, 235, 207);
+  background: rgb(255, 235, 207) !important;
+  border: 0.53dvw solid rgb(114, 51, 46) !important;
+  outline: none;
+  box-shadow: none;
 }
 
 .control-icon {

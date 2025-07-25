@@ -55,10 +55,8 @@ export default {
           const loadedResources = resourceManager.getLoadedResources()
           gameStateStore.setLoadedResources(loadedResources)
           
-          // 延迟一秒后切换到介绍页面
-          setTimeout(() => {
+          // 资源加载完成后立即跳转，不再等待1秒
             gameStateStore.setCurrentView('intro')
-          }, 1000)
         }
       )
     }

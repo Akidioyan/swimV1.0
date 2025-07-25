@@ -58,11 +58,11 @@ onMounted(() => {
         // 直接尝试播放
         videoElement.value.play().then(() => {
           console.log('🎬 视频播放成功')
-          // 1秒后显示跳过按钮
+          // 0.3秒后显示跳过按钮，让用户快速获得控制权
           skipTimer = setTimeout(() => {
             showSkipButton.value = true
             startCountdown()
-          }, 1000)
+          }, 300)
         }).catch(error => {
           console.warn('⚠️ 视频播放失败:', error)
           handleVideoError()
@@ -84,10 +84,11 @@ onMounted(() => {
       
       videoElement.value.play().then(() => {
         console.log('🎬 视频播放成功（未预加载）')
+        // 0.3秒后显示跳过按钮，让用户快速获得控制权
         skipTimer = setTimeout(() => {
           showSkipButton.value = true
           startCountdown()
-        }, 3000)
+        }, 300)
       }).catch(error => {
         console.warn('⚠️ 视频播放失败（未预加载）:', error)
         handleVideoError()
