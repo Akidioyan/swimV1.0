@@ -1,10 +1,22 @@
 <template>
   <div class="video-scene">
+    <!-- 添加占位图片，在视频加载前显示 -->
+    <div 
+      v-if="showPlaceholder" 
+      class="placeholder-image"
+      :style="{ backgroundImage: 'url(/OpeningImg.png)' }"
+    >
+    </div>
+    
     <video 
       ref="videoElement"
       class="opening-video"
+      :class="{ 'video-hidden': showPlaceholder }"
       @ended="handleVideoEnd"
       @error="handleVideoError"
+      @loadstart="handleVideoLoadStart"
+      @canplay="handleVideoCanPlay"
+      @playing="handleVideoPlaying"
       autoplay
       muted
       playsinline
@@ -31,12 +43,42 @@ const gameStateStore = useGameStateStore()
 const videoElement = ref(null)
 const showSkipButton = ref(false)
 const skipCountdown = ref(3)
+const showPlaceholder = ref(true) // 新增：控制占位图显示
 
 let skipTimer = null
 let countdownTimer = null
 
+// 新增：视频加载开始事件
+const handleVideoLoadStart = () => {
+  console.log('🎬 视频开始加载')
+  showPlaceholder.value = true
+}
+
+// 新增：视频可以播放事件
+const handleVideoCanPlay = () => {
+  console.log('🎬 视频可以播放，隐藏占位图')
+  showPlaceholder.value = false
+}
+
+// 新增：视频开始播放事件
+const handleVideoPlaying = () => {
+  console.log('🎬 视频开始播放')
+  showPlaceholder.value = false
+  
+  // 0.3秒后显示跳过按钮
+  if (!showSkipButton.value) {
+    skipTimer = setTimeout(() => {
+      showSkipButton.value = true
+      startCountdown()
+    }, 300)
+  }
+}
+
 onMounted(() => {
   console.log('🎬 VideoView 组件挂载')
+  
+  // 初始显示占位图
+  showPlaceholder.value = true
   
   // 优先使用IntroView预准备的视频
   const loadedResources = gameStateStore.getLoadedResources()
@@ -55,12 +97,9 @@ onMounted(() => {
         
         console.log('🎬 使用预准备视频，立即播放')
         
-        // 由于视频已经预准备，可以立即播放，减少黑屏时间
+        // 由于视频已经预准备，可以立即播放
         videoElement.value.play().then(() => {
           console.log('🎬 预准备视频播放成功')
-          // 立即显示跳过按钮
-          showSkipButton.value = true
-          startCountdown()
         }).catch(error => {
           console.warn('⚠️ 预准备视频播放失败，回退到原方案:', error)
           handleVideoError()
@@ -91,11 +130,6 @@ onMounted(() => {
         // 直接尝试播放
         videoElement.value.play().then(() => {
           console.log('🎬 视频播放成功')
-          // 0.3秒后显示跳过按钮，让用户快速获得控制权
-          skipTimer = setTimeout(() => {
-            showSkipButton.value = true
-            startCountdown()
-          }, 300)
         }).catch(error => {
           console.warn('⚠️ 视频播放失败:', error)
           handleVideoError()
@@ -111,27 +145,16 @@ onMounted(() => {
     // 即使没有预加载，也尝试直接播放
     if (videoElement.value) {
       videoElement.value.src = '/video/OpeningVideo.mp4'
-      videoElement.value.currentTime = 0
-      videoElement.value.muted = true
-      videoElement.value.playsInline = true
-      
-      videoElement.value.play().then(() => {
-        console.log('🎬 视频播放成功（未预加载）')
-        // 0.3秒后显示跳过按钮，让用户快速获得控制权
-        skipTimer = setTimeout(() => {
-          showSkipButton.value = true
-          startCountdown()
-        }, 300)
-      }).catch(error => {
-        console.warn('⚠️ 视频播放失败（未预加载）:', error)
+      videoElement.value.play().catch(error => {
+        console.warn('⚠️ 直接播放失败:', error)
         handleVideoError()
       })
     }
   }
 })
 
+// 视频播放完毕，开始游戏
 const handleVideoEnd = () => {
-  // 视频播放完毕，开始游戏
   gameStateStore.startGameFromVideo()
 }
 
@@ -176,10 +199,31 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* 新增：占位图片样式 */
+.placeholder-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
 .opening-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 2;
+  transition: opacity 0.3s ease;
+}
+
+/* 新增：视频隐藏状态 */
+.video-hidden {
+  opacity: 0;
 }
 
 .skip-button {

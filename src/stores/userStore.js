@@ -52,9 +52,9 @@ export const useUserStore = defineStore("user", {
           console.log('[userStore] 腾讯API加载成功');
         } catch (error) {
           console.warn('[userStore] 腾讯API加载失败，使用fallback:', error.message);
-          // Fallback逻辑
-          this.qimei36 = 'mock_qimei36_' + Date.now();
-          this.hasLogin = Math.random() > 0.5; // 模拟登录状态
+          // Fallback逻辑 - 使用默认值而不是随机模拟
+          this.qimei36 = '';
+          this.hasLogin = false; // 默认未登录状态
         }
       } else {
         console.log('[userStore] 非腾讯新闻环境，使用默认值');
@@ -162,11 +162,20 @@ export const useUserStore = defineStore("user", {
     // 授予奖励次数
     grantBonusPlays(amount = 3) {
       const today = new Date().toDateString();
+      console.log(`[userStore] grantBonusPlays called - today: ${today}, lastBonusGrantDate: ${this.lastBonusGrantDate}`);
+      
       if (this.lastBonusGrantDate !== today) {
+        const previousCanPlay = this.canPlay;
+        const previousRemainingPlays = this.remainingPlays;
+        
         this.bonusPlaysGrantedToday = true;
         this.lastBonusGrantDate = today;
         this.savePlayDataToLocalStorage();
+        
         console.log(`[userStore] 授予奖励游戏次数: ${amount}次`);
+        console.log(`[userStore] 状态变化: canPlay ${previousCanPlay} -> ${this.canPlay}, remainingPlays ${previousRemainingPlays} -> ${this.remainingPlays}`);
+        console.log(`[userStore] 当前状态: todayPlayCount=${this.todayPlayCount}, maxPlaysAllowed=${this.maxPlaysAllowed}, bonusPlaysGrantedToday=${this.bonusPlaysGrantedToday}`);
+        
         return true;
       } else {
         console.log(`[userStore] 今日已授予奖励次数`);

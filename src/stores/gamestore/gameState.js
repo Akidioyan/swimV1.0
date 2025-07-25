@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import audioManager from '../../utils/audio-manager'
 import vibrationManager from '../../utils/vibration.js'
 import { getDifficultyLevelFromVw, getMovementSpeed, convertMetersToVw } from '../../utils/obstacles/obstacleConfig.js'
+import { useUserStore } from '../userStore' // 新增导入
 
 export const useGameStateStore = defineStore('gameState', {
   state: () => ({
@@ -135,6 +136,10 @@ export const useGameStateStore = defineStore('gameState', {
     
     // 从视频直接开始游戏
     startGameFromVideo() {
+      // 在游戏开始时增加游玩次数
+      const userStore = useUserStore()
+      userStore.incrementTodayPlayCount()
+      
       this.currentView = 'game'
       this.gameStartTime = Date.now()
       

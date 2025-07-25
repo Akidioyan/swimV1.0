@@ -740,12 +740,18 @@ export default {
   }
   
   .sprint-energy-bar {
-    width: 35dvw;
-    height: 35dvw;
+    width: 35vw;
+    height: 35vw;
     bottom: calc(15vh + 20px);
   }
-  
-  
+
+  /* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+  @supports (width: 100dvw) {
+    .sprint-energy-bar {
+      width: 35dvw;
+      height: 35dvw;
+    }
+  }
 
 }
 
@@ -803,9 +809,6 @@ export default {
     font-size: 11px;
     top: -25px;
   }
-  
 
 }
-
-
 </style>

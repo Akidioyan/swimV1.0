@@ -151,8 +151,8 @@ export const useGameStore = defineStore('game', {
           return null;
         }
         
-        // 增加游戏次数
-        userStore.incrementTodayPlayCount();
+        // 移除这里的 incrementTodayPlayCount 调用，因为已经在游戏开始时调用了
+        // userStore.incrementTodayPlayCount();
         
         // 同步游戏数据到gameStore的swimming状态
         this.swimming.distance = gameData.distance || 0;

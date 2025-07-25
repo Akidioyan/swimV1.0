@@ -160,22 +160,22 @@ const parseScoreToStarsAndDistance = (score) => {
 }
 
 // 计算击败百分比的函数
-const calculateDefeatPercentage = (userRank, lessScoreCount, totalPV) => {
+const calculateDefeatPercentage = (userRank, lessScoreCount, rankingSize) => {
   // 如果用户有明确排名，基于排名计算战胜百分比
   if (userRank && typeof userRank === 'number' && userRank > 0) {
     if (userRank === 1) {
       return 100; // 排名第一，战胜100%
     } else {
-      // 基于排名计算：假设总参与人数为totalPV，排名为rank的用户战胜了(totalPV - rank) / totalPV的人
-      const totalParticipants = Math.max(totalPV || 1000, userRank * 2); // 确保总人数合理
+      // 基于排名计算：假设总参与人数为rankingSize，排名为rank的用户战胜了(rankingSize - rank) / rankingSize的人
+      const totalParticipants = Math.max(rankingSize || 50, userRank * 2); // 确保总人数合理
       const defeatedCount = totalParticipants - userRank;
       return Math.min(Math.round((defeatedCount / totalParticipants) * 100), 99);
     }
   }
   
-  // 如果没有排名，使用原始的less_score_count计算方式
-  if (!totalPV || totalPV === 0) return 0;
-  return Math.min(Math.round((lessScoreCount / totalPV) * 100), 99);
+  // 如果没有排名，使用新的公式：less_score_count / ranking_size × 100%
+  if (!rankingSize || rankingSize === 0) return 0;
+  return Math.min(Math.round((lessScoreCount / rankingSize) * 100), 99);
 }
 
 // 根据距离获取称号
@@ -349,10 +349,10 @@ onMounted(async () => {
       const defeatPercentage = calculateDefeatPercentage(
         userRank, // 传递用户排名
         apiData.less_score_count || 0,
-        realCurrentPV  // 使用真实的PV数据，而不是ranking_size
+        apiData.ranking_size || 50  // 使用ranking_size替代totalPV
       )
       
-      console.log(`[EndingSceneApp] 战胜比例计算: 排名${userRank} -> 战胜${defeatPercentage}%`);
+      console.log(`[EndingSceneApp] 战胜比例计算: 排名${userRank}, less_score_count=${apiData.less_score_count}, ranking_size=${apiData.ranking_size} -> 战胜${defeatPercentage}%`);
 
       // 设置当前用户数据 - 使用best_rank信息
       if (apiData.best_rank) {
@@ -386,64 +386,20 @@ onMounted(async () => {
           }
         })
       } else {
-        console.warn('[EndingSceneApp] API response missing or invalid ranking_board');
-        leaderboardData.value = generateMockLeaderboard();
+        console.error('[EndingSceneApp] API response error or malformed data:', realDataResponse);
+        apiError.value = realDataResponse?.msg || 'API request failed or returned malformed data';
+        leaderboardData.value = [];
+        currentUserEntry.value = {
+          rank: '未上榜',
+          nick: displayNick.value,
+          distance: gameData.value.currentDistance,
+          stars: gameData.value.stars
+        };
+        currentUserData.value = { rankPercent: '0' };
       }
-      
-      currentUserData.value = { rankPercent: defeatPercentage };
-      
-      console.log('[EndingSceneApp] Parsed currentUserEntry:', currentUserEntry.value);
-      console.log('[EndingSceneApp] Parsed leaderboardData:', leaderboardData.value);
-    } else {
-      console.error('[EndingSceneApp] API response error or malformed data:', realDataResponse);
-      apiError.value = realDataResponse?.msg || 'API request failed or returned malformed data';
-      // 使用模拟数据
-      leaderboardData.value = generateMockLeaderboard();
-      currentUserEntry.value = {
-        rank: Math.floor(Math.random() * 100) + 50,
-        nick: displayNick.value,
-        distance: gameData.value.currentDistance,
-        stars: gameData.value.stars
-      };
-      currentUserData.value = { rankPercent: '66' };
-    }
-  } catch (error) {
-    console.error('[EndingSceneApp] Error fetching swimming game leaderboard data:', error);
-    apiError.value = error.message || 'Failed to fetch data';
-    // 使用模拟数据作为降级方案
-    leaderboardData.value = generateMockLeaderboard();
-    currentUserEntry.value = {
-      rank: Math.floor(Math.random() * 100) + 50,
-      nick: displayNick.value,
-      distance: gameData.value.currentDistance,
-      stars: gameData.value.stars
-    };
-    currentUserData.value = { rankPercent: '33' };
-  } finally {
-    isLoadingApi.value = false;
-  }
-});
-
-// 生成模拟排行榜数据
-function generateMockLeaderboard() {
-  const mockData = []
-  const nicknames = ['游泳健将', '水中飞鱼', '蛙泳大师', '自由泳王', '仰泳高手', '蝶泳专家', '水上飞人', '游泳达人']
+   
   
-  for (let i = 1; i <= 50; i++) {
-    const stars = Math.max(1, 50 - i + Math.floor(Math.random() * 10))
-    const distance = Math.max(100, 1000 - i * 20 + Math.floor(Math.random() * 100))
-    
-    mockData.push({
-      rank: i,
-      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
-      distance: distance,
-      stars: stars,
-      score: stars
-    })
-  }
-  
-  return mockData
-}
+  // 删除模拟排行榜数据生成函数
 
 const handleRestartGame = async () => {
   userStore.logCurrentPlayStats('[EndingSceneApp] handleRestartGame clicked');
@@ -513,6 +469,36 @@ const handleShareInApp = () => {
   showShareMenu();
   console.log('[EndingSceneApp] Share menu shown.');
 }
+      // 设置用户数据
+      currentUserData.value = { rankPercent: defeatPercentage };
+      
+      } else {
+      console.error('[EndingSceneApp] API response error or malformed data:', realDataResponse);
+      apiError.value = realDataResponse?.msg || 'API request failed or returned malformed data';
+      leaderboardData.value = [];
+      currentUserEntry.value = {
+        rank: '未上榜',
+        nick: displayNick.value,
+        distance: gameData.value.currentDistance,
+        stars: gameData.value.stars
+      };
+      currentUserData.value = { rankPercent: '0' };
+    }
+  } catch (error) {
+    console.error('[EndingSceneApp] Error fetching leaderboard data:', error);
+    apiError.value = 'Failed to load leaderboard data';
+    leaderboardData.value = [];
+    currentUserEntry.value = {
+      rank: '未上榜',
+      nick: displayNick.value,
+      distance: gameData.value.currentDistance,
+      stars: gameData.value.stars
+    };
+    currentUserData.value = { rankPercent: '0' };
+  } finally {
+    isLoadingApi.value = false;
+  }
+})
 </script>
 
 <style scoped>
@@ -521,12 +507,19 @@ const handleShareInApp = () => {
 
 .ending-scene-app {
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background-color: #171717;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ending-scene-app {
+    height: 100dvh;
+  }
 }
 
 .background-container {

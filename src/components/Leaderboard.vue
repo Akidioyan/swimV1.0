@@ -30,7 +30,7 @@
       
       <!-- 错误状态 -->
       <div v-else-if="hasError" class="error-container">
-        <div class="error-text">加载失败，正在使用模拟数据</div>
+        <div class="error-text">加载失败，请稍后重试</div>
       </div>
       
       <!-- 排行榜内容 -->
@@ -90,19 +90,6 @@ export default {
     const hasError = ref(false)
     const bestRank = ref(null)
     
-    // 模拟排行榜数据（作为fallback）
-    const mockLeaderboardData = [
-      { rank: 1, name: 'id：75134841', distance: 1602, score: 150 },
-      { rank: 2, name: 'id：6511202', distance: 1602, score: 149 },
-      { rank: 3, name: 'id：75134841', distance: 1607, score: 130 },
-      { rank: 4, name: 'id：75134841', distance: 1555, score: 120 },
-      { rank: 5, name: 'id：75134841', distance: 1408, score: 110 },
-      { rank: 6, name: 'id：75134841', distance: 1452, score: 98 },
-      { rank: 7, name: 'id：75134841', distance: 1252, score: 98 },
-      { rank: 8, name: 'id：75134841', distance: 1350, score: 95 },
-      { rank: 9, name: 'id：75134841', distance: 950, score: 80 }
-    ]
-    
     // 获取排行榜数据
     const fetchLeaderboardData = async () => {
       if (!props.isVisible) return
@@ -143,8 +130,8 @@ export default {
               }
             })
           } else {
-            // API数据格式异常，使用模拟数据
-            leaderboardData.value = mockLeaderboardData
+            // API数据格式异常，显示空状态
+            leaderboardData.value = []
             hasError.value = true
           }
           
@@ -170,8 +157,8 @@ export default {
       } catch (error) {
         console.error('获取排行榜数据失败:', error)
         hasError.value = true
-        // 使用模拟数据作为fallback
-        leaderboardData.value = mockLeaderboardData
+        // 不再使用模拟数据，显示空状态
+        leaderboardData.value = []
       } finally {
         isLoading.value = false
       }
@@ -262,23 +249,38 @@ export default {
   display: flex;
   justify-content: center; /* 改为center */
   align-items: center;
-  margin-bottom: -2.13dvw; /* 与游戏规则一致 */
+  margin-bottom: -2.13vw; /* 与游戏规则一致 */
   position: relative; /* 添加相对定位 */
-  height: 15dvw; /* 与游戏规则一致 */
-  padding: 0 4dvw; /* 与游戏规则一致 */
-  border-bottom: 0.17dvh solid rgb(182, 157, 134); /* 与游戏规则一致 */
+  height: 15vw; /* 与游戏规则一致 */
+  padding: 0 4vw; /* 与游戏规则一致 */
+  border-bottom: 0.17vh solid rgb(182, 157, 134); /* 与游戏规则一致 */
   background: rgb(255, 235, 210); /* 添加背景色与游戏规则一致 */
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .leaderboard-header {
+    border-bottom: 0.17dvh solid rgb(182, 157, 134); /* 与游戏规则一致 */
+  }
 }
 
 .leaderboard-title {
   display: flex; /* 使用flex布局 */
   align-items: center; /* 垂直居中图标 */
-  gap: 2.13dvw; /* 图标与文字间距与游戏规则一致 */
+  gap: 2.13vw; /* 图标与文字间距与游戏规则一致 */
   color: rgb(114, 51, 46);
   font-size: 5.33vw; /* 与游戏规则标题一致 */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 800; /* 与其他标题一致 */
-  margin-left: -1.07dvw; /* 与游戏规则一致 */
+  margin-left: -1.07vw; /* 与游戏规则一致 */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .leaderboard-title {
+    gap: 2.13dvw; /* 图标与文字间距与游戏规则一致 */
+    margin-left: -1.07dvw; /* 与游戏规则一致 */
+  }
 }
 
 .leaderboard-title .title-icon {
@@ -292,8 +294,8 @@ export default {
   right: 0;
   top: 50%;
   transform: translateY(-50%); /* 垂直居中 */
-  width: 8.53dvw;
-  height: 8.53dvw;
+  width: 8.53vw;
+  height: 8.53vw;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -304,10 +306,26 @@ export default {
   z-index: 10; /* 统一添加层级 */
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .leaderboard-header .close-btn {
+    width: 8.53dvw;
+    height: 8.53dvw;
+  }
+}
+
 .leaderboard-header .close-x {
   position: relative;
-  width: 6.4dvw; /* 与其他close-x一致 */
-  height: 6.4dvw;
+  width: 6.4vw; /* 与其他close-x一致 */
+  height: 6.4vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .leaderboard-header .close-x {
+    width: 6.4dvw; /* 与其他close-x一致 */
+    height: 6.4dvw;
+  }
 }
 
 .leaderboard-header .close-x::before,
@@ -316,10 +334,20 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4dvw; /* 与其他close-x一致 */
-  height: 0.8dvw; /* 与其他close-x一致 */
+  width: 6.4vw; /* 与其他close-x一致 */
+  height: 0.8vw; /* 与其他close-x一致 */
   background: rgb(114, 51, 46);
-  border-radius: 0.4dvw;
+  border-radius: 0.4vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .leaderboard-header .close-x::before,
+  .leaderboard-header .close-x::after {
+    width: 6.4dvw; /* 与其他close-x一致 */
+    height: 0.8dvw; /* 与其他close-x一致 */
+    border-radius: 0.4dvw;
+  }
 }
 
 .leaderboard-header .close-x::before {

@@ -271,93 +271,183 @@ export default {
 </script>
 
 <style scoped>
+/* 顶部UI容器 */
 .ui-top {
   position: fixed;
-  top: 2.57dvh;
+  top: 2.57vh;
   left: 0;
   right: 0;
-  width: 90dvw;
-  height: 8dvw;
+  width: 90vw;
+  height: 8vh;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 1000;
   box-sizing: border-box;
-  padding: 0; /* 减少padding */
   background: transparent;
   pointer-events: none;
   margin: 0 auto;
-  padding: 0;
-  border: 0;
-  vertical-align: top;
+  padding: 0 5vw;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ui-top {
+    top: 2.57dvh;
+    height: 8dvh;
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .ui-top {
+    width: 90dvw;
+  }
+}
+
+/* UI块容器样式 - 确保对齐 */
 .ui-block {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 100%;
   pointer-events: auto;
 }
+
+/* UI SVG图标样式 - 统一大小确保对齐 */
 .ui-svg {
+  width: auto;
+  height: 100%;
+  max-height: 6vh;
   object-fit: contain;
-  object-position: center;
-}
-/* 重新分配宽度，总计约80dvw，确保能完整显示，统一高度 */
-.ui-svg.heart { 
-  width: 20dvw; 
-  height: 8dvw; 
-}
-.ui-svg.distance { 
-  width: 25dvw; 
-  height: 8dvw; 
-}
-.ui-svg.star { 
-  width: 21.5dvw; 
-  height: 8.6dvw;
-}
-.ui-svg.set { 
-  width: 8dvw; 
-  height: 8dvw; 
+  display: block;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ui-svg {
+    max-height: 6dvh;
+  }
+}
 
+/* 特定图标尺寸调整 */
+.ui-svg.heart {
+  width: 20vw;
+  height: 8vh;
+}
 
+.ui-svg.distance {
+  width: 25vw;
+  height: 8vh;
+}
+
+.ui-svg.star {
+  width: 21.5vw;
+  height: 8.6vh;
+}
+
+.ui-svg.set {
+  width: 8vw;
+  height: 8vh;
+  cursor: pointer;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ui-svg.heart {
+    height: 8dvh;
+  }
+
+  .ui-svg.distance {
+    height: 8dvh;
+  }
+
+  .ui-svg.star {
+    height: 8.6dvh;
+  }
+
+  .ui-svg.set {
+    height: 8dvh;
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .ui-svg.heart {
+    width: 20dvw;
+  }
+
+  .ui-svg.distance {
+    width: 25dvw;
+  }
+
+  .ui-svg.star {
+    width: 21.5dvw;
+  }
+
+  .ui-svg.set {
+    width: 8dvw;
+  }
+}
+
+/* 动态值样式 - 改为相对定位 */
 .ui-value {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -45%);
   color: #72332E;
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  font-size: 2dvh;
+  font-size: 2vh;
   line-height: 0.9;
   text-align: center;
   pointer-events: none;
   user-select: none;
+  -webkit-user-select: none;
   white-space: nowrap;
 }
 
-/* 为不同的ui-value设置不同的水平位置，确保在对应svg内 */
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ui-value {
+    font-size: 2dvh;
+  }
+}
+
 .ui-value.lives {
-  left: 67%; /* 针对heart svg调整 */
+  left: 67%;
 }
 
 .ui-value.distance {
-  left: 60%; /* 针对distance svg调整 */
+  left: 60%;
 }
 
 .ui-value.stars {
-  left: 64%; /* 针对star svg调整 */
+  left: 64%;
 }
 
-/* 设置弹窗样式 - 使用动态视口单位 */
+/* 暂停覆盖层 */
+.pause-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+}
+
+/* 设置模态框 */
 .settings-modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100dvw;
-  height: 100dvh;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
@@ -365,66 +455,125 @@ export default {
   z-index: 2000;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .settings-modal {
+    height: 100dvh;
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .settings-modal {
+    width: 100dvw;
+  }
+}
+
 .settings-panel {
-  width: 66.4dvw; /* 249px / 375px * 100 */
-  background: #FFEBD2;
-  border: 0.53dvw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
-  border-radius: 5.33dvw; /* 20px / 375px * 100 */
-  padding: 3.2dvw; /* 12px / 375px * 100 */
+  width: 66.4vw;
+  background: rgb(255, 235, 210);
+  border: 0.533vw solid rgb(114, 51, 46);
+  border-radius: 5.33vw;
+  padding: 3.2vw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1dvh; 
+  gap: 1vh;
   pointer-events: auto;
   overflow: hidden;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .settings-panel {
+    gap: 1dvh;
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .settings-panel {
+    width: 66.4dvw;
+  }
 }
 
 .settings-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1.28dvh; /* 10px / 779px * 100 */
+  margin-bottom: 1.28vh; /* 10px / 779px * 100 */
   position: relative;
-  height: 8.53dvw; /* 与close-btn保持一致的高度 */
+  height: 8.53vw;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .settings-header {
+    margin-bottom: 1.28dvh; /* 10px / 779px * 100 */
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .settings-header {
+    height: 8.53dvw;
+  }
 }
 
 .settings-title {
   display: flex;
   align-items: center;
-  gap: 2.13dvw; /* 8px / 375px * 100 */
+  gap: 2.13vw;
   color: rgb(114, 51, 46);
-  font-size: 6.4dvw; /* 24px / 375px * 100 */
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 800;
-  margin-left: -1.07dvw; /* -4px / 375px * 100 */
+  font-size: 6.4vw;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  margin-left: -1.07vw;
 }
 
-.title-icon {
-  width: 6.4dvw; /* 24px / 375px * 100 */
-  height: 6.4dvw;
+.settings-title .title-icon {
+  width: 6.24vw;
+  height: 6.24vw;
+  object-fit: contain;
 }
 
 .close-btn {
   position: absolute;
   right: 0;
-  top: 50%; /* 统一为50%垂直居中 */
-  transform: translateY(-50%); /* 添加垂直居中变换 */
-  width: 8.53dvw; /* 32px / 375px * 100 */
-  height: 8.53dvw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8.53vw;
+  height: 8.53vw;
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto; /* 统一添加事件处理 */
-  z-index: 10; /* 统一添加层级 */
+  pointer-events: auto;
+  z-index: 10;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .close-btn {
+    width: 8.53dvw;
+    height: 8.53dvw;
+  }
 }
 
 .close-x {
   position: relative;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 6.4dvw;
+  width: 6.4vw;
+  height: 6.4vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .close-x {
+    width: 6.4dvw;
+    height: 6.4dvw;
+  }
 }
 
 .close-x::before,
@@ -433,10 +582,20 @@ export default {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 0.8dvw; /* 统一为0.8dvw */
+  width: 6.4vw;
+  height: 0.8vw;
   background: rgb(114, 51, 46);
-  border-radius: 0.4dvw; /* 统一为0.4dvw */
+  border-radius: 0.4vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .close-x::before,
+  .close-x::after {
+    width: 6.4dvw;
+    height: 0.8dvw;
+    border-radius: 0.4dvw;
+  }
 }
 
 .close-x::before {
@@ -448,40 +607,73 @@ export default {
 }
 
 .button-bg {
-  width: 57.87dvw; /* 217px / 375px * 100 */
-  height: 19.9dvh; /* 155px / 779px * 100 */
+  width: 57.87vw; /* 217px / 375px * 100 */
+  height: 19.9vh; /* 155px / 779px * 100 */
   background: #D9B595;
-  border-radius: 1.33dvw; /* 5px / 375px * 100 */
-  box-shadow: inset 0 0.33dvh 0.33dvh 0 rgba(0, 0, 0, 0.25);
+  border-radius: 1.33vw; /* 5px / 375px * 100 */
+  box-shadow: inset 0 0.33vh 0.33vh 0 rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.57dvh; /* 20px / 779px * 100 */
+  gap: 1.57vh; /* 20px / 779px * 100 */
   align-self: center;
-  padding: 2dvh 3.8dvw; /* 25px / 779px * 100, 4px / 375px * 100 */
-  margin: 0 1.07dvw;
+  padding: 2vh 3.8vw; /* 25px / 779px * 100, 4px / 375px * 100 */
+  margin: 0 1.07vw;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .button-bg {
+    height: 19.9dvh; /* 155px / 779px * 100 */
+    box-shadow: inset 0 0.33dvh 0.33dvh 0 rgba(0, 0, 0, 0.25);
+    gap: 1.57dvh; /* 20px / 779px * 100 */
+    padding: 2dvh 3.8vw; /* 25px / 779px * 100, 4px / 375px * 100 */
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .button-bg {
+    width: 57.87dvw; /* 217px / 375px * 100 */
+    padding: 2vh 3.8dvw; /* 25px / 779px * 100, 4px / 375px * 100 */
+  }
+  
+  @supports (height: 100dvh) {
+    .button-bg {
+      padding: 2dvh 3.8dvw; /* 25px / 779px * 100, 4px / 375px * 100 */
+    }
+  }
 }
 
 .continue-btn,
 .leaderboard-btn {
-  width: calc(100% - 1.07dvw);
-  height: 7.06dvh; /* 55px / 779px * 100 */
+  width: calc(100% - 1.07vw);
+  height: 7.06vh; /* 55px / 779px * 100 */
   background: rgb(255, 235, 207);
-  border: 0.53dvw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
-  border-radius: 1.33dvw; /* 5px / 375px * 100 */
+  border: 0.533vw solid rgb(114, 51, 46);
+  border-radius: 1.33vw;
   color: rgb(114, 51, 46);
-  font-size: 5.33dvw; /* 20px / 375px * 100 */
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 5.33vw;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0px 0.17dvh 0.17dvh 0px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 0.17vh 0.17vh 0px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.6dvw; /* 6px / 375px * 100 */
+  gap: 1.6vw;
   box-sizing: border-box;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .continue-btn,
+  .leaderboard-btn {
+    height: 7.06dvh; /* 55px / 779px * 100 */
+    box-shadow: 0px 0.17dvh 0.17dvh 0px rgba(0, 0, 0, 0.25);
+  }
 }
 
 .continue-btn:hover,
@@ -491,26 +683,35 @@ export default {
 
 .continue-btn:active,
 .leaderboard-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
-.btn-icon {
-  width: 4.53dvw; /* 17px / 375px * 100 */
-  height: 4.53dvw;
+.continue-btn .btn-icon,
+.leaderboard-btn .btn-icon {
+  width: 4.8vw;
+  height: 4.8vw;
+  object-fit: contain;
 }
 
 .control-buttons {
   display: flex;
   justify-content: center;
-  gap: 4dvw; /* 15px / 375px * 100 */
+  gap: 4vw; /* 15px / 375px * 100 */
   margin-top: auto;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .control-buttons {
+    gap: 4dvw; /* 15px / 375px * 100 */
+  }
+}
+
 .control-btn {
-  width: 14.67dvw;
-  height: 14.67dvw;
+  width: 14.67vw;
+  height: 14.67vw;
   background: rgb(255, 235, 207);
-  border: 0.53dvw solid rgb(114, 51, 46);
+  border: 0.53vw solid rgb(114, 51, 46);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -523,154 +724,148 @@ export default {
   outline: none;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .control-btn {
+    width: 14.67dvw;
+    height: 14.67dvw;
+    border: 0.53dvw solid rgb(114, 51, 46);
+  }
+}
+
 .control-btn:active {
   background: rgb(255, 235, 207) !important;
-  border: 0.53dvw solid rgb(114, 51, 46) !important;
+  border: 0.53vw solid rgb(114, 51, 46) !important;
   outline: none;
   box-shadow: none;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .control-btn:active {
+    border: 0.53dvw solid rgb(114, 51, 46) !important;
+  }
+}
+
 .control-icon {
-  width: 6.4dvw; /* 24px / 375px * 100 */
-  height: 6.4dvw;
+  width: 6.4vw; /* 24px / 375px * 100 */
+  height: 6.4vw;
   object-fit: contain;
   object-position: center;
   transform: translate(0, 0);
 }
 
-/* 游戏规则弹窗 - 基于Figma设计稿 */
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .control-icon {
+    width: 6.4dvw; /* 24px / 375px * 100 */
+    height: 6.4dvw;
+  }
+}
+
+/* 游戏规则模态框 */
 .game-rules-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
-  z-index: 3000; /* 提高z-index确保在最上层 */
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5dvw;
+  padding: 5vw;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .game-rules-modal {
+    height: 100dvh;
+  }
 }
 
 .game-rules-panel {
-  width: 88.21vw; /* 330.8px / 375px * 100 */
-  height: 76.26vh; /* 594.06px / 779px * 100 */
-  background: rgb(255, 235, 210); /* 基于设计稿 */
-  border: 0.53vw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
-  border-radius: 5.33vw; /* 20px / 375px * 100 */
+  width: 64vw;
+  height: 55.33vh;
+  background: rgb(255, 235, 210);
+  border: 2px solid rgb(114, 51, 46);
+  border-radius: 5.33vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 5dvw 16dvw rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.3s ease-out;
-  pointer-events: auto; /* 确保面板可以接收事件 */
+  pointer-events: auto;
 }
 
-@keyframes modalSlideIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* 标题栏 */
 .rules-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: -2.13dvw; /* -8px / 375px * 100 */
+  margin-bottom: -2.13vw;
   position: relative;
-  height: 15dvw;
-  padding: 0 4dvw; /* 15px / 375px * 100 */
-  border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  height: 15vw;
+  padding: 0 4vw;
+  border-bottom: 0.17vh solid rgb(182, 157, 134);
   background: rgb(255, 235, 210);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rules-header {
+    border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  }
 }
 
 .rules-title {
   display: flex;
   align-items: center;
-  gap: 2.13dvw;
+  gap: 2.13vw;
   color: rgb(114, 51, 46);
-  font-size: 5.33vw; /* 20px / 375px * 100 */
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 700;
-  margin-left: -1.07dvw; /* -4px / 375px * 100 */
+  font-size: 5.33vw;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  margin-left: -1.07vw;
 }
 
-.title-icon {
-  width: 6.24vw; /* 23.43px / 375px * 100 */
+.rules-title .title-icon {
+  width: 6.24vw;
   height: 6.24vw;
   object-fit: contain;
 }
 
-/* 关闭按钮 */
-.rules-header .close-btn {
+.rules-close-btn {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 8.53dvw;
-  height: 8.53dvw;
+  width: 8.53vw;
+  height: 8.53vw;
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto; /* 确保按钮可以接收点击事件 */
-  z-index: 10; /* 确保按钮在上层 */
+  pointer-events: auto;
+  z-index: 10;
 }
 
-.rules-header .close-x {
-  position: relative;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 6.4dvw;
-}
-
-.rules-header .close-x::before,
-.rules-header .close-x::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 0.8dvw; /* 统一为0.8dvw */
-  background: rgb(114, 51, 46);
-  border-radius: 0.4dvw; /* 统一为0.4dvw */
-}
-
-.rules-header .close-x::before {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.rules-header .close-x::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-/* 内容区域 */
-.rules-content-area {
-  flex: 1;
-  background: rgb(217, 181, 149); /* 基于设计稿 */
-  border-radius: 2.67vw; /* 10px / 375px * 100 */
-  margin: 2.13vw 3.73vw; /* 8px 14px */
-  overflow: hidden;
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .rules-close-btn {
+    width: 8.53dvw;
+    height: 8.53dvw;
+  }
 }
 
 .rules-scroll-content {
-  padding: 4dvw;
+  padding: 4vw;
   height: 100%;
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
-  /* 添加移动端触摸滚动支持 */
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
 }
 
 .rules-scroll-content::-webkit-scrollbar {
@@ -679,21 +874,32 @@ export default {
 
 /* 规则章节 */
 .rule-section {
-  margin-bottom: 4dvw;
+  margin-bottom: 4vw;
 }
 
 .rule-section:last-child {
-  margin-bottom: 2dvw;
+  margin-bottom: 2vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .rule-section {
+    margin-bottom: 4dvw;
+  }
+
+  .rule-section:last-child {
+    margin-bottom: 2dvw;
+  }
 }
 
 .rule-title {
   font-size: 3.73vw; /* 14px / 375px * 100 */
   font-weight: 700;
   color: rgb(114, 51, 46);
-  margin-bottom: 2.13dvw;
+  margin-bottom: 2.13vw;
   display: flex;
   align-items: center;
-  gap: 1.6dvw;
+  gap: 1.6vw;
 }
 
 .rule-description {
@@ -712,12 +918,20 @@ export default {
 }
 
 .rule-list li {
-  padding: 1.07dvw 0;
-  padding-left: 4.27dvw;
+  padding: 1.07vw 0;
+  padding-left: 4.27vw;
   position: relative;
   font-size: 3.2vw;
   color: rgb(114, 51, 46);
   line-height: 1.4;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .rule-list li {
+    padding: 1.07dvw 0;
+    padding-left: 4.27dvw;
+  }
 }
 
 .rule-list li::before {
@@ -726,7 +940,14 @@ export default {
   font-weight: bold;
   position: absolute;
   left: 0;
-  top: 1.07dvw;
+  top: 1.07vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .rule-list li::before {
+    top: 1.07dvw;
+  }
 }
 
 /* 操作和道具列表 */
@@ -734,7 +955,7 @@ export default {
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 1.6dvw;
+  gap: 1.6vw;
   margin-top: 1.33vw;
 }
 
@@ -742,11 +963,11 @@ export default {
 .item {
   display: flex;
   align-items: center;
-  gap: 2.13dvw;
-  padding: 1.6dvw 2.67vw;
+  gap: 2.13vw;
+  padding: 1.6vw 2.67vw;
   background: rgba(255, 235, 207, 0.8);
   border: 0.27vw solid rgba(114, 51, 46, 0.2);
-  border-radius: 1.6dvw;
+  border-radius: 1.6vw;
   font-size: 3.2vw;
 }
 

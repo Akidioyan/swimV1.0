@@ -80,10 +80,12 @@
   
   <!-- 三页式教学提示：替换原来的 pause-hint -->
   <div v-if="showPauseHint && !showObstacleBanner" class="tutorial-pages-container">
-    <!-- 第一页：操作玩法提示 -->
-    <div v-if="currentTutorialPage === 1" class="tutorial-page" @click="nextTutorialPage">
+    <!-- 操作玩法教学页面 -->
+    <div class="tutorial-page" @click="startGame">
       <div class="tutorial-bg"></div>
       <div class="tutorial-content-1">
+  
+        
         <!-- 游戏界面展示 -->
         <div class="game-demo-area">
           <div class="swimmer-demo">🏊‍♂️</div>
@@ -99,33 +101,17 @@
         <div class="operation-instructions">
           <div class="instruction-group">
             <div class="left-instruction">
-              <div class="tutorial-arrow-left">←</div>
-              <p>点左半屏，向左移动</p>
+              <div class="tutorial-arrow-left">👆</div>
+              <p>点击左半屏<br>向左切换泳道</p>
             </div>
             <div class="right-instruction">
-              <div class="tutorial-arrow-right">→</div>
-              <p>点右半屏，向右移动</p>
+              <div class="tutorial-arrow-right">👆</div>
+              <p>点击右半屏<br>向右切换泳道</p>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+        
 
-    <!-- 第二页：Ready 准备页面 -->
-    <div v-if="currentTutorialPage === 2" class="tutorial-page" @click="nextTutorialPage">
-      <div class="tutorial-bg"></div>
-      <div class="tutorial-content-2">
-        <h1 class="ready-text">READY</h1>
-        <div class="finger-emoji">👆</div>
-      </div>
-    </div>
-
-    <!-- 第三页：GO 开始页面 -->
-    <div v-if="currentTutorialPage === 3" class="tutorial-page" @click="startGame">
-      <div class="tutorial-bg"></div>
-      <div class="tutorial-content-3">
-        <h1 class="go-text">GO</h1>
-        <div class="finger-emoji">👆</div>
       </div>
     </div>
   </div>
@@ -435,31 +421,11 @@ const onReadyGoComplete = () => {
   startGame()
 }
 
-// 新增教学页面相关状态
-const currentTutorialPage = ref(1) // 当前教学页面 (1, 2, 3)
-
-// 下一个教学页面
-const nextTutorialPage = () => {
-  if (currentTutorialPage.value === 1) {
-    // 从第一页到第二页
-    currentTutorialPage.value = 2
-  } else if (currentTutorialPage.value === 2) {
-    // 从第二页到第三页
-    currentTutorialPage.value = 3
-  }
-}
-
-// 重置教学页面状态
-const resetTutorialPages = () => {
-  currentTutorialPage.value = 1
-}
-
 // 修改开始游戏函数
 const startGame = () => {
   showTutorial.value = false
   showReadyGo.value = false
   showPauseHint.value = false
-  resetTutorialPages() // 重置教学页面状态
   gameStateStore.actuallyStartGame()
 }
 
@@ -491,9 +457,17 @@ defineExpose({
 }
 
 .card {
-  width: 65.87dvw;
-  height: 68dvw;
+  width: 65.87vw;
+  height: 68vw;
   position: relative;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .card {
+    width: 65.87dvw;
+    height: 68dvw;
+  }
 }
 
 .card-content {
@@ -501,10 +475,10 @@ defineExpose({
   height: 100%;
   background: rgb(255, 235, 210);
   border: 2px solid rgb(114, 51, 46);
-  border-radius: 5.29dvw; /* 20px / 378px * 100 */
+  border-radius: 5.29vw; /* 20px / 378px * 100 */
   display: flex;
   flex-direction: column;
-  padding: 3.97dvw 3.97dvw 2.65dvw; /* 15px 15px 10px */
+  padding: 3.97vw 3.97vw 2.65vw; /* 15px 15px 10px */
   box-sizing: border-box;
   position: relative;
   /* 触摸体验优化 */
@@ -515,42 +489,79 @@ defineExpose({
   cursor: grab; /* 鼠标悬停时显示可拖拽光标 */
 }
 
-.card-content:active {
-  cursor: grabbing; /* 触摸时显示抓取光标 */
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .card-content {
+    border-radius: 5.29dvw; /* 20px / 378px * 100 */
+    padding: 3.97dvw 3.97dvw 2.65dvw; /* 15px 15px 10px */
+  }
 }
 
 .title-section {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1.85dvw; /* 7px */
+  margin-bottom: 1.85vw; /* 7px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .title-section {
+    margin-bottom: 1.85dvw; /* 7px */
+  }
 }
 
 .title-text {
   margin: 0;
   color: rgb(114, 51, 46);
-  font-size: 5.29dvw; /* 20px */
+  font-size: 5.29vw; /* 20px */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  line-height: 7.41dvw; /* 28px */
+  line-height: 7.41vw; /* 28px */
   text-align: center;
   display: flex;
   align-items: center;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .title-text {
+    font-size: 5.29dvw; /* 20px */
+    line-height: 7.41dvw; /* 28px */
+  }
+}
+
 .hint-icon {
-  width: 4.5dvw; /* 17px */
-  height: 5.29dvw; /* 20px */
-  margin-right: 2.12dvw; /* 8px - 图标右侧间距 */
-  margin-top: 0.53dvw; /* 2px */
+  width: 4.5vw; /* 17px */
+  height: 5.29vw; /* 20px */
+  margin-right: 2.12vw; /* 8px - 图标右侧间距 */
+  margin-top: 0.53vw; /* 2px */
   vertical-align: middle; /* 确保图标与文字垂直对齐 */
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .hint-icon {
+    width: 4.5dvw; /* 17px */
+    height: 5.29dvw; /* 20px */
+    margin-right: 2.12dvw; /* 8px - 图标右侧间距 */
+    margin-top: 0.53dvw; /* 2px */
+  }
+}
+
 .divider-line {
-  width: 43.39dvw; /* 164px */
+  width: 43.39vw; /* 164px */
   height: 0;
   border-top: 2px dashed rgb(114, 51, 46);
-  margin: 0 auto 3.97dvw; /* 15px */
+  margin: 0 auto 3.97vw; /* 15px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .divider-line {
+    width: 43.39dvw; /* 164px */
+    margin: 0 auto 3.97dvw; /* 15px */
+  }
 }
 
 .image-section {
@@ -558,32 +569,57 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3.7dvw; /* 14px */
-  height: 26.46dvw; /* 100px */
+  margin-bottom: 3.7vw; /* 14px */
+  height: 26.46vw; /* 100px */
   width: 100%;
-  padding: 0 10.6dvw; /* 为箭头预留空间 */
+  padding: 0 10.6vw; /* 为箭头预留空间 */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .image-section {
+    margin-bottom: 3.7dvw; /* 14px */
+    height: 26.46dvw; /* 100px */
+    padding: 0 10.6dvw; /* 为箭头预留空间 */
+  }
 }
 
 .image-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26.46dvw; /* 100px */
-  height: 26.46dvw; /* 100px */
+  width: 26.46vw; /* 100px */
+  height: 26.46vw; /* 100px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .image-container {
+    width: 26.46dvw; /* 100px */
+    height: 26.46dvw; /* 100px */
+  }
 }
 
 .card-image {
-  width: 26.46dvw; /* 100px */
-  height: 26.46dvw; /* 100px */
+  width: 26.46vw; /* 100px */
+  height: 26.46vw; /* 100px */
   object-fit: contain;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .card-image {
+    width: 26.46dvw; /* 100px */
+    height: 26.46dvw; /* 100px */
+  }
 }
 
 .nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 7.41dvw; /* 28px */
-  height: 7.41dvw; /* 28px */
+  width: 7.41vw; /* 28px */
+  height: 7.41vw; /* 28px */
   border: 2px solid rgb(114, 51, 46);
   border-radius: 50%;
   background: transparent;
@@ -596,11 +632,11 @@ defineExpose({
 }
 
 .nav-arrow:first-child {
-  left: 0; /* 修改为0 */
+  left: 0; /* 左箭头位于容器左边 */
 }
 
 .nav-arrow:last-child {
-  right: 0; /* 修改为0 */
+  right: 0; /* 右箭头位于容器右边 */
 }
 
 .nav-arrow:hover:not(:disabled) {
@@ -612,9 +648,17 @@ defineExpose({
   cursor: not-allowed;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .nav-arrow {
+    width: 7.41dvw; /* 28px */
+    height: 7.41dvw; /* 28px */
+  }
+}
+
 .arrow-svg {
-  width: 2.65dvw; /* 10px */
-  height: 3.97dvw; /* 15px */
+  width: 2.65vw; /* 10px */
+  height: 3.97vw; /* 15px */
   object-fit: contain;
 }
 
@@ -622,12 +666,28 @@ defineExpose({
   opacity: 0.5;
 }
 
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .arrow-svg {
+    width: 2.65dvw; /* 10px */
+    height: 3.97dvw; /* 15px */
+  }
+}
+
 .sprite-image {
-  width: 26.46dvw; /* 100px */
-  height: 26.46dvw; /* 100px */
+  width: 26.46vw; /* 100px */
+  height: 26.46vw; /* 100px */
   background-image: url('/card/tur_card.png');
   background-size: 200% 200%; /* 雪碧图是2列2行，所以放大2倍宽度，2倍高度 */
   background-repeat: no-repeat;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .sprite-image {
+    width: 26.46dvw; /* 100px */
+    height: 26.46dvw; /* 100px */
+  }
 }
 
 /* 第一行第一列 - 障碍物（教学卡片1） */
@@ -667,46 +727,92 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3.97dvw; /* 15px */
+  margin-bottom: 3.97vw; /* 15px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .image-section-single {
+    margin-bottom: 3.97dvw; /* 15px */
+  }
 }
 
 /* 障碍物提示文字样式 */
 .obstacle-hint-text {
   color: rgb(114, 51, 46);
-  font-size: 5.03dvw; /* 19px */
+  font-size: 5.03vw; /* 19px */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  line-height: 7.04dvw; /* 26.6px */
+  line-height: 7.04vw; /* 26.6px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .obstacle-hint-text {
+    font-size: 5.03dvw; /* 19px */
+    line-height: 7.04dvw; /* 26.6px */
+  }
 }
 
 .description-section {
   text-align: center;
-  margin-bottom: 3.7dvw; /* 14px */
+  margin-bottom: 3.7vw; /* 14px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .description-section {
+    margin-bottom: 3.7dvw; /* 14px */
+  }
 }
 
 .description-text {
   margin: 0;
   color: rgb(114, 51, 46);
-  font-size: 5.03dvw; /* 19px */
+  font-size: 5.03vw; /* 19px */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600;
-  line-height: 7.04dvw; /* 26.6px */
+  line-height: 7.04vw; /* 26.6px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .description-text {
+    font-size: 5.03dvw; /* 19px */
+    line-height: 7.04dvw; /* 26.6px */
+  }
 }
 
 .progress-indicator {
   display: flex;
   justify-content: center;
-  gap: 2.12dvw; /* 8px */
+  gap: 2.12vw; /* 8px */
   margin-top: auto;
-  padding-bottom: 1.32dvw; /* 5px */
+  padding-bottom: 1.32vw; /* 5px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .progress-indicator {
+    gap: 2.12dvw; /* 8px */
+    padding-bottom: 1.32dvw; /* 5px */
+  }
 }
 
 .progress-dot {
-  width: 1.59dvw; /* 6px */
-  height: 1.59dvw; /* 6px */
+  width: 1.59vw; /* 6px */
+  height: 1.59vw; /* 6px */
   border-radius: 50%;
   background: rgba(114, 51, 46, 0.3);
   transition: all 0.2s ease;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .progress-dot {
+    width: 1.59dvw; /* 6px */
+    height: 1.59dvw; /* 6px */
+  }
 }
 
 .progress-dot.active {
@@ -760,132 +866,86 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8dvh;
+  gap: 8vh;
   color: white;
   text-align: center;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .tutorial-content-1 {
+    gap: 8dvh;
+  }
+}
+
+.tutorial-title {
+  margin-bottom: 3.7vw; /* 14px */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .tutorial-title {
+    margin-bottom: 3.7dvw; /* 14px */
+  }
+}
+
+.tutorial-title h2 {
+  font-size: 6.2vw; /* 24px */
+  font-weight: 600;
+  line-height: 8.4vw; /* 32px */
+  color: #fff;
+  text-shadow: 0 1vh 2vh rgba(0, 0, 0, 0.5);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .tutorial-title h2 {
+    text-shadow: 0 1dvh 2dvh rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .tutorial-title h2 {
+    font-size: 6.2dvw; /* 24px */
+    line-height: 8.4dvw; /* 32px */
+  }
+}
+
 .game-demo-area {
   position: relative;
-  width: 54dvw; /* 202.5/375*100 */
-  height: 17.3dvh; /* 135/779*100 */
+  width: 54vw; /* 202.5/375*100 */
+  height: 17.3vh; /* 135/779*100 */
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 2.7dvw;
+  border-radius: 2.7vw;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .game-demo-area {
+    height: 17.3dvh; /* 135/779*100 */
+  }
+}
+
 .swimmer-demo {
-  font-size: 8dvw;
+  font-size: 8vw;
   animation: swimDemo 2s ease-in-out infinite;
 }
 
-.lane-indicators {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 2.7dvw;
-}
-
-.lane {
-  width: 0.5dvw;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.operation-instructions {
-  width: 100%;
-}
-
-.instruction-group {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 84.5dvw;
-  margin: 0 auto;
-}
-
-.left-instruction,
-.right-instruction {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2.7dvw;
-}
-
-.left-instruction p,
-.right-instruction p {
-  font-size: 4dvw; 
-  font-weight: 600;
-  line-height: 5.6dvw;
-  margin: 0;
-  width: 36.8dvw; 
-}
-
-.tutorial-arrow-left,
-.tutorial-arrow-right {
-  width: 4.4dvw; 
-  height: 8.8dvw; 
-  border: 0.8dvw solid white; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3.2dvw;
-  color: white;
-  border-radius: 1.3dvw;
-}
-
-/* 第二页和第三页：Ready/GO样式 */
-.tutorial-content-2,
-.tutorial-content-3 {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5.3dvh;
-  color: white;
-  text-align: center;
-  width: 100%;
-  justify-content: center;
-  padding: 0 4dvw;
-  box-sizing: border-box;
-}
-
-.ready-text,
-.go-text {
-  font-size: 12dvw; 
-  font-weight: 600;
-  line-height: 16.8dvw; /* 相应调整行高 */
-  margin: 0;
-  text-shadow: 0 1dvh 2dvh rgba(0, 0, 0, 0.5);
-  text-align: center;
-  width: 100%;
-  display: block;
-}
-
-.finger-emoji {
-  font-size: 12dvw; /* 手指emoji大小 */
-  animation: fingerPulse 1.5s ease-in-out infinite;
-  margin-top: 4dvh;
+@keyframes swimDemo {
+  0%, 100% { 
+    transform: translateX(-5vw) translateY(0); 
+  }
+  50% { 
+    transform: translateX(5vw) translateY(-1vw); 
+  }
 }
 
 /* 动画效果 */
-@keyframes swimDemo {
-  0%, 100% { 
-    transform: translateX(-5dvw) translateY(0); 
-  }
-  50% { 
-    transform: translateX(5dvw) translateY(-1dvw); 
-  }
-}
-
 @keyframes fingerPulse {
   0%, 100% { 
     transform: scale(1);
@@ -897,6 +957,18 @@ defineExpose({
   }
 }
 
+/* 箭头脉冲动画 */
+@keyframes arrowPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
 /* 障碍物横幅动画样式 */
 .obstacle-banner-container {
   position: absolute;
@@ -904,12 +976,19 @@ defineExpose({
   left: 50%;
   transform: translate(-50%,-50%);
   width: 100%;
-  max-width: 60dvw;
+  max-width: 60vw;
   z-index: 20; 
   pointer-events: none;
   overflow: hidden;
   /* 关键：消除容器内的空白 */
   font-size: 0;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .obstacle-banner-container {
+    max-width: 60dvw;
+  }
 }
 
 .obstacle-banner-part {
@@ -947,9 +1026,144 @@ defineExpose({
 
 .banner-image-left {
   width: calc(100% / 3) !important;
-  max-width: calc(80dvw / 3) !important;
+  max-width: calc(80vw / 3) !important;
   height: auto;
   display: block;
   margin: 0 auto; /* 水平居中 */
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .banner-image-left {
+    max-width: calc(80dvw / 3) !important;
+  }
+}
+
+.operation-instructions {
+  width: 100%;
+  margin-bottom: 4vh;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .operation-instructions {
+    margin-bottom: 4dvh;
+  }
+}
+
+.instruction-group {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 8vw;
+  margin-bottom: 3.2vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .instruction-group {
+    gap: 8dvw;
+    margin-bottom: 3.2dvw;
+  }
+}
+
+.left-instruction,
+.right-instruction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: white;
+  flex: 1;
+}
+
+.tutorial-arrow-left,
+.tutorial-arrow-right {
+  font-size: 8vw; /* 32px */
+  margin-bottom: 2vw;
+  animation: arrowPulse 1.5s ease-in-out infinite;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .tutorial-arrow-left,
+  .tutorial-arrow-right {
+    font-size: 8dvw; /* 32px */
+    margin-bottom: 2dvw;
+  }
+}
+
+.left-instruction p,
+.right-instruction p {
+  font-size: 4vw; /* 16px */
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .left-instruction p,
+  .right-instruction p {
+    font-size: 4dvw; /* 16px */
+  }
+}
+
+.tap-to-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: white;
+  margin-top: 3vh;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .tap-to-start {
+    margin-top: 3dvh;
+  }
+}
+
+.tap-to-start .finger-emoji {
+  font-size: 8vw; /* 32px */
+  animation: fingerPulse 1.5s ease-in-out infinite;
+  margin-bottom: 2vw;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .tap-to-start .finger-emoji {
+    font-size: 8dvw; /* 32px */
+    margin-bottom: 2dvw;
+  }
+}
+
+.tap-to-start p {
+  font-size: 4vw; /* 16px */
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .tap-to-start p {
+    font-size: 4dvw; /* 16px */
+  }
+}
+
+/* 箭头脉冲动画 */
+@keyframes arrowPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 </style>

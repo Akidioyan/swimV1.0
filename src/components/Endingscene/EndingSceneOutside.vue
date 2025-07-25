@@ -35,10 +35,11 @@
             <span v-else-if="currentUserEntry?.rank === '未上榜'">{{ getRandomEncouragementText() }}</span>
             <span v-else>{{ getRandomLoginText() }}</span>
           </div>
-          <div class="distance-line">
+          <!-- 删除以下distance-line部分 -->
+          <!-- <div class="distance-line">
             你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，
             已超越 <span class="number-text">{{ currentUserData?.rankPercent || '0' }}%</span> 网友！
-          </div>
+          </div> -->
         </template>
       </div>
 
@@ -138,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, onUnmounted, nextTick } from 'vue'
 import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useUserStore } from '../../stores/userStore'
@@ -156,6 +157,10 @@ const leaderboardData = ref([])
 const currentUserEntry = ref(null)
 const showNeedShareTipsImage = ref(false)
 const isTryAgainDisabled = ref(false)
+
+// 分享相关状态
+const shareActionInitiated = ref(false)
+const shareTimestamp = ref(null)
 
 // 游戏数据
 const gameData = computed(() => ({
@@ -219,33 +224,16 @@ const getRandomLoginText = () => {
     '登录查看真实排行，展现指尖天赋！',
     '登录腾讯新闻，成为排行榜传奇！',
     '登录解锁更多功能，称霸游泳界！',
-    '登录腾讯新闻，与千万玩家同台竞技！'
+    '登录腾讯新闻，与千万玩家竞技！'
   ]
   
   return loginTexts[Math.floor(Math.random() * loginTexts.length)]
 }
 
-// 扩展排行榜数据（50人）
+// 显示实际排行榜数据（不扩展虚拟数据）
 const extendedLeaderboard = computed(() => {
-  const extended = [...leaderboardData.value]
-  
-  // 如果不足50人，生成更多数据
-  while (extended.length < 50) {
-    const rank = extended.length + 1
-    const nicknames = ['游泳健将', '水中飞鱼', '蛙泳大师', '自由泳选手', '仰泳高手', '蝶泳专家', '混合泳王者', '水中精灵']
-    const baseStar = Math.max(1, 30 - rank + Math.floor(Math.random() * 5))
-    const baseDistance = Math.max(50, 800 - rank * 10 + Math.floor(Math.random() * 50))
-    
-    extended.push({
-      rank: rank,
-      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
-      distance: baseDistance,
-      stars: baseStar,
-      score: baseStar
-    })
-  }
-  
-  return extended.slice(0, 50)
+  // 直接返回真实的API数据，不生成虚拟数据填充
+  return leaderboardData.value
 })
 
 // 监听游戏次数变化
@@ -258,66 +246,18 @@ watch(() => userStore.canPlay, (canStillPlay) => {
 
 // 在script setup部分，修改数据处理逻辑
 
-// 计算击败百分比的函数（端外使用假数据）
-const calculateDefeatPercentage = (distance) => {
-  // 基于距离推算排名和战胜百分比，更符合逻辑
-  if (distance >= 300) {
-    // 超长距离：排名很靠前，战胜90-99%
-    return Math.min(90 + Math.floor((distance - 300) / 10), 99);
-  } else if (distance >= 200) {
-    // 长距离：排名中上，战胜70-89%
-    return 70 + Math.floor((distance - 200) / 5);
-  } else if (distance >= 100) {
-    // 中等距离：排名中等，战胜40-69%
-    return 40 + Math.floor((distance - 100) / 3.33);
-  } else if (distance >= 50) {
-    // 短距离：排名中下，战胜20-39%
-    return 20 + Math.floor((distance - 50) / 2.5);
-  } else if (distance >= 20) {
-    // 很短距离：排名较低，战胜5-19%
-    return 5 + Math.floor((distance - 20) / 2);
-  } else {
-    // 极短距离：排名很低，战胜0-4%
-    return Math.floor(distance / 5);
-  }
-}
+// 删除虚拟数据计算函数
 
-// 基于距离推算合理的排名
-const calculateRankByDistance = (distance) => {
-  if (distance >= 320) return Math.floor(Math.random() * 3) + 1; // 1-3名
-  else if (distance >= 280) return Math.floor(Math.random() * 5) + 1; // 1-5名
-  else if (distance >= 240) return Math.floor(Math.random() * 10) + 1; // 1-10名
-  else if (distance >= 200) return Math.floor(Math.random() * 20) + 5; // 5-25名
-  else if (distance >= 160) return Math.floor(Math.random() * 30) + 10; // 10-40名
-  else if (distance >= 120) return Math.floor(Math.random() * 50) + 20; // 20-70名
-  else if (distance >= 80) return Math.floor(Math.random() * 100) + 50; // 50-150名
-  else if (distance >= 40) return Math.floor(Math.random() * 200) + 100; // 100-300名
-  else return '未上榜'; // 距离太短，未上榜
-}
-
-// 修改onMounted函数（约第212行）
+// 修改onMounted函数中的数据处理逻辑（约第250-290行）
 onMounted(async () => {
+  // 添加页面可见性监听器
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  console.log('[EndingSceneOutside] 页面可见性监听器已添加')
+  
   try {
-    // 端外环境：用户数据使用基于距离的假数据算法，排行榜数据使用真实API
     const currentDistance = gameData.value.currentDistance
-    const defeatPercentage = calculateDefeatPercentage(currentDistance)
-    const estimatedRank = calculateRankByDistance(currentDistance)
     
-    console.log(`[EndingSceneOutside] 战胜比例计算(假数据): 距离${currentDistance}m -> 推算排名${estimatedRank} -> 战胜${defeatPercentage}%`);
-    
-    // 用户数据仍使用假数据
-    currentUserData.value = { 
-      rankPercent: defeatPercentage.toString(),
-      nickName: '您'
-    }
-    
-    // 设置当前用户数据（假数据）
-    currentUserEntry.value = {
-      rank: estimatedRank, // 使用推算的排名
-      nick: "我",
-      distance: currentDistance,
-      stars: gameData.value.stars
-    }
+    console.log(`[EndingSceneOutside] 当前距离: ${currentDistance}m`);
     
     // 获取真实排行榜数据
     console.log('[EndingSceneOutside] 开始获取真实排行榜数据...');
@@ -325,39 +265,63 @@ onMounted(async () => {
       const rankingResponse = await getRankingBoard();
       console.log('[EndingSceneOutside] 获取排行榜数据成功:', rankingResponse);
       
-      if (rankingResponse && rankingResponse.data && rankingResponse.data.ranking_board) {
-        // 解析真实排行榜数据
-        leaderboardData.value = rankingResponse.data.ranking_board.map(entry => {
-          // 数据已经在formatRankingData中解析过了
-          return {
-            rank: entry.ranking.rank,
-            nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
-            distance: entry.ranking.distance || 0,
-            stars: entry.ranking.stars || 0,
-            score: entry.ranking.stars || 0,
-            head_url: entry.user_info.head_url || ''
-          };
-        });
-        console.log('[EndingSceneOutside] 解析排行榜数据完成，共', leaderboardData.value.length, '条记录');
+      if (rankingResponse && rankingResponse.data) {
+        const apiData = rankingResponse.data;
+        
+        // 使用新公式计算击败百分比：less_score_count / ranking_size × 100%
+        let defeatPercentage = 0;
+        if (apiData.less_score_count && apiData.ranking_size) {
+          defeatPercentage = Math.round((apiData.less_score_count / apiData.ranking_size) * 100);
+          console.log(`[EndingSceneOutside] 击败百分比计算: ${apiData.less_score_count} / ${apiData.ranking_size} × 100% = ${defeatPercentage}%`);
+        }
+        
+        // 设置用户数据 - 使用新公式计算的击败百分比
+        currentUserData.value = { 
+          rankPercent: defeatPercentage.toString(),
+          nickName: '您'
+        }
+        
+        // 解析排行榜数据
+        if (apiData.ranking_board) {
+          leaderboardData.value = apiData.ranking_board.map(entry => {
+            return {
+              rank: entry.ranking.rank,
+              nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
+              distance: entry.ranking.distance || 0,
+              stars: entry.ranking.stars || 0,
+              score: entry.ranking.stars || 0,
+              head_url: entry.user_info.head_url || ''
+            };
+          });
+          console.log('[EndingSceneOutside] 解析排行榜数据完成，共', leaderboardData.value.length, '条记录');
+        }
       } else {
-        console.warn('[EndingSceneOutside] 排行榜API返回数据格式异常，使用模拟数据');
-        leaderboardData.value = generateMockLeaderboard();
+        console.warn('[EndingSceneOutside] 排行榜API返回数据格式异常，显示空状态');
+        currentUserData.value = { rankPercent: '0', nickName: '您' }
+        leaderboardData.value = [];
       }
     } catch (rankingError) {
-      console.error('[EndingSceneOutside] 获取排行榜数据失败，使用模拟数据:', rankingError);
-      leaderboardData.value = generateMockLeaderboard();
+      console.error('[EndingSceneOutside] 获取排行榜数据失败，显示空状态:', rankingError);
+      currentUserData.value = { rankPercent: '0', nickName: '您' }
+      leaderboardData.value = [];
     }
     
-    console.log('[EndingSceneOutside] 数据准备完成 - 用户数据(假数据):', estimatedRank, '战胜百分比:', defeatPercentage, '排行榜数据:', leaderboardData.value.length, '条');
+    // 设置当前用户数据 - 显示实际游戏成绩
+    currentUserEntry.value = {
+      rank: '未上榜', // 端外用户无法获取真实排名
+      nick: "我",
+      distance: currentDistance,
+      stars: gameData.value.stars
+    }
+    
+    console.log('[EndingSceneOutside] 数据准备完成 - 排行榜数据:', leaderboardData.value.length, '条');
   } catch (e) {
     console.error('[EndingSceneOutside] 初始化失败:', e);
-    // 完全降级处理
-    const defeatPercentage = calculateDefeatPercentage(gameData.value.currentDistance)
-    const estimatedRank = calculateRankByDistance(gameData.value.currentDistance)
-    currentUserData.value = { rankPercent: defeatPercentage.toString(), nickName: '您' }
-    leaderboardData.value = generateMockLeaderboard()
+    // 完全降级处理 - 显示空状态
+    currentUserData.value = { rankPercent: '0', nickName: '您' }
+    leaderboardData.value = []
     currentUserEntry.value = {
-      rank: estimatedRank,
+      rank: '未上榜',
       nick: "我",
       distance: gameData.value.currentDistance,
       stars: gameData.value.stars
@@ -365,26 +329,14 @@ onMounted(async () => {
   }
 })
 
-// 生成模拟排行榜数据
-function generateMockLeaderboard() {
-  const mockData = []
-  const nicknames = ['游泳健将', '水中飞鱼', '蛙泳大师']
-  
-  for (let i = 1; i <= 10; i++) {
-    const stars = Math.max(1, 30 - i + Math.floor(Math.random() * 5))
-    const distance = Math.max(100, 800 - i * 50 + Math.floor(Math.random() * 100))
-    
-    mockData.push({
-      rank: i,
-      nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}_${Math.floor(Math.random() * 1000)}`,
-      distance: distance,
-      stars: stars,
-      score: stars
-    })
-  }
-  
-  return mockData
-}
+// 添加onUnmounted清理函数
+onUnmounted(() => {
+  // 清理页面可见性监听器
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  console.log('[EndingSceneOutside] 页面可见性监听器已清理')
+})
+
+// 删除模拟排行榜数据生成函数
 
 const handleRestartGame = () => {
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleRestartGame clicked')
@@ -433,18 +385,83 @@ const handleShareToFriendClick = () => {
   
   userStore.logCurrentPlayStats('[EndingSceneOutside] handleShareToFriendClick clicked')
   
+  // 记录分享操作开始
+  shareActionInitiated.value = true
+  shareTimestamp.value = Date.now()
   shareArrowOverlayIsVisible.value = true
   console.log('[EndingSceneOutside] shareArrowOverlayIsVisible set to true');
 
-  console.log('[EndingSceneOutside] Share action initiated (showing arrow). Simulating share & starting 5s timer for bonus plays.')
+  console.log('[EndingSceneOutside] Share action initiated (showing arrow). Starting timer for bonus plays.')
+  
+  // 减少延迟时间到2秒，作为备用机制
   setTimeout(() => {
-    console.log('[EndingSceneOutside] 5s timer elapsed. Granting bonus plays for outside-app share.')
-    userStore.grantBonusPlays(3)
-  }, 5000)
+    if (shareActionInitiated.value) {
+      console.log('[EndingSceneOutside] 2s timer elapsed. Granting bonus plays for outside-app share.')
+      const granted = userStore.grantBonusPlays(3)
+      if (granted) {
+        console.log('[EndingSceneOutside] 奖励次数授予成功，更新UI状态')
+        shareActionInitiated.value = false
+        userStore.logCurrentPlayStats('[EndingSceneOutside] After granting bonus plays')
+        
+        // 强制UI更新
+        nextTick(() => {
+          console.log('[EndingSceneOutside] 定时器奖励后UI更新完成，当前canPlay状态:', userStore.canPlay)
+        })
+      }
+    }
+  }, 2000)
 }
 
 const handleOverlayClick = () => {
+  console.log('[EndingSceneOutside] shareArrowOverlay clicked, closing overlay and granting bonus plays')
   shareArrowOverlayIsVisible.value = false
+  
+  // 用户点击关闭分享遮罩时立即授予奖励次数
+  if (shareActionInitiated.value) {
+    const granted = userStore.grantBonusPlays(3)
+    if (granted) {
+      console.log('[EndingSceneOutside] 分享完成！奖励次数授予成功')
+      shareActionInitiated.value = false
+      userStore.logCurrentPlayStats('[EndingSceneOutside] After manual granting bonus plays')
+      
+      // 强制UI更新
+      nextTick(() => {
+        console.log('[EndingSceneOutside] UI更新完成，当前canPlay状态:', userStore.canPlay)
+      })
+    } else {
+      console.log('[EndingSceneOutside] 今日已授予过奖励次数')
+      shareActionInitiated.value = false
+    }
+  }
+}
+
+// 页面可见性变化监听 - 用户从分享返回时的处理
+const handleVisibilityChange = () => {
+  if (!document.hidden && shareActionInitiated.value) {
+    // 页面重新可见且有分享操作进行中
+    const timeSinceShare = Date.now() - (shareTimestamp.value || 0)
+    console.log(`[EndingSceneOutside] 页面重新可见，分享操作距今 ${timeSinceShare}ms`)
+    
+    if (timeSinceShare > 1000) { // 如果分享操作超过1秒，认为用户完成了分享
+      setTimeout(() => {
+        if (shareActionInitiated.value) {
+          console.log('[EndingSceneOutside] 检测到从分享返回，授予奖励次数')
+          const granted = userStore.grantBonusPlays(3)
+          if (granted) {
+            console.log('[EndingSceneOutside] 分享返回奖励次数授予成功')
+            shareActionInitiated.value = false
+            shareArrowOverlayIsVisible.value = false
+            userStore.logCurrentPlayStats('[EndingSceneOutside] After visibility change bonus grant')
+            
+            // 强制UI更新
+            nextTick(() => {
+              console.log('[EndingSceneOutside] 可见性变化后UI更新完成，当前canPlay状态:', userStore.canPlay)
+            })
+          }
+        }
+      }, 500) // 稍微延迟一下确保状态稳定
+    }
+  }
 }
 </script>
 
@@ -454,12 +471,19 @@ const handleOverlayClick = () => {
 
 .ending-scene-outside {
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background-color: #171717;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .ending-scene-outside {
+    height: 100dvh;
+  }
 }
 
 .background-container {
@@ -850,9 +874,16 @@ const handleOverlayClick = () => {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 9.26dvh; /* 67px at 723px height - 覆盖按钮区域 */
+  height: 9.26vh; /* 67px at 723px height - 覆盖按钮区域 */
   background: rgba(23, 23, 23, 0.95);
   z-index: 0;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .bottom-overlay {
+    height: 9.26dvh; /* 67px at 723px height - 覆盖按钮区域 */
+  }
 }
 
 /* 分享箭头遮罩 */
@@ -872,7 +903,14 @@ const handleOverlayClick = () => {
 .share-instruction-arrow {
   width: 26.67vw; /* 100px at 375px width */
   height: auto;
-  margin-top: 2.76dvh; /* 20px at 723px height */
+  margin-top: 2.76vh; /* 20px at 723px height */
   margin-right: 5.33vw; /* 20px at 375px width */
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .share-instruction-arrow {
+    margin-top: 2.76dvh; /* 20px at 723px height */
+  }
 }
 </style>

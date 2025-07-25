@@ -77,16 +77,8 @@ export async function getActivityPV() {
     return response;
   } catch (error) {
     console.error('活动PV API 调用失败:', error);
-    // 返回模拟数据作为降级处理 - 基于真实的活动数据
-    const baseCount = 81151; // 
-    const randomGrowth = Math.floor(Math.random() * 500) + 50; // 小幅度随机增长
-    const totalParticipants = baseCount + randomGrowth;
-    console.log('使用降级数据，参与人数:', totalParticipants);
-    // 适配新的返回格式
-    return { 
-      current_pv: totalParticipants,
-      next_no: totalParticipants + 1
-    };
+    // 不再返回模拟数据，抛出错误
+    throw error;
   }
 }
 
@@ -199,9 +191,8 @@ export async function getRankingBoard() {
     
   } catch (error) {
     console.error('排行榜前50名查询失败:', error);
-    // 返回模拟数据作为降级处理
-    const mockData = generateMockRankingData();
-    return formatRankingData(mockData);
+    // 不再返回模拟数据，抛出错误
+    throw error;
   }
 }
 
@@ -239,9 +230,8 @@ export async function submitGameResultAndGetRanking(gameData) {
     
   } catch (error) {
     console.error('排行榜API调用失败:', error);
-    // 返回模拟数据作为降级处理
-    const mockData = generateMockRankingData(gameData);
-    return formatRankingData(mockData);
+    // 不再返回模拟数据，抛出错误
+    throw error;
   }
 }
 
@@ -274,76 +264,9 @@ export async function getRankingOnly() {
     
   } catch (error) {
     console.error('排行榜查询失败:', error);
-    // 返回模拟数据作为降级处理
-    const mockData = generateMockRankingData();
-    return formatRankingData(mockData);
+    // 不再返回模拟数据，抛出错误
+    throw error;
   }
-}
-
-// 生成模拟排行榜数据（降级处理）
-function generateMockRankingData(gameData = null) {
-  console.log('使用模拟排行榜数据');
-  
-  const mockRankingBoard = [];
-  const nicknames = ['游泳健将', '水中飞鱼', '蛙泳高手', '自由泳达人', '仰泳专家', '蝶泳王者', '混合泳大师'];
-  const headUrls = [
-    'https://inews.gtimg.com/om_ls/OXqWE1gpeCwuFsrBRTYRPAR35t8jNJPJBzzGG_Ga4XHyoAA_200200/0',
-    'http://p.qpic.cn/user_pic/0/_1750140487107295905/243'
-  ];
-  
-  // 生成前50名数据
-  for (let i = 1; i <= 50; i++) {
-    const stars = Math.max(10, 120 - i + Math.floor(Math.random() * 20)); // 星星数
-    const distance = Math.max(100, 1000 - i * 10 + Math.floor(Math.random() * 100)); // 距离
-    const finalScore = stars * 100000 + distance; // 按新公式计算
-    
-    mockRankingBoard.push({
-      ranking: {
-        rank: i,
-        score: finalScore
-      },
-      user_info: {
-        head_url: headUrls[Math.floor(Math.random() * headUrls.length)],
-        nick: `${nicknames[Math.floor(Math.random() * nicknames.length)]}${Math.floor(Math.random() * 1000)}`,
-        openid: "",
-        suid: `mock_user_${i}_${Date.now()}`
-      }
-    });
-  }
-  
-  // 按最终得分排序
-  mockRankingBoard.sort((a, b) => b.ranking.score - a.ranking.score);
-  
-  // 重新分配排名
-  mockRankingBoard.forEach((item, index) => {
-    item.ranking.rank = index + 1;
-  });
-  
-  // 生成用户相关数据
-  let bestRank = null;
-  let lessScoreCount = 0;
-  
-  if (gameData) {
-    const userFinalScore = (gameData.score || 0) * 100000 + (gameData.distance || 0);
-    bestRank = {
-      rank: Math.floor(Math.random() * 1000) + 51,
-      score: userFinalScore
-    };
-    
-    // 计算低于用户得分的人数
-    lessScoreCount = Math.floor(Math.random() * 500) + 100;
-  }
-  
-  return {
-    code: 0,
-    msg: 'success',
-    data: {
-      best_rank: bestRank,
-      less_score_count: lessScoreCount,
-      ranking_board: mockRankingBoard,
-      ranking_size: 50
-    }
-  };
 }
 
 // 测试排行榜API功能

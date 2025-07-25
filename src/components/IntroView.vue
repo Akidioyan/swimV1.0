@@ -485,28 +485,44 @@ const handleDeviceModalAction = () => {
   font-style: normal;
 }
 
+/* 主场景容器 */
 .intro-scene {
   width: 100%;
-  height: 100dvh;
+  height: 100vh; /* modern browsers */
   position: relative;
-  background: linear-gradient(180deg, #A4D0F5 0%, #7BB3E0 50%, #5A9BD4 100%);
+  background: linear-gradient(180deg, #a4d0f5 0%, #7bb3e0 50%, #5a9bd4 100%);
   font-family: 'FZLTCH', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
 }
 
-/* === 设备检测弹窗样式保持不变 === */
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .intro-scene {
+    height: 100dvh;
+  }
+}
+
+/* 设备检测弹窗 */
 .device-detection-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10000;
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .device-detection-modal {
+    height: 100dvh;
+  }
 }
 
 .modal-container {
@@ -704,6 +720,8 @@ const handleDeviceModalAction = () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* 添加兼容性处理 */
+  font-family: 'object-fit: cover;'; /* IE polyfill */
 }
 
 /* 主要内容 */
@@ -718,25 +736,40 @@ const handleDeviceModalAction = () => {
 .side-buttons {
   position: absolute;
   right: 0;
-  top: 14.7dvh; /* 游戏规则按钮开始位置: (3247-3132)/779*100 */
+  top: 14.7vh; /* 游戏规则按钮开始位置: (3247-3132)/779*100 */
   display: flex;
   flex-direction: column;
-  gap: 3.8dvh; /* 两个按钮之间的间距: (3377-3247-116)/779*100 */
+  gap: 3.8vh; /* 两个按钮之间的间距: (3377-3247-116)/779*100 */
   z-index: 10;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .side-buttons {
+    top: 14.7dvh; /* 游戏规则按钮开始位置: (3247-3132)/779*100 */
+    gap: 3.8dvh; /* 两个按钮之间的间距: (3377-3247-116)/779*100 */
+  }
+}
+
 .side-button {
-  width: 13.9dvw; /* 52/375*100 - 基于设计稿宽度 */
-  height: 14.9dvh; /* 116/779*100 - 基于设计稿高度 */
+  width: 13.9vw; /* 52/375*100 - 基于设计稿宽度 */
+  height: 14.9vh; /* 116/779*100 - 基于设计稿高度 */
   background: #FDDE38; /* 基于设计稿颜色 rgb(253, 222, 56) */
   border: none;
-  border-radius: 2.7dvw 0 0 2.7dvw; /* 10px圆角，右侧贴边 */
+  border-radius: 2.7vw 0 0 2.7vw; /* 10px圆角，右侧贴边 */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 0.5dvw 2dvw rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .side-button {
+    height: 14.9dvh; /* 116/779*100 - 基于设计稿高度 */
+  }
 }
 
 .side-button:hover {
@@ -750,44 +783,58 @@ const handleDeviceModalAction = () => {
 
 .side-button-text {
   color: white;
-  font-size: 5.3dvw; /* 20px/375*100 - 基于设计稿字体大小 */
+  font-size: 5.3vw; /* 20px/375*100 - 基于设计稿字体大小 */
   font-weight: 600;
   writing-mode: vertical-rl;
   text-orientation: upright;
   letter-spacing: 0px;
-  line-height: 7.2dvw; /* 28px/375*100 - 基于设计稿行高 */
+  line-height: 7.2vw; /* 28px/375*100 - 基于设计稿行高 */
 }
 
 /* 主挑战按钮区域 - 基于Figma精确位置 */
 .challenge-section {
   position: absolute;
   left: 50%;
-  top: 65.8dvh; /* (3651-3132)/779*100 - 基于设计稿Y位置 */
-  transform: translateX(-50%);
+  top: 65.8vh; /* (3651-3132)/779*100 - 基于设计稿Y位置 */
+  transform: translate(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 10;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .challenge-section {
+    top: 65.8dvh; /* (3651-3132)/779*100 - 基于设计稿Y位置 */
+  }
+}
+
 .challenge-button {
-  width: 65.9dvw; /* 247/375*100 - 基于设计稿宽度 */
-  height: 12.2dvh; /* 95/779*100 - 基于设计稿高度 */
+  width: 65.9vw; /* 247/375*100 - 基于设计稿宽度 */
+  height: 12.2vh; /* 95/779*100 - 基于设计稿高度 */
   background: #0D71ED; /* 基于设计稿颜色 rgb(13, 113, 237) */
   border: none;
-  border-radius: 2.7dvw; /* 10px/375*100 - 基于设计稿圆角 */
+  border-radius: 2.7vw; /* 10px/375*100 - 基于设计稿圆角 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1dvw 3dvw rgba(13, 113, 237, 0.3);
+  box-shadow: 0 1vw 3vw rgba(13, 113, 237, 0.3);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .challenge-button {
+    height: 12.2dvh; /* 95/779*100 - 基于设计稿高度 */
+  }
 }
 
 .challenge-button:hover {
-  transform: translateY(-0.5dvw);
-  box-shadow: 0 1.5dvw 4dvw rgba(13, 113, 237, 0.4);
+  transform: translateY(-0.5vw);
+  box-shadow: 0 1.5vw 4vw rgba(13, 113, 237, 0.4);
 }
 
 .challenge-button:active {
@@ -796,20 +843,20 @@ const handleDeviceModalAction = () => {
 
 .challenge-text {
   color: white;
-  font-size: 12dvw; /* 45px/375*100 - 基于设计稿字体大小 */
+  font-size: 12vw; /* 45px/375*100 - 基于设计稿字体大小 */
   font-weight: 600;
-  line-height: 16.8dvw; /* 63px/375*100 - 基于设计稿行高 */
+  line-height: 16.8vw; /* 63px/375*100 - 基于设计稿行高 */
   margin: 0;
 }
 
 .participant-count {
   color: white;
-  font-size: 3.2dvw; /* 12px/375*100 - 基于设计稿字体大小 */
+  font-size: 3.2vw; /* 12px/375*100 - 基于设计稿字体大小 */
   font-weight: 400;
-  line-height: 4.5dvw; /* 16.8px/375*100 - 基于设计稿行高 */
+  line-height: 4.5vw; /* 16.8px/375*100 - 基于设计稿行高 */
   margin: 0;
   text-align: center;
-  width: 60.3dvw; /* 226px/375*100 - 基于设计稿宽度 */
+  width: 60.3vw; /* 226px/375*100 - 基于设计稿宽度 */
   transition: opacity 0.3s ease;
 }
 
@@ -833,14 +880,22 @@ const handleDeviceModalAction = () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5dvw;
+  padding: 5vw;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .game-rules-modal {
+    height: 100dvh;
+  }
 }
 
 .game-rules-panel {
@@ -852,7 +907,7 @@ const handleDeviceModalAction = () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 5dvw 16dvw rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5vw 16vw rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.3s ease-out;
 }
 
@@ -872,23 +927,30 @@ const handleDeviceModalAction = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: -2.13dvw; /* -8px / 375px * 100 */
+  margin-bottom: -2.13vw; /* -8px / 375px * 100 */
   position: relative;
-  height: 15dvw;
-  padding: 0 4dvw; /* 15px / 375px * 100 */
-  border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  height: 15vw;
+  padding: 0 4vw; /* 15px / 375px * 100 */
+  border-bottom: 0.17vh solid rgb(182, 157, 134);
   background: rgb(255, 235, 210);
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rules-header {
+    border-bottom: 0.17dvh solid rgb(182, 157, 134);
+  }
 }
 
 .rules-title {
   display: flex;
   align-items: center;
-  gap: 2.13dvw;
+  gap: 2.13vw;
   color: rgb(114, 51, 46);
   font-size: 5.33vw; /* 20px / 375px * 100 */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
   font-weight: 600; /* 改为与排行榜标题一致 */
-  margin-left: -1.07dvw; /* -4px / 375px * 100 */
+  margin-left: -1.07vw; /* -4px / 375px * 100 */
 }
 
 .title-icon {
@@ -903,8 +965,8 @@ const handleDeviceModalAction = () => {
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 8.53dvw;
-  height: 8.53dvw;
+  width: 8.53vw;
+  height: 8.53vw;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -917,8 +979,8 @@ const handleDeviceModalAction = () => {
 
 .rules-header .close-x {
   position: relative;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 6.4dvw;
+  width: 6.4vw; /* 统一为6.4vw */
+  height: 6.4vw;
 }
 
 .rules-header .close-x::before,
@@ -927,10 +989,10 @@ const handleDeviceModalAction = () => {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4dvw; /* 统一为6.4dvw */
-  height: 0.8dvw; /* 统一为0.8dvw */
+  width: 6.4vw; /* 统一为6.4vw */
+  height: 0.8vw; /* 统一为0.8vw */
   background: rgb(114, 51, 46);
-  border-radius: 0.4dvw; /* 统一为0.4dvw */
+  border-radius: 0.4vw; /* 统一为0.4vw */
 }
 
 .rules-header .close-x::before {
@@ -951,7 +1013,7 @@ const handleDeviceModalAction = () => {
 }
 
 .rules-scroll-content {
-  padding: 4dvw;
+  padding: 4vw;
   height: 100%;
   overflow-y: auto;
   /* 隐藏滚动条 - Firefox */
@@ -967,21 +1029,21 @@ const handleDeviceModalAction = () => {
 
 /* 规则章节 */
 .rule-section {
-  margin-bottom: 4dvw;
+  margin-bottom: 4vw;
 }
 
 .rule-section:last-child {
-  margin-bottom: 2dvw;
+  margin-bottom: 2vw;
 }
 
 .rule-title {
   font-size: 3.73vw; /* 14px / 375px * 100 */
   font-weight: 400; /* 改为与排行榜正文一致 */
   color: rgb(114, 51, 46);
-  margin-bottom: 2.13dvw;
+  margin-bottom: 2.13vw;
   display: flex;
   align-items: center;
-  gap: 1.6dvw;
+  gap: 1.6vw;
 }
 
 .rule-description {
@@ -1001,8 +1063,8 @@ const handleDeviceModalAction = () => {
 }
 
 .rule-list li {
-  padding: 1.07dvw 0;
-  padding-left: 4.27dvw;
+  padding: 1.07vw 0;
+  padding-left: 4.27vw;
   position: relative;
   font-size: 3.2vw;
   color: rgb(114, 51, 46);
@@ -1016,7 +1078,7 @@ const handleDeviceModalAction = () => {
   font-weight: bold;
   position: absolute;
   left: 0;
-  top: 1.07dvw;
+  top: 1.07vw;
 }
 
 /* 操作和道具列表 */
@@ -1024,7 +1086,7 @@ const handleDeviceModalAction = () => {
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 1.6dvw;
+  gap: 1.6vw;
   margin-top: 1.33vw;
 }
 
@@ -1032,11 +1094,11 @@ const handleDeviceModalAction = () => {
 .item {
   display: flex;
   align-items: center;
-  gap: 2.13dvw;
-  padding: 1.6dvw 2.67vw;
+  gap: 2.13vw;
+  padding: 1.6vw 2.67vw;
   background: rgba(255, 235, 207, 0.8);
   border: 0.27vw solid rgba(114, 51, 46, 0.2);
-  border-radius: 1.6dvw;
+  border-radius: 1.6vw;
   font-size: 3.2vw;
 }
 
@@ -1071,14 +1133,15 @@ const handleDeviceModalAction = () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5dvw;
+  padding: 5vw;
 }
 
 /* 登录提示样式 - 基于IntroScene.vue */
@@ -1126,35 +1189,67 @@ const handleDeviceModalAction = () => {
 /* 响应式适配 - 基于原设计保持比例 */
 @media (max-width: 480px) {
   .challenge-text {
-    font-size: 10dvw;
+    font-size: 10vw;
   }
   
   .participant-count {
-    font-size: 2.8dvw;
+    font-size: 2.8vw;
   }
   
   .side-button-text {
-    font-size: 4.8dvw;
-    line-height: 6.5dvw;
+    font-size: 4.8vw;
+    line-height: 6.5vw;
   }
 }
 
+/* 响应式适配 - 基于原设计保持比例 */
 @media (max-height: 600px) {
   .side-buttons {
-    top: 12dvh;
-    gap: 3dvh;
+    top: 12vh;
+    gap: 3vh;
   }
   
   .challenge-section {
-    top: 60dvh;
+    top: 60vh;
   }
   
   .side-button {
-    height: 12dvh;
+    height: 12vh;
   }
   
   .challenge-button {
-    height: 10dvh;
+    height: 10vh;
+  }
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  @media (max-height: 600px) {
+    .side-buttons {
+      top: 12dvh;
+      gap: 3dvh;
+    }
+    
+    .challenge-section {
+      top: 60dvh;
+    }
+    
+    .side-button {
+      height: 12dvh;
+    }
+    
+    .challenge-button {
+      height: 10dvh;
+    }
+  }
+}
+
+/* 向下兼容：不支持dvh的浏览器 */
+@supports not (height: 100dvh) {
+  .intro-scene,
+  .device-detection-modal,
+  .game-rules-modal {
+    height: 100vh !important;
   }
 }
 </style>
