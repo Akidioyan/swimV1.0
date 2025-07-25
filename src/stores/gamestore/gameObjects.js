@@ -68,7 +68,7 @@ export const useGameObjectsStore = defineStore('gameObjects', {
       
       // 重置动态难度系统
       this.forceNextSpawn = true
-      this.currentDifficultyLevel = 3 // 改为从第3级开始
+      this.currentDifficultyLevel = 1 // 改为从第1级开始
       this.pendingObjectTypes = []
       this.lastLevelUpdate = 0
     },
