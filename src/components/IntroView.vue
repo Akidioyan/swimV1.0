@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useUserStore } from '../stores/userStore'
@@ -188,6 +188,10 @@ const isLeaderboardVisible = ref(false)
 
 // 设备检测弹窗状态
 const showDeviceModal = ref(false)
+
+// 添加视频预准备相关状态
+const videoPrepared = ref(false)
+const preparedVideoElement = ref(null)
 
 // PV 参与人数相关状态
 const participantData = ref({
@@ -213,6 +217,45 @@ const formattedParticipants = computed(() => {
 const participantText = computed(() => {
   return `—— 已有${formattedParticipants.value}人参与过挑战 ——`;
 });
+
+// 视频预准备函数
+const prepareVideo = () => {
+  if (videoPrepared.value) return
+  
+  console.log('🎬 IntroView: 开始预准备视频')
+  
+  // 获取预加载的视频资源
+  const loadedResources = gameStateStore.getLoadedResources()
+  
+  if (loadedResources && loadedResources.videoElement) {
+    try {
+      // 创建新的video元素用于预准备
+      const video = document.createElement('video')
+      video.src = '/video/OpeningVideo.mp4'
+      video.muted = true
+      video.playsInline = true
+      video.preload = 'auto'
+      video.currentTime = 0
+      
+      // 监听视频准备就绪事件
+      video.oncanplay = () => {
+        console.log('🎬 IntroView: 视频预准备完成')
+        preparedVideoElement.value = video
+        videoPrepared.value = true
+      }
+      
+      video.onerror = (error) => {
+        console.warn('⚠️ IntroView: 视频预准备失败:', error)
+      }
+      
+      // 开始预加载
+      video.load()
+      
+    } catch (error) {
+      console.error('❌ IntroView: 视频预准备异常:', error)
+    }
+  }
+}
 
 // 获取活动参与人数
 const fetchActivityPV = async () => {
@@ -313,6 +356,19 @@ onMounted(async () => {
   } catch (error) {
     console.error('❌ 参与人数数据获取失败:', error)
   }
+  
+  // 延迟一段时间后开始预准备视频，避免影响页面渲染
+  setTimeout(() => {
+    prepareVideo()
+  }, 1000)
+})
+
+// 清理函数
+onUnmounted(() => {
+  if (preparedVideoElement.value) {
+    preparedVideoElement.value.src = ''
+    preparedVideoElement.value = null
+  }
 })
 
 const handleStartGame = async () => {
@@ -337,6 +393,15 @@ const handleStartGame = async () => {
   }
   
   console.log('✅ 用户验证通过，开始游戏');
+  
+  // 如果视频已预准备，将其传递给VideoView
+  if (videoPrepared.value && preparedVideoElement.value) {
+    console.log('🎬 IntroView: 传递预准备的视频给VideoView')
+    // 将预准备的视频元素存储到gameStateStore中
+    const loadedResources = gameStateStore.getLoadedResources() || {}
+    loadedResources.preparedVideoElement = preparedVideoElement.value
+    gameStateStore.setLoadedResources(loadedResources)
+  }
   
   // 上报游戏开始事件
   clickReport({

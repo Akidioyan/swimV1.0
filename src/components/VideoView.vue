@@ -38,10 +38,43 @@ let countdownTimer = null
 onMounted(() => {
   console.log('🎬 VideoView 组件挂载')
   
-  // 使用预加载的视频资源
+  // 优先使用IntroView预准备的视频
   const loadedResources = gameStateStore.getLoadedResources()
   
-  if (loadedResources && loadedResources.videoElement) {
+  if (loadedResources && loadedResources.preparedVideoElement) {
+    console.log('✅ 发现IntroView预准备的视频，直接使用')
+    const preparedVideo = loadedResources.preparedVideoElement
+    
+    if (videoElement.value) {
+      try {
+        // 将预准备的视频内容复制到当前video元素
+        videoElement.value.src = preparedVideo.src
+        videoElement.value.currentTime = 0
+        videoElement.value.muted = true
+        videoElement.value.playsInline = true
+        
+        console.log('🎬 使用预准备视频，立即播放')
+        
+        // 由于视频已经预准备，可以立即播放，减少黑屏时间
+        videoElement.value.play().then(() => {
+          console.log('🎬 预准备视频播放成功')
+          // 立即显示跳过按钮
+          showSkipButton.value = true
+          startCountdown()
+        }).catch(error => {
+          console.warn('⚠️ 预准备视频播放失败，回退到原方案:', error)
+          handleVideoError()
+        })
+        
+        // 清理预准备的视频资源
+        delete loadedResources.preparedVideoElement
+        
+      } catch (error) {
+        console.error('❌ 使用预准备视频失败:', error)
+        handleVideoError()
+      }
+    }
+  } else if (loadedResources && loadedResources.videoElement) {
     console.log('✅ 发现预加载的视频资源')
     const preloadedVideo = loadedResources.videoElement
     
