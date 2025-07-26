@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { isQQNews } from "../utils/ua";
 import { getOrCreateDeviceId } from "../utils/device";
-// import { getAppInfo, isLogin, setActionBtnStyle } from "@tencent/qqnews-jsapi";
+import { getAppInfo, isLogin, setActionBtnStyle } from "@tencent/qqnews-jsapi";
 
 console.log("[userStore.js] Module loading...");
 
@@ -15,7 +15,8 @@ export const useUserStore = defineStore("user", {
     todayPlayCount: 0,
     lastPlayDate: null,
     bonusPlaysGrantedToday: false,
-    lastBonusGrantDate: null
+    lastBonusGrantDate: null,
+    isInitialized: false // 添加初始化状态标记
   }),
   
   getters: {
@@ -37,27 +38,54 @@ export const useUserStore = defineStore("user", {
       this.deviceId = getOrCreateDeviceId();
       this.isInQQNewsApp = isQQNews();
       
-      // 尝试动态加载腾讯API（如果可用）
+      console.log('[userStore] 环境检测结果:', {
+        isInQQNewsApp: this.isInQQNewsApp,
+        userAgent: this.userAgent.substring(0, 100) + '...'
+      });
+      
+      // 在腾讯新闻APP内时获取登录状态
       if (this.isInQQNewsApp) {
         try {
-          // 使用字符串拼接来避免Vite预处理
-          const moduleName = '@tencent' + '/qqnews-jsapi';
-          const qqnewsApi = await import(/* @vite-ignore */ moduleName);
-          const { getAppInfo, isLogin } = qqnewsApi.default || qqnewsApi;
-          
           const appInfo = await getAppInfo();
           this.qimei36 = appInfo?.qimei36 || '';
-          this.hasLogin = await isLogin();
+          console.log('[userStore] APP信息获取成功:', { qimei36: this.qimei36 });
           
-          console.log('[userStore] 腾讯API加载成功');
+          console.log('[userStore] 🔍 开始检测登录状态...');
+          const loginResult = await isLogin();
+          console.log('[userStore] 🔍 isLogin API原始返回值:', loginResult);
+          
+          // 处理不同格式的返回值
+          let loginStatus = false;
+          if (typeof loginResult === 'boolean') {
+            loginStatus = loginResult;
+          } else if (typeof loginResult === 'object' && loginResult !== null) {
+            // 处理对象格式的返回值
+            loginStatus = loginResult.hasLogin || loginResult.isLogin || loginResult.status || false;
+          } else {
+            loginStatus = Boolean(loginResult);
+          }
+          
+          this.hasLogin = loginStatus;
+          console.log('[userStore] 登录状态检测完成:', { 
+            rawResult: loginResult,
+            parsedLogin: loginStatus,
+            hasLogin: this.hasLogin 
+          });
+          
+          if (this.hasLogin) {
+            console.log('[userStore] ✅ 用户已登录，无需显示登录提示');
+          } else {
+            console.log('[userStore] ❌ 用户未登录，将显示登录提示');
+          }
         } catch (error) {
-          console.warn('[userStore] 腾讯API加载失败，使用fallback:', error.message);
-          // Fallback逻辑 - 使用默认值而不是随机模拟
+          console.warn('[userStore] 腾讯JSAPI调用失败，使用fallback:', error.message);
+          console.warn('[userStore] 错误详情:', error);
           this.qimei36 = '';
-          this.hasLogin = false; // 默认未登录状态
+          this.hasLogin = false;
+          console.log('[userStore] 使用fallback状态: hasLogin = false');
         }
       } else {
-        console.log('[userStore] 非腾讯新闻环境，使用默认值');
+        console.log('[userStore] 非腾讯新闻APP环境，使用默认值');
         this.qimei36 = '';
         this.hasLogin = false;
       }
@@ -65,11 +93,16 @@ export const useUserStore = defineStore("user", {
       // 加载游戏次数数据
       this.loadPlayCountFromLocalStorage();
       
-      console.log('[userStore] 环境初始化完成:', {
+      // 标记初始化完成
+      this.isInitialized = true;
+      
+      console.log('[userStore] 🎯 环境初始化完成:', {
         isInQQNewsApp: this.isInQQNewsApp,
         hasLogin: this.hasLogin,
         deviceId: this.deviceId,
-        canPlay: this.canPlay
+        canPlay: this.canPlay,
+        shouldShowLoginPrompt: this.isInQQNewsApp && !this.hasLogin,
+        isInitialized: this.isInitialized
       });
     },
     
@@ -179,6 +212,38 @@ export const useUserStore = defineStore("user", {
         return true;
       } else {
         console.log(`[userStore] 今日已授予奖励次数`);
+        return false;
+      }
+    },
+
+    // 手动刷新登录状态（用于登录完成后更新状态）
+    async refreshLoginStatus() {
+      if (!this.isInQQNewsApp) {
+        console.log('[userStore] 非APP环境，跳过登录状态刷新');
+        return false;
+      }
+
+      console.log('[userStore] 🔄 手动刷新登录状态...');
+      
+      try {
+        const previousLoginStatus = this.hasLogin;
+        const loginStatus = await isLogin();
+        this.hasLogin = loginStatus;
+        
+        console.log('[userStore] 登录状态刷新完成:', {
+          previousStatus: previousLoginStatus,
+          currentStatus: this.hasLogin,
+          statusChanged: previousLoginStatus !== this.hasLogin
+        });
+        
+        if (previousLoginStatus !== this.hasLogin) {
+          console.log('[userStore] ✅ 登录状态已更新！');
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('[userStore] 刷新登录状态失败:', error);
         return false;
       }
     }

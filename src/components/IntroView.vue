@@ -76,6 +76,28 @@
       <img src="/login.png" alt="点击登录" class="login-prompt-image">
     </div>
 
+    <!-- 调试：临时显示登录提示用于测试 (开发环境) -->
+    <div v-if="isDev && showDebugLogin" class="login-prompt-container debug-login" @click="handleDebugLogin">
+      <img src="/login.png" alt="调试登录" class="login-prompt-image">
+      <div class="debug-label">调试登录提示</div>
+    </div>
+
+    <!-- 调试：APP环境切换按钮 (开发环境) -->
+    <div v-if="isDev" class="debug-controls">
+      <button @click="toggleAppEnvironment" class="debug-btn">
+        {{ userStore.isInQQNewsApp ? '模拟非APP环境' : '模拟APP环境' }}
+      </button>
+      <button @click="toggleLoginStatus" class="debug-btn">
+        {{ userStore.hasLogin ? '模拟未登录' : '模拟已登录' }}
+      </button>
+      <div class="debug-info">
+        <div>初始化: {{ userStore.isInitialized ? '✅' : '❌' }}</div>
+        <div>APP环境: {{ userStore.isInQQNewsApp ? '✅' : '❌' }}</div>
+        <div>登录状态: {{ userStore.hasLogin ? '✅' : '❌' }}</div>
+        <div>显示登录提示: {{ shouldShowLoginPrompt ? '✅' : '❌' }}</div>
+      </div>
+    </div>
+
     <!-- 打开APP提示：APP外时显示 -->
     <div v-if="!userStore.isInQQNewsApp" class="open-app-prompt-container" @click="handleOpenApp">
       <img src="/openAppAtIntro.png" alt="点击打开APP" class="open-app-prompt-image">
@@ -166,11 +188,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useUserStore } from '../stores/userStore'
-import { login } from '@tencent/qqnews-jsapi'
+import { setShareInfo, showShareMenu, login } from '@tencent/qqnews-jsapi'
 import { openNativeScheme } from '../utils/appDownload'
 import { clickReport } from '../utils/report'
 import { 
@@ -204,8 +226,33 @@ const participantData = ref({
 
 // 登录提示显示条件：在QQ新闻App内且未登录
 const shouldShowLoginPrompt = computed(() => {
-  return userStore.isInQQNewsApp && !userStore.hasLogin;
+  const isInitialized = userStore.isInitialized;
+  const isInApp = userStore.isInQQNewsApp;
+  const hasLogin = userStore.hasLogin;
+  const isLogging = isLoggingIn.value;
+  
+  // 只有在userStore初始化完成后才进行判断
+  const shouldShow = isInitialized && isInApp && !hasLogin && !isLogging;
+  
+  // 添加详细的调试日志
+  console.log('[IntroView] 🔐 登录提示显示判断:', {
+    isInitialized: isInitialized,
+    isInQQNewsApp: isInApp,
+    hasLogin: hasLogin,
+    isLoggingIn: isLogging,
+    shouldShowLoginPrompt: shouldShow,
+    userAgent: navigator.userAgent.substring(0, 100) + '...'
+  });
+  
+  return shouldShow;
 });
+
+// 添加登录状态防止重复调用
+const isLoggingIn = ref(false);
+
+// 调试功能：在开发环境显示登录提示
+const showDebugLogin = ref(import.meta.env.DEV && true); // 开发环境默认显示
+const isDev = import.meta.env.DEV; // 环境检测变量
 
 // 格式化参与人数显示 - 显示精确数字
 const formattedParticipants = computed(() => {
@@ -330,6 +377,54 @@ const fetchActivityPV = async () => {
 onMounted(async () => {
   console.log('🎮 IntroView 组件挂载，开始获取参与人数数据...')
   
+  // 等待userStore初始化完成
+  console.log('[IntroView] 等待userStore初始化完成...');
+  let waitCount = 0;
+  while (!userStore.isInitialized && waitCount < 50) { // 最多等待5秒
+    await new Promise(resolve => setTimeout(resolve, 100));
+    waitCount++;
+  }
+  
+  if (userStore.isInitialized) {
+    console.log('[IntroView] ✅ userStore初始化完成，开始监听状态变化');
+  } else {
+    console.warn('[IntroView] ⚠️ userStore初始化超时，继续执行');
+  }
+  
+  // 监听登录状态变化
+  watch(() => userStore.hasLogin, (newValue, oldValue) => {
+    console.log('[IntroView] 登录状态变化:', {
+      oldValue: oldValue,
+      newValue: newValue,
+      isInQQNewsApp: userStore.isInQQNewsApp,
+      shouldShowLoginPrompt: userStore.isInQQNewsApp && !newValue
+    });
+    
+    // 如果从未登录变为已登录，记录成功日志
+    if (!oldValue && newValue) {
+      console.log('[IntroView] ✅ 用户登录成功！');
+    }
+  }, { immediate: true });
+  
+  // 监听APP环境状态变化
+  watch(() => userStore.isInQQNewsApp, (newValue) => {
+    console.log('[IntroView] APP环境状态:', {
+      isInQQNewsApp: newValue,
+      hasLogin: userStore.hasLogin,
+      shouldShowLoginPrompt: newValue && !userStore.hasLogin
+    });
+  }, { immediate: true });
+  
+  // 监听登录提示显示状态变化
+  watch(() => shouldShowLoginPrompt.value, (newValue) => {
+    console.log('[IntroView] 🔐 登录提示显示状态变化:', {
+      shouldShow: newValue,
+      isInQQNewsApp: userStore.isInQQNewsApp,
+      hasLogin: userStore.hasLogin,
+      isLoggingIn: isLoggingIn.value
+    });
+  }, { immediate: true });
+  
   // 注册设备检测回调
   registerDeviceDetectionCallbacks({
     onShowModal: () => {
@@ -365,6 +460,9 @@ onMounted(async () => {
 
 // 清理函数
 onUnmounted(() => {
+  // 重置登录状态
+  isLoggingIn.value = false;
+  
   if (preparedVideoElement.value) {
     preparedVideoElement.value.src = ''
     preparedVideoElement.value = null
@@ -374,22 +472,15 @@ onUnmounted(() => {
 const handleStartGame = async () => {
   // 检查端内APP用户是否已登录
   if (userStore.isInQQNewsApp && !userStore.hasLogin) {
-    console.log('🚫 端内APP用户未登录，无法开始游戏，自动触发登录');
+    console.log('🚫 端内APP用户未登录，无法开始游戏，请先登录');
     
-    // 上报点击事件
+    // 上报点击事件，但不自动触发登录
     clickReport({
       id: 'game_start_login_required',
     });
     
-    try {
-      // 自动触发登录流程
-      await handleLogin();
-      return; // 登录后需要重新加载页面，所以直接返回
-    } catch (error) {
-      console.error('🚫 登录失败，无法开始游戏:', error);
-      // 登录失败时也返回，不开始游戏
-      return;
-    }
+    // 不开始游戏，让用户点击登录提示来手动登录
+    return;
   }
   
   console.log('✅ 用户验证通过，开始游戏');
@@ -434,21 +525,63 @@ const handleCloseLeaderboard = () => {
 
 const handleLogin = async () => {
   if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+    // 防止重复调用
+    if (isLoggingIn.value) {
+      console.log('[IntroView] 登录请求正在处理中，请稍候...');
+      return;
+    }
+    
+    isLoggingIn.value = true;
+    
     try {
       console.log('[IntroView] Attempting to invoke login...');
       clickReport({
         id: 'login',
       })
-      // 根据参考文件，login() 可能返回一个promise
-      await login(); // 假设login自身处理UI并在尝试后解析
+      // 调用腾讯新闻JSAPI的登录方法
+      await login();
       console.log('[IntroView] Login process initiated by JSAPI, reloading page.');
-      location.reload();
+      location.reload(); // 登录完成后刷新页面
     } catch (error) {
       console.error('[IntroView] Failed to invoke login or login was cancelled:', error);
       // 可选择性地向用户显示登录失败的消息
+    } finally {
+      isLoggingIn.value = false;
     }
   }
 }
+
+// 调试登录处理函数
+const handleDebugLogin = () => {
+  console.log('[IntroView] 🐛 调试登录点击');
+  console.log('[IntroView] 🐛 当前状态:', {
+    isInitialized: userStore.isInitialized,
+    isInQQNewsApp: userStore.isInQQNewsApp,
+    hasLogin: userStore.hasLogin,
+    isLoggingIn: isLoggingIn.value,
+    shouldShowLoginPrompt: shouldShowLoginPrompt.value
+  });
+  
+  // 临时切换登录状态用于测试
+  if (isDev) {
+    userStore.hasLogin = !userStore.hasLogin;
+    console.log('[IntroView] 🐛 切换登录状态:', userStore.hasLogin);
+  }
+}
+
+// 调试APP环境切换函数
+const toggleAppEnvironment = () => {
+  console.log('[IntroView] 🐛 调试APP环境切换');
+  userStore.isInQQNewsApp = !userStore.isInQQNewsApp;
+  console.log('[IntroView] 🐛 切换APP环境到:', userStore.isInQQNewsApp);
+};
+
+// 调试登录状态切换函数
+const toggleLoginStatus = () => {
+  console.log('[IntroView] 🐛 调试登录状态切换');
+  userStore.hasLogin = !userStore.hasLogin;
+  console.log('[IntroView] 🐛 切换登录状态到:', userStore.hasLogin);
+};
 
 const handleOpenApp = () => {
   clickReport({
@@ -1163,6 +1296,68 @@ const handleDeviceModalAction = () => {
   height: auto;
   display: block; /* 移除图像下方的额外空间 */
   cursor: pointer;
+}
+
+/* 调试：临时显示登录提示用于测试 (开发环境) */
+.debug-login {
+  background-color: rgba(255, 255, 255, 0.9); /* 白色背景，便于调试 */
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10001; /* 确保在其他内容之上 */
+}
+
+.debug-label {
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* 调试控制样式 */
+.debug-controls {
+  position: fixed;
+  top: 10px; /* 调整位置，避免与模态框重叠 */
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 10002; /* 确保在其他内容之上 */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.debug-btn {
+  background-color: #4CAF50; /* 绿色按钮 */
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.debug-btn:hover {
+  background-color: #388E3C; /* 深绿色 */
+}
+
+.debug-btn:active {
+  background-color: #388E3C;
+}
+
+.debug-info {
+  font-size: 12px;
+  color: #ccc;
+  text-align: left;
+  padding-top: 5px;
+  border-top: 1px solid #555;
 }
 
 /* 打开APP提示样式 - 基于IntroScene.vue */
