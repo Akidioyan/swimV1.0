@@ -5,7 +5,7 @@
       
       <!-- 恭喜文字 -->
       <div class="congratulation-text">
-        恭喜您获得，{{ userName }}
+        {{ userName ? `恭喜${userName}获得` : '恭喜您获得' }}
       </div>
       
       <!-- 称号区域 -->
@@ -96,16 +96,16 @@
       <div class="bottom-gradient"></div>
       
       <!-- 分享提示（当无法继续游戏时显示） -->
-      <div v-if="showPlayLimitOverlay" class="share-tips">
-        <img src="/needShareToPlayTips.png" alt="分享给好友，获得3次挑战机会" class="tips-background">
-      </div>
+      <!-- 删除分享提示（当无法继续游戏时显示） -->
+      <!-- <div v-if="showPlayLimitOverlay" class="share-tips">
+      <img src="/needShareToPlayTips.png" alt="分享给好友，获得3次挑战机会" class="tips-background">
+      </div> -->
       
       <!-- 底部按钮 -->
       <div class="bottom-buttons">
         <button 
           @click="handleRestartGame" 
-          class="try-again-btn" 
-          :class="{ 'disabled': isTryAgainDisabled }"
+          class="try-again-btn"
         >
           <img src="/tryAgain.png" alt="再挑战一次" class="btn-image">
         </button>
@@ -190,11 +190,10 @@ const getTitleByDistance = (distance) => {
 // 未上榜提示词数组
 const getRandomEncouragementText = () => {
   const encouragementTexts = [
-    '继续挑战，冲击排行榜！',
-    '再接再厉，向高分进发！',
-    '加油游泳，突破自我极限！',
-    '勇敢前行，下次必上榜！',
-    '练好游泳技巧，排行榜等你！'
+    '继续挑战！',
+    '再接再厉！',
+    '突破极限！',
+    '勇敢前行！',
   ]
   return encouragementTexts[Math.floor(Math.random() * encouragementTexts.length)]
 }
@@ -202,11 +201,10 @@ const getRandomEncouragementText = () => {
 // 排名不佳提示词数组
 const getRandomRankingText = () => {
   const rankingTexts = [
-    '继续挑战，冲击排行榜！',
-    '再接再厉，排名还能提升！',
-    '努力游泳，向前50名进发！',
-    '坚持练习，排行榜在等你！',
-    '提升技巧，下次冲击更高排名！'
+    '继续挑战冲击排行！',
+    '再接再厉！',
+    '向更高名次进发！',
+    '排行榜在等你！',
   ]
   return rankingTexts[Math.floor(Math.random() * rankingTexts.length)]
 }
@@ -242,25 +240,18 @@ const getUserName = async () => {
       const { getUserInfo } = qqnewsApi.default || qqnewsApi;
       
       const userInfo = await getUserInfo();
-      userName.value = userInfo?.nickname || userInfo?.name || '游泳达人';
+      userName.value = userInfo?.nickname || userInfo?.name || '';
       console.log('[EndingSceneApp] 获取到用户名:', userName.value);
     } else {
-      userName.value = '游泳达人';
-      console.log('[EndingSceneApp] 使用默认用户名:', userName.value);
+      userName.value = '';
+      console.log('[EndingSceneApp] 使用空用户名');
     }
   } catch (error) {
-    console.warn('[EndingSceneApp] 获取用户名失败，使用默认值:', error);
-    userName.value = '游泳达人';
+    console.warn('[EndingSceneApp] 获取用户名失败，使用空值:', error);
+    userName.value = '';
   }
 }
 
-// 监听游戏次数变化
-watch(() => userStore.canPlay, (canStillPlay) => {
-  console.log(`[EndingSceneApp] userStore.canPlay changed to: ${canStillPlay}`);
-  isTryAgainDisabled.value = !canStillPlay;
-  showPlayLimitOverlay.value = !canStillPlay;
-  userStore.logCurrentPlayStats('[EndingSceneApp] Stats after canPlay changed');
-}, { immediate: true });
 
 onMounted(async () => { 
   console.log('[EndingSceneApp] Component mounted.');
@@ -405,20 +396,7 @@ const handleRestartGame = async () => {
     });
     return;
   }
-  
-  // 检查剩余游戏次数
-  if (!userStore.canPlay) {
-    if (tipsImageRef.value) {
-      tipsImageRef.value.classList.add('tips-animate');
-      setTimeout(() => {
-        if (tipsImageRef.value) {
-            tipsImageRef.value.classList.remove('tips-animate');
-        }
-      }, 500);
-    }
-    return;
-  }
-  
+
   console.log('✅ 用户验证通过，重新开始游戏');
   
   clickReport({
@@ -496,7 +474,7 @@ const handleShareInApp = () => {
   height: 100vh;
   background-color: #171717;
   position: relative;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -510,11 +488,11 @@ const handleShareInApp = () => {
 
 .background-container {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   padding: 0 5.33vw;
   box-sizing: border-box;
-  height: auto;
+  overflow: hidden;
   padding-bottom: 30vh;
 }
 
@@ -673,7 +651,7 @@ const handleShareInApp = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  max-height: 45vh;
+  max-height: 53vh;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;

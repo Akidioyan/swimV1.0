@@ -373,6 +373,7 @@ const handleOpenApp = () => {
   openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim')
 }
 
+// 在handleShareToFriendClick函数中，修改定时器逻辑
 const handleShareToFriendClick = () => {
   console.log('[EndingSceneOutside] handleShareToFriendClick called! 分享按钮被点击了');
   
@@ -403,9 +404,12 @@ const handleShareToFriendClick = () => {
         shareActionInitiated.value = false
         userStore.logCurrentPlayStats('[EndingSceneOutside] After granting bonus plays')
         
-        // 强制UI更新
+        // 强制UI更新 - 确保按钮状态立即更新
         nextTick(() => {
           console.log('[EndingSceneOutside] 定时器奖励后UI更新完成，当前canPlay状态:', userStore.canPlay)
+          // 强制触发响应式更新
+          isTryAgainDisabled.value = !userStore.canPlay
+          showNeedShareTipsImage.value = !userStore.canPlay
         })
       }
     }
@@ -424,9 +428,12 @@ const handleOverlayClick = () => {
       shareActionInitiated.value = false
       userStore.logCurrentPlayStats('[EndingSceneOutside] After manual granting bonus plays')
       
-      // 强制UI更新
+      // 强制UI更新 - 确保按钮状态立即更新
       nextTick(() => {
         console.log('[EndingSceneOutside] UI更新完成，当前canPlay状态:', userStore.canPlay)
+        // 强制触发响应式更新
+        isTryAgainDisabled.value = !userStore.canPlay
+        showNeedShareTipsImage.value = !userStore.canPlay
       })
     } else {
       console.log('[EndingSceneOutside] 今日已授予过奖励次数')
@@ -453,10 +460,18 @@ const handleVisibilityChange = () => {
             shareArrowOverlayIsVisible.value = false
             userStore.logCurrentPlayStats('[EndingSceneOutside] After visibility change bonus grant')
             
-            // 强制UI更新
+            // 强制UI更新 - 确保按钮状态立即更新
             nextTick(() => {
               console.log('[EndingSceneOutside] 可见性变化后UI更新完成，当前canPlay状态:', userStore.canPlay)
+              // 强制触发响应式更新
+              isTryAgainDisabled.value = !userStore.canPlay
+              showNeedShareTipsImage.value = !userStore.canPlay
             })
+          } else {
+            // 即使没有授予奖励次数，也要重置分享状态
+            console.log('[EndingSceneOutside] 今日已授予过奖励次数，重置分享状态')
+            shareActionInitiated.value = false
+            shareArrowOverlayIsVisible.value = false
           }
         }
       }, 500) // 稍微延迟一下确保状态稳定
@@ -684,7 +699,7 @@ const handleVisibilityChange = () => {
 
 /* 可滚动的排行榜容器 */
 .leaderboard-scroll-container {
-  max-height: 45vh; /* 限制最大高度为视口高度的45% */
+  max-height: 55vh; /* 限制最大高度为视口高度的45% */
   overflow-y: auto; /* 启用垂直滚动 */
   /* 隐藏滚动条 - Firefox */
   scrollbar-width: none;
@@ -888,11 +903,11 @@ const handleVisibilityChange = () => {
 
 /* 分享箭头遮罩 */
 .share-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
   z-index: 10;
   display: flex;
@@ -901,16 +916,23 @@ const handleVisibilityChange = () => {
 }
 
 .share-instruction-arrow {
-  width: 26.67vw; /* 100px at 375px width */
+  position: fixed;
+  top: 2.76vh;
+  right: 5.33vw;
+  width: 26.67vw;
   height: auto;
-  margin-top: 2.76vh; /* 20px at 723px height */
-  margin-right: 5.33vw; /* 20px at 375px width */
+  z-index: 11;
 }
 
 /* 如果支持dvh,则使用dvh覆盖上面的vh值 */
 @supports (height: 100dvh) {
+  .share-overlay {
+    width: 100dvw;
+    height: 100dvh;
+  }
+  
   .share-instruction-arrow {
-    margin-top: 2.76dvh; /* 20px at 723px height */
+    top: 2.76dvh;
   }
 }
 </style>
