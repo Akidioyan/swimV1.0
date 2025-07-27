@@ -689,6 +689,13 @@ const handleDeviceModalAction = () => {
   align-items: flex-end;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .intro-scene {
+    height: 100dvh;
+  }
+}
+
 /* ============================================
    设备检测弹窗 - 居中显示
    ============================================ */
@@ -947,10 +954,17 @@ const handleDeviceModalAction = () => {
 
 .challenge-button-image {
   height: auto;
-  width: 50dvw;
+  width: 50vw; /* 使用vw作为基础值 */
   cursor: pointer;
   transition: all 0.3s ease;
   object-fit: contain;
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .challenge-button-image {
+    width: 50dvw;
+  }
 }
 
 .challenge-button-image:hover {
@@ -1348,7 +1362,7 @@ const handleDeviceModalAction = () => {
 }
 
 /* ============================================
-   兼容性回退
+   兼容性回退 - 确保低端机型正常显示
    ============================================ */
 @supports not (height: 100dvh) {
   .intro-scene,
@@ -1363,6 +1377,10 @@ const handleDeviceModalAction = () => {
   .device-detection-modal,
   .game-rules-modal {
     width: 100vw !important;
+  }
+  
+  .challenge-button-image {
+    width: 50vw !important;
   }
 }
 </style>

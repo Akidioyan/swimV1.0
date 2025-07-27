@@ -976,7 +976,7 @@ defineExpose({
   left: 50%;
   transform: translate(-50%,-50%);
   width: 100%;
-  max-width: 60vw;
+  max-width: 45vw; /* 从60vw改为45vw，调整为3/4大小 */
   z-index: 20; 
   pointer-events: none;
   overflow: hidden;
@@ -987,7 +987,7 @@ defineExpose({
 /* 如果支持dvw,则使用dvw覆盖上面的vw值 */
 @supports (width: 100dvw) {
   .obstacle-banner-container {
-    max-width: 60dvw;
+    max-width: 45dvw; /* 从60dvw改为45dvw，调整为3/4大小 */
   }
 }
 
@@ -1023,10 +1023,9 @@ defineExpose({
   margin-top: 0;
 }
 
-
 .banner-image-left {
   width: calc(100% / 3) !important;
-  max-width: calc(80vw / 3) !important;
+  max-width: calc(60vw / 3) !important; /* 从calc(80vw / 3)改为calc(60vw / 3)，调整为3/4大小 */
   height: auto;
   display: block;
   margin: 0 auto; /* 水平居中 */
@@ -1035,7 +1034,7 @@ defineExpose({
 /* 如果支持dvw,则使用dvw覆盖上面的vw值 */
 @supports (width: 100dvw) {
   .banner-image-left {
-    max-width: calc(80dvw / 3) !important;
+    max-width: calc(60dvw / 3) !important; /* 从calc(80dvw / 3)改为calc(60dvw / 3)，调整为3/4大小 */
   }
 }
 

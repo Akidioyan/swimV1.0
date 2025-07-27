@@ -342,6 +342,13 @@ export default {
   -webkit-overflow-scrolling: touch;
 }
 
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .game-view {
+    height: 100dvh;
+  }
+}
+
 /* 游戏UI覆盖层 */
 .game-ui {
   position: absolute;
@@ -418,19 +425,30 @@ export default {
 /* 冲刺能量条 - 环形进度按钮 */
 .sprint-energy-bar {
   position: absolute;
-  bottom: 15dvh; /* 距离底部20% */
+  bottom: 15vh; /* 使用vh作为基础值 */
   left: 50%;
   transform: translateX(-50%);
-  width: 15dvw; /* 使用动态视口宽度 */
-  height: 15dvw; /* 保持正方形比例 */
+  width: 15vw; /* 使用vw作为基础值 */
+  height: 15vw; /* 保持正方形比例 */
   min-width: 80px; /* 低端机型最小尺寸 */
   min-height: 80px;
-  max-width: 15dvw; /* 大屏幕最大尺寸 */
-  max-height: 15dvw;
+  max-width: 15vw; /* 使用vw作为基础值 */
+  max-height: 15vw;
   z-index: 1000;
   pointer-events: auto;
   cursor: pointer;
   transition: transform 0.2s ease;
+}
+
+/* 如果支持dvh/dvw,则使用动态视口单位覆盖上面的vh/vw值 */
+@supports (height: 100dvh) and (width: 100dvw) {
+  .sprint-energy-bar {
+    bottom: 15dvh;
+    width: 15dvw;
+    height: 15dvw;
+    max-width: 15dvw;
+    max-height: 15dvw;
+  }
 }
 
 .sprint-energy-bar:hover {
@@ -500,7 +518,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   color: #72332E;
-  font-size: clamp(10px, 2.5dvw, 14px); /* 动态字体大小 */
+  font-size: clamp(10px, 2.5vw, 14px); /* 使用vw作为基础值 */
   font-weight: 700;
   font-family: 'FZLTCH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   text-shadow: 
@@ -511,12 +529,26 @@ export default {
   z-index: 10;
 }
 
+/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
+@supports (width: 100dvw) {
+  .energy-percentage {
+    font-size: clamp(10px, 2.5dvw, 14px);
+  }
+}
+
 /* 闪电图标 */
 .energy-percentage::before {
   content: '⚡';
-  font-size: clamp(20px, 5dvw, 32px); /* 动态图标大小 */
+  font-size: clamp(20px, 5vw, 32px); /* 使用vw作为基础值 */
   margin-bottom: 2px;
   opacity: 0.9;
+}
+
+/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
+@supports (width: 100dvw) {
+  .energy-percentage::before {
+    font-size: clamp(20px, 5dvw, 32px);
+  }
 }
 
 .energy-percentage.no-energy-flash {
@@ -532,7 +564,7 @@ export default {
 /* 主动冲刺状态指示器 */
 .active-sprint-indicator {
   position: absolute;
-  top: calc(20dvh + 18dvw); /* 相对于能量条位置 */
+  top: calc(20vh + 18vw); /* 使用vh/vw作为基础值 */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -543,11 +575,11 @@ export default {
   border: 2px solid rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   color: #fff;
-  padding: clamp(8px, 2dvh, 12px) clamp(12px, 4dvw, 20px);
+  padding: clamp(8px, 2vh, 12px) clamp(12px, 4vw, 20px); /* 使用vh/vw作为基础值 */
   border-radius: 25px;
   font-weight: 600;
   font-family: 'FZLTCH', Arial, sans-serif;
-  font-size: clamp(12px, 3dvw, 16px);
+  font-size: clamp(12px, 3vw, 16px); /* 使用vw作为基础值 */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   animation: gentleGlow 1.5s ease-in-out infinite;
   pointer-events: none;
@@ -555,14 +587,37 @@ export default {
   white-space: nowrap;
 }
 
+/* 如果支持dvh/dvw,则使用动态视口单位覆盖上面的vh/vw值 */
+@supports (height: 100dvh) and (width: 100dvw) {
+  .active-sprint-indicator {
+    top: calc(20dvh + 18dvw);
+    padding: clamp(8px, 2dvh, 12px) clamp(12px, 4dvw, 20px);
+    font-size: clamp(12px, 3dvw, 16px);
+  }
+}
+
 .sprint-icon {
-  font-size: clamp(14px, 3.5dvw, 20px);
+  font-size: clamp(14px, 3.5vw, 20px); /* 使用vw作为基础值 */
   opacity: 0.95;
 }
 
+/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
+@supports (width: 100dvw) {
+  .sprint-icon {
+    font-size: clamp(14px, 3.5dvw, 20px);
+  }
+}
+
 .sprint-text {
-  font-size: clamp(12px, 3dvw, 16px);
+  font-size: clamp(12px, 3vw, 16px); /* 使用vw作为基础值 */
   font-weight: 500;
+}
+
+/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
+@supports (width: 100dvw) {
+  .sprint-text {
+    font-size: clamp(12px, 3dvw, 16px);
+  }
 }
 
 

@@ -1,5 +1,43 @@
 <template>
   <div id="app" class="app">
+    <!-- 设备检测弹窗 - 全局显示 -->
+    <div v-if="showDeviceModal" class="device-detection-modal" @click="handleDeviceModalBackdrop">
+      <div class="modal-container" @click.stop>
+        <!-- 主要弹窗内容 -->
+        <div class="modal-content">
+          <!-- 顶部提示头部 -->
+          <div class="modal-header">
+            <div class="header-banner">
+              <span class="header-text">温馨提示</span>
+            </div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div class="modal-body">
+            <div class="warning-text">
+              检测到当前设备不符合游戏要求，<br>
+              请切换到竖屏模式或更换设备。
+            </div>
+            <div class="suggestion-text">
+              腾讯体育游泳世锦赛专题有更多精彩内容：
+            </div>
+          </div>
+
+          <!-- 底部按钮 -->
+          <div class="modal-footer">
+            <button class="action-button" @click="handleDeviceModalAction">
+              <span class="button-text">进入体育频道 世锦赛专题</span>
+              <img 
+                src="/assets/device-detection-modal/Rectangle 14-x1.svg" 
+                alt="箭头" 
+                class="button-icon"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 加载页面 -->
     <LoadingView v-if="gameStateStore.currentView === 'loading'" />
     
@@ -28,13 +66,82 @@ import IntroView from './components/IntroView.vue'
 import VideoView from './components/VideoView.vue'
 import GameView from './components/GameView.vue'
 import EndingScene from './components/Endingscene/EndingScene.vue'
+import { isQQNews } from './utils/ua'
+import { clickReport } from './utils/report'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const playerControlStore = usePlayerControlStore()
 const userStore = useUserStore()
 
+// 设备检测弹窗状态
+const showDeviceModal = ref(false)
+
+// 检测设备兼容性
+const checkDeviceCompatibility = () => {
+  const width = window.innerWidth
+  const height = window.innerHeight
+  const aspectRatio = width / height
+  
+  // 检测条件：横屏 或 长宽比 > 10/16 (0.625)
+  const isLandscape = width > height
+  const isWideAspectRatio = aspectRatio > (10 / 16)
+  
+  console.log('设备检测:', {
+    width,
+    height,
+    aspectRatio: aspectRatio.toFixed(3),
+    isLandscape,
+    isWideAspectRatio,
+    shouldShowModal: isLandscape || isWideAspectRatio
+  })
+  
+  if (isLandscape || isWideAspectRatio) {
+    showDeviceModal.value = true
+  } else {
+    showDeviceModal.value = false
+  }
+}
+
 onMounted(async () => {
+  // 上报页面访问
+  clickReport({ id: 'page_view' })
+  
+  // 移除加载动画
+  document.querySelector('.loading-container')?.classList.add('hide')
+  
+  // 初始化分享信息
+  if (isQQNews()) {
+    // 腾讯新闻APP内分享设置
+    try {
+      const { setShareInfo } = await import('@tencent/qqnews-jsapi')
+      setShareInfo({
+        title: '指尖游泳挑战赛',
+        longTitle: '用指尖与全网游泳高手对决，一起来游泳挑战！',
+        content: '用指尖与全网游泳高手对决，一起来游泳挑战！',
+        url: 'https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1',
+        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0',
+      })
+    } catch (error) {
+      console.log('腾讯新闻分享设置失败:', error)
+    }
+  } else {
+    // 其他环境分享设置（如微信等）
+    try {
+      const JsBridge = await import('@tencent/qn-jsbridge')
+      const instance = await JsBridge.default.readyAny()
+      const shareInfo = {
+        title: '指尖游泳挑战赛',
+        desc: '用指尖与全网游泳高手对决，一起来游泳挑战！',
+        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0',
+        link: 'https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1'
+      }
+      instance.setShareInfo(shareInfo)
+    } catch (error) {
+      console.log('JsBridge分享设置失败:', error)
+    }
+  }
+  
   // 初始化用户环境
   await userStore.initEnvironment()
   
@@ -49,12 +156,16 @@ onMounted(async () => {
   // 启用全屏模式
   enableFullscreen()
   
+  // 初始检测设备兼容性
+  checkDeviceCompatibility()
+  
   // 添加全局键盘事件监听
   document.addEventListener('keydown', handleKeyDown)
   document.addEventListener('keyup', handleKeyUp)
   
-  // 添加窗口大小变化监听
+  // 添加窗口大小变化监听（包含设备检测）
   window.addEventListener('resize', handleResize)
+  window.addEventListener('orientationchange', handleOrientationChange)
   
   // 阻止移动端的缩放手势（移除touchmove阻止）
   document.addEventListener('gesturestart', preventZoom, { passive: false })
@@ -82,6 +193,7 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('keyup', handleKeyUp)
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('orientationchange', handleOrientationChange)
   document.removeEventListener('gesturestart', preventZoom)
   document.removeEventListener('gesturechange', preventZoom)
   document.removeEventListener('gestureend', preventZoom)
@@ -110,7 +222,34 @@ const handleKeyUp = (event) => {
 
 // 处理窗口大小变化
 const handleResize = () => {
-  // 窗口大小变化处理逻辑
+  // 重新检测设备兼容性
+  checkDeviceCompatibility()
+}
+
+// 处理设备方向变化
+const handleOrientationChange = () => {
+  // 延迟一下再检测，因为方向变化后尺寸可能还没更新
+  setTimeout(() => {
+    checkDeviceCompatibility()
+  }, 300)
+}
+
+// 设备检测弹窗事件处理
+const handleDeviceModalBackdrop = () => {
+  // 由于设备不兼容，通常不允许关闭
+  console.log('用户尝试关闭设备检测弹窗')
+}
+
+const handleDeviceModalAction = () => {
+  // 处理用户点击"进入体育频道"按钮
+  try {
+    // 跳转到腾讯体育世锦赛专题页面
+    window.open('https://sports.qq.com/swim2024/', '_blank')
+  } catch (error) {
+    console.error('跳转失败:', error)
+    // 降级方案
+    window.open('https://sports.qq.com/', '_blank')
+  }
 }
 
 // 阻止缩放手势
@@ -207,6 +346,155 @@ const preventWheelZoom = (e) => {
   touch-action: manipulation !important;
   -webkit-user-drag: none !important;
   -webkit-user-modify: read-only;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  #app.app {
+    height: 100dvh;
+  }
+}
+
+/* 设备检测弹窗样式 */
+.device-detection-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.modal-container {
+  width: min(360px, 85vw);
+  height: auto;
+  min-height: 240px;
+  position: relative;
+}
+
+.modal-content {
+  width: 100%;
+  height: 100%;
+  background: rgb(32, 32, 32);
+  border: 2px solid rgb(13, 113, 237);
+  border-radius: 11px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  position: relative;
+  height: 25.83px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.header-banner {
+  width: 229.5px;
+  height: 25.83px;
+  background: rgb(11, 106, 234);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(0% 0%, 100% 0%, calc(90% + 8px) calc(100% - 8px), 90% 100%, 10% 100%, calc(10% - 8px) calc(100% - 8px));
+}
+
+.header-text {
+  color: rgb(255, 255, 255);
+  font-family: "PingFang SC", "PingFang-SC-Regular", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 12px;
+  text-align: center;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 24px 21px 16px 21px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.warning-text {
+  color: rgb(231, 231, 231);
+  font-family: "PingFang SC", "PingFangSC-Semibold", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 28px;
+  text-align: center;
+}
+
+.suggestion-text {
+  color: rgb(218, 218, 218);
+  font-family: "PingFang SC", "PingFang-SC-Regular", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 19px;
+  text-align: center;
+}
+
+.modal-footer {
+  padding: 0 21px 20px 21px;
+}
+
+.action-button {
+  width: 100%;
+  height: 49.5px;
+  background: transparent;
+  border: 1.5px solid rgb(11, 106, 234);
+  border-radius: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.action-button:hover {
+  background: rgba(11, 106, 234, 0.1);
+  transform: scale(1.02);
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+.button-text {
+  color: rgb(11, 106, 234);
+  font-family: "PingFang SC", "PingFangSC-Semibold", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 25px;
+  text-align: center;
+}
+
+.button-icon {
+  width: 12.36px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.action-button:hover .button-icon {
+  transform: translateX(2px);
 }
 
 /* 隐藏滚动条 */
