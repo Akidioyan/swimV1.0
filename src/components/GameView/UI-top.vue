@@ -53,80 +53,11 @@
       </div>
     </div>
   </div>
-  <Leaderboard :isVisible="isLeaderboardVisible" @close="hideLeaderboard" />
-  <div v-if="isGameRulesVisible" class="game-rules-modal" @click="hideGameRules">
-    <div class="game-rules-panel" @click.stop>
-      <!-- 标题栏 -->
-      <div class="rules-header">
-        <div class="rules-title">
-          <img src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
-          <span>游戏规则</span>
-        </div>
-        <button class="close-btn" @click="hideGameRules">
-          <div class="close-x"></div>
-        </button>
-      </div>
-      
-      <!-- 规则内容区域 -->
-      <div class="rules-content-area">
-        <div class="rules-scroll-content">
-          
-          <!-- 游戏目标 -->
-          <div class="rule-section">
-            <div class="rule-title">🎯 游戏目标</div>
-            <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
-          </div>
-
-          <!-- 基本操作 -->
-          <div class="rule-section">
-            <div class="rule-title">🎮 基本操作</div>
-            <div class="operation-list">
-              <div class="operation-item">
-                <span class="operation-icon">👆</span>
-                <span class="operation-text">点击屏幕左右区域切换泳道</span>
-              </div>
-              <div class="operation-item">
-                <span class="operation-icon">⚡</span>
-                <span class="operation-text">长按能量按钮加速冲刺</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 游戏规则 -->
-          <div class="rule-section">
-            <div class="rule-title">⚠️ 游戏规则</div>
-            <ul class="rule-list">
-              <li>每位玩家有3次生命机会</li>
-              <li>碰到障碍物将损失一次生命</li>
-              <li>失去所有生命后游戏结束</li>
-            </ul>
-          </div>
-
-          <!-- 特殊道具 -->
-          <div class="rule-section">
-            <div class="rule-title">🎁 特殊道具</div>
-            <div class="items-list">
-              <div class="item">
-                <span class="item-icon">🤿</span>
-                <span class="item-text">呼吸管：进入无敌状态</span>
-              </div>
-              <div class="item">
-                <span class="item-icon">⭐</span>
-                <span class="item-text">星星：唯一加分途径</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 排行榜规则 -->
-          <div class="rule-section">
-            <div class="rule-title">🏆 排行榜规则</div>
-            <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
-          </div>
-          
-        </div>
-      </div>
-    </div>
-  </div>
+  <Leaderboard 
+    :isVisible="isLeaderboardVisible" 
+    :initialView="leaderboardInitialView"
+    @close="hideLeaderboard" 
+  />
 </template>
 
 <script>
@@ -147,7 +78,7 @@ export default {
     const userStore = useUserStore()
     const isSettingsVisible = ref(false)
     const isLeaderboardVisible = ref(false)
-    const isGameRulesVisible = ref(false)
+    const leaderboardInitialView = ref('leaderboard') // 控制Leaderboard显示的视图
     
     // 使用ref来创建响应式的音效状态
     const isSoundOn = ref(audioManager.isSoundOn)
@@ -161,15 +92,19 @@ export default {
       hideSettings()
       if (gameStateStore.gameState === 'paused') gameStateStore.togglePause()
     }
-    const showLeaderboard = () => { hideSettings(); isLeaderboardVisible.value = true }
+    const showLeaderboard = () => { 
+      hideSettings(); 
+      leaderboardInitialView.value = 'leaderboard'
+      isLeaderboardVisible.value = true 
+    }
     const hideLeaderboard = () => { 
       isLeaderboardVisible.value = false
       isSettingsVisible.value = true  // 添加这行，显示设置页面
     }
-    const showGameRules = () => { hideSettings(); isGameRulesVisible.value = true }
-    const hideGameRules = () => { 
-      isGameRulesVisible.value = false
-      isSettingsVisible.value = true  // 添加这行，显示设置页面
+    const showGameRules = () => { 
+      hideSettings(); 
+      leaderboardInitialView.value = 'rules'
+      isLeaderboardVisible.value = true 
     }
     const goHome = () => { 
       hideSettings(); 
@@ -253,7 +188,7 @@ export default {
       gameStateStore,
       isSettingsVisible,
       isLeaderboardVisible,
-      isGameRulesVisible,
+      leaderboardInitialView,
       isSoundOn,
       showSettings,
       hideSettings,
@@ -261,7 +196,6 @@ export default {
       showLeaderboard,
       hideLeaderboard,
       showGameRules,
-      hideGameRules,
       goHome,
       restartGame,
       toggleSound
@@ -761,226 +695,5 @@ export default {
     width: 6.4dvw; /* 24px / 375px * 100 */
     height: 6.4dvw;
   }
-}
-
-/* 游戏规则模态框 */
-.game-rules-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5vw;
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .game-rules-modal {
-    height: 100dvh;
-  }
-}
-
-.game-rules-panel {
-  width: 64vw;
-  height: 55.33vh;
-  background: rgb(255, 235, 210);
-  border: 2px solid rgb(114, 51, 46);
-  border-radius: 5.33vw;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.rules-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: -2.13vw;
-  position: relative;
-  height: 15vw;
-  padding: 0 4vw;
-  border-bottom: 0.17vh solid rgb(182, 157, 134);
-  background: rgb(255, 235, 210);
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .rules-header {
-    border-bottom: 0.17dvh solid rgb(182, 157, 134);
-  }
-}
-
-.rules-title {
-  display: flex;
-  align-items: center;
-  gap: 2.13vw;
-  color: rgb(114, 51, 46);
-  font-size: 5.33vw;
-  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 800;
-  margin-left: -1.07vw;
-}
-
-.rules-title .title-icon {
-  width: 6.24vw;
-  height: 6.24vw;
-  object-fit: contain;
-}
-
-.rules-close-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8.53vw;
-  height: 8.53vw;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  z-index: 10;
-}
-
-/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
-@supports (width: 100dvw) {
-  .rules-close-btn {
-    width: 8.53dvw;
-    height: 8.53dvw;
-  }
-}
-
-.rules-scroll-content {
-  padding: 4vw;
-  height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-.rules-scroll-content::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Webkit */
-}
-
-/* 规则章节 */
-.rule-section {
-  margin-bottom: 4vw;
-}
-
-.rule-section:last-child {
-  margin-bottom: 2vw;
-}
-
-/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
-@supports (width: 100dvw) {
-  .rule-section {
-    margin-bottom: 4dvw;
-  }
-
-  .rule-section:last-child {
-    margin-bottom: 2dvw;
-  }
-}
-
-.rule-title {
-  font-size: 3.73vw; /* 14px / 375px * 100 */
-  font-weight: 700;
-  color: rgb(114, 51, 46);
-  margin-bottom: 2.13vw;
-  display: flex;
-  align-items: center;
-  gap: 1.6vw;
-}
-
-.rule-description {
-  font-size: 3.2vw; /* 12px / 375px * 100 */
-  color: rgb(114, 51, 46);
-  line-height: 1.5;
-  margin: 0;
-  margin-top: 1.33vw;
-}
-
-/* 规则列表 */
-.rule-list {
-  list-style: none;
-  padding: 0;
-  margin: 1.33vw 0 0 0;
-}
-
-.rule-list li {
-  padding: 1.07vw 0;
-  padding-left: 4.27vw;
-  position: relative;
-  font-size: 3.2vw;
-  color: rgb(114, 51, 46);
-  line-height: 1.4;
-}
-
-/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
-@supports (width: 100dvw) {
-  .rule-list li {
-    padding: 1.07dvw 0;
-    padding-left: 4.27dvw;
-  }
-}
-
-.rule-list li::before {
-  content: '•';
-  color: rgb(114, 51, 46);
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 1.07vw;
-}
-
-/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
-@supports (width: 100dvw) {
-  .rule-list li::before {
-    top: 1.07dvw;
-  }
-}
-
-/* 操作和道具列表 */
-.operation-list,
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.6vw;
-  margin-top: 1.33vw;
-}
-
-.operation-item,
-.item {
-  display: flex;
-  align-items: center;
-  gap: 2.13vw;
-  padding: 1.6vw 2.67vw;
-  background: rgba(255, 235, 207, 0.8);
-  border: 0.27vw solid rgba(114, 51, 46, 0.2);
-  border-radius: 1.6vw;
-  font-size: 3.2vw;
-}
-
-.operation-icon,
-.item-icon {
-  font-size: 3.73vw;
-  flex-shrink: 0;
-}
-
-.operation-text,
-.item-text {
-  font-size: 3.2vw;
-  color: rgb(114, 51, 46);
-  line-height: 1.3;
 }
 </style>

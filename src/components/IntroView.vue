@@ -135,86 +135,13 @@
       </div>
     </div>
 
-    <!-- 规则说明浮层 -->
-    <Transition name="slide-up">
-      <div v-if="isRuleModalVisible" class="game-rules-modal" @click="handleCloseRuleModal">
-        <div class="game-rules-panel" @click.stop>
-          <!-- 标题栏 -->
-          <div class="rules-header">
-            <div class="rules-title">
-              <img src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
-              <span>游戏规则</span>
-            </div>
-            <button class="close-btn" @click="handleCloseRuleModal">
-              <div class="close-x"></div>
-            </button>
-          </div>
-          
-          <!-- 规则内容区域 -->
-          <div class="rules-content-area">
-            <div class="rules-scroll-content">
-              
-              <!-- 游戏目标 -->
-              <div class="rule-section">
-                <div class="rule-title">🎯 游戏目标</div>
-                <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
-              </div>
-
-              <!-- 基本操作 -->
-              <div class="rule-section">
-                <div class="rule-title">🎮 基本操作</div>
-                <div class="operation-list">
-                  <div class="operation-item">
-                    <span class="operation-icon">👆</span>
-                    <span class="operation-text">点击屏幕左右区域切换泳道</span>
-                  </div>
-                  <div class="operation-item">
-                    <span class="operation-icon">⚡</span>
-                    <span class="operation-text">长按能量按钮加速冲刺</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 游戏规则 -->
-              <div class="rule-section">
-                <div class="rule-title">⚠️ 游戏规则</div>
-                <ul class="rule-list">
-                  <li>每位玩家有3次生命机会</li>
-                  <li>碰到障碍物将损失一次生命</li>
-                  <li>失去所有生命后游戏结束</li>
-                </ul>
-              </div>
-
-              <!-- 特殊道具 -->
-              <div class="rule-section">
-                <div class="rule-title">🎁 特殊道具</div>
-                <div class="items-list">
-                  <div class="item">
-                    <span class="item-icon">🤿</span>
-                    <span class="item-text">呼吸管：进入无敌状态</span>
-                  </div>
-                  <div class="item">
-                    <span class="item-icon">⭐</span>
-                    <span class="item-text">星星：唯一加分途径</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 排行榜规则 -->
-              <div class="rule-section">
-                <div class="rule-title">🏆 排行榜规则</div>
-                <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
-              </div>
-              
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
     <!-- 排行榜浮层 -->
     <Transition name="slide-up">
-      <Leaderboard :isVisible="isLeaderboardVisible" @close="handleCloseLeaderboard" />
+      <Leaderboard 
+        :isVisible="isLeaderboardVisible" 
+        :initialView="initialView"
+        @close="handleCloseLeaderboard" 
+      />
     </Transition>
   </div>
 </template>
@@ -237,8 +164,8 @@ import Leaderboard from './Leaderboard.vue'
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
 const userStore = useUserStore()
-const isRuleModalVisible = ref(false)
 const isLeaderboardVisible = ref(false)
+const initialView = ref('leaderboard') // 控制Leaderboard初始显示的视图
 
 // 设备检测弹窗状态
 const showDeviceModal = ref(false)
@@ -554,18 +481,11 @@ const handleStartGame = async () => {
   gameStateStore.startGame();
 }
 
-const handleShowRuleModal = () => {
-  isRuleModalVisible.value = true
-}
-
-const handleCloseRuleModal = () => {
-  isRuleModalVisible.value = false
-}
-
 const handleShowRanking = () => {
   console.log('🔍 排行榜按钮被点击了！')
   console.log('当前 isLeaderboardVisible 状态:', isLeaderboardVisible.value)
   
+  initialView.value = 'leaderboard'
   isLeaderboardVisible.value = true
   
   console.log('设置后 isLeaderboardVisible 状态:', isLeaderboardVisible.value)
@@ -573,6 +493,13 @@ const handleShowRanking = () => {
 
 const handleCloseLeaderboard = () => {
   isLeaderboardVisible.value = false
+}
+
+const handleShowRuleModal = () => {
+  console.log('🔗 游戏规则按钮被点击了！')
+  
+  initialView.value = 'rules'
+  isLeaderboardVisible.value = true
 }
 
 const handleLogin = async () => {
@@ -639,7 +566,16 @@ const handleOpenApp = () => {
   clickReport({
     id: 'open_app', // 使用更具体的ID来标识此操作
   });
-  openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swim');
+  
+  try {
+    // 优先跳转到端内游戏URL
+    window.open('https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1', '_blank')
+    console.log('[IntroView] 优先跳转到端内游戏URL')
+  } catch (error) {
+    console.error('[IntroView] 端内游戏URL跳转失败，使用降级方案:', error)
+    // 降级方案：使用原来的native scheme
+    openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swim')
+  }
 }
 
 // 设备检测弹窗事件处理
@@ -1134,220 +1070,6 @@ const handleDeviceModalAction = () => {
 }
 
 /* ============================================
-   游戏规则弹窗 - 居中显示
-   ============================================ */
-.game-rules-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-
-.game-rules-panel {
-  width: 380px;
-  max-width: 90%;
-  height: 550px;
-  max-height: 85%;
-  background: rgb(255, 235, 210);
-  border: 2px solid rgb(114, 51, 46);
-  border-radius: 25px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.rules-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  height: 60px;
-  padding: 0 16px;
-  border-bottom: 1px solid rgb(182, 157, 134);
-  background: rgb(255, 235, 210);
-}
-
-.rules-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgb(114, 51, 46);
-  font-size: 20px;
-  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600;
-}
-
-.title-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.close-btn {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.close-x {
-  position: relative;
-  width: 24px;
-  height: 24px;
-}
-
-.close-x::before,
-.close-x::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 3px;
-  background: rgb(114, 51, 46);
-  border-radius: 2px;
-}
-
-.close-x::before {
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.close-x::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.rules-content-area {
-  flex: 1;
-  background: rgb(217, 181, 149);
-  border-radius: 8px;
-  margin: 8px 12px;
-  overflow: hidden;
-}
-
-.rules-scroll-content {
-  padding: 16px;
-  height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.rules-scroll-content::-webkit-scrollbar {
-  display: none;
-}
-
-.rule-section {
-  margin-bottom: 16px;
-}
-
-.rule-section:last-child {
-  margin-bottom: 8px;
-}
-
-.rule-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgb(114, 51, 46);
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.rule-description {
-  font-size: 12px;
-  color: rgb(114, 51, 46);
-  font-weight: 400;
-  line-height: 1.5;
-  margin: 0;
-  margin-top: 4px;
-}
-
-.rule-list {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 0 0;
-}
-
-.rule-list li {
-  padding: 4px 0;
-  padding-left: 16px;
-  position: relative;
-  font-size: 12px;
-  color: rgb(114, 51, 46);
-  font-weight: 400;
-  line-height: 1.4;
-}
-
-.rule-list li::before {
-  content: '•';
-  color: rgb(114, 51, 46);
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-  top: 4px;
-}
-
-.operation-list,
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.operation-item,
-.item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: rgba(255, 235, 207, 0.8);
-  border: 1px solid rgba(114, 51, 46, 0.2);
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.operation-icon,
-.item-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.operation-text,
-.item-text {
-  font-size: 12px;
-  color: rgb(114, 51, 46);
-  line-height: 1.3;
-  font-weight: 400;
-}
-
-/* ============================================
    过渡动画
    ============================================ */
 .slide-up-enter-active,
@@ -1366,16 +1088,14 @@ const handleDeviceModalAction = () => {
    ============================================ */
 @supports not (height: 100dvh) {
   .intro-scene,
-  .device-detection-modal,
-  .game-rules-modal {
+  .device-detection-modal {
     height: 100vh !important;
   }
 }
 
 @supports not (width: 100dvw) {
   .intro-scene,
-  .device-detection-modal,
-  .game-rules-modal {
+  .device-detection-modal {
     width: 100vw !important;
   }
   

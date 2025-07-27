@@ -4,63 +4,126 @@
       <!-- 标题栏 -->
       <div class="leaderboard-header">
         <div class="leaderboard-title">
-          <img src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
-          <span>排行榜</span>
+          <img v-if="currentView === 'leaderboard'" src="/vector/gold.svg" alt="奖杯图标" class="title-icon" />
+          <img v-else src="/vector/gold.svg" alt="规则图标" class="title-icon" />
+          <span>{{ currentView === 'leaderboard' ? '排行榜' : '游戏规则' }}</span>
         </div>
+        
         <button class="close-btn" @click="hideLeaderboard">
           <div class="close-x"></div>
         </button>
       </div>
       
-      <!-- 表头 -->
-      <div class="table-header">
-        <div class="header-bg"></div>
-        <div class="header-labels">
-          <span class="label-rank">排名</span>
-          <span class="label-player">玩家</span>
-          <span class="label-distance">距离</span>
-          <span class="label-score">得分</span>
-        </div>
-      </div>
-      
-      <!-- 加载状态 -->
-      <div v-if="isLoading" class="loading-container">
-        <div class="loading-text">正在加载排行榜...</div>
-      </div>
-      
-      <!-- 错误状态 -->
-      <div v-else-if="hasError" class="error-container">
-        <div class="error-text">加载失败，请稍后重试</div>
-      </div>
-      
-      <!-- 排行榜内容 -->
-      <div v-else class="leaderboard-content">
-        <div 
-          v-for="(player, index) in leaderboardData" 
-          :key="index"
-          class="player-row"
-          :class="{ 'current-player': player.isCurrentPlayer }"
-        >
-          <span class="player-rank">{{ player.rank }}</span>
-          <span class="player-name">{{ player.name }}</span>
-          <span class="player-distance">{{ player.distance }}m</span>
-          <span class="player-score">{{ player.score }}</span>
-        </div>
-      </div>
-      
-      <!-- 我的排名 -->
-      <div class="my-rank-section">
-        <div class="my-rank-bg"></div>
-        <div class="my-rank-content">
-          <span class="my-rank-label">我的排名</span>
-          <div class="my-rank-row">
-            <span class="player-rank">{{ currentPlayerRank }}</span>
-            <span class="player-name">{{ currentPlayerName }}</span>
-            <span class="player-distance">{{ currentPlayerDistance }}m</span>
-            <span class="player-score">{{ currentPlayerScore }}</span>
+      <!-- 排行榜视图 -->
+      <template v-if="currentView === 'leaderboard'">
+        <!-- 表头 -->
+        <div class="table-header">
+          <div class="header-bg"></div>
+          <div class="header-labels">
+            <span class="label-rank">排名</span>
+            <span class="label-player">玩家</span>
+            <span class="label-distance">距离</span>
+            <span class="label-score">得分</span>
           </div>
         </div>
-      </div>
+        
+        <!-- 加载状态 -->
+        <div v-if="isLoading" class="loading-container">
+          <div class="loading-text">正在加载排行榜...</div>
+        </div>
+        
+        <!-- 错误状态 -->
+        <div v-else-if="hasError" class="error-container">
+          <div class="error-text">加载失败，请稍后重试</div>
+        </div>
+        
+        <!-- 排行榜内容 -->
+        <div v-else class="leaderboard-content">
+          <div 
+            v-for="(player, index) in leaderboardData" 
+            :key="index"
+            class="player-row"
+            :class="{ 'current-player': player.isCurrentPlayer }"
+          >
+            <span class="player-rank">{{ player.rank }}</span>
+            <span class="player-name">{{ player.name }}</span>
+            <span class="player-distance">{{ player.distance }}m</span>
+            <span class="player-score">{{ player.score }}</span>
+          </div>
+        </div>
+        
+        <!-- 我的排名 -->
+        <div class="my-rank-section">
+          <div class="my-rank-bg"></div>
+          <div class="my-rank-content">
+            <span class="my-rank-label">我的排名</span>
+            <div class="my-rank-row">
+              <span class="player-rank">{{ currentPlayerRank }}</span>
+              <span class="player-name">{{ currentPlayerName }}</span>
+              <span class="player-distance">{{ currentPlayerDistance }}m</span>
+              <span class="player-score">{{ currentPlayerScore }}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+      
+      <!-- 游戏规则视图 -->
+      <template v-else>
+        <!-- 规则内容区域 -->
+        <div class="rules-content">
+          <div class="rules-scroll-content">
+            
+            <!-- 游戏目标 -->
+            <div class="rule-section">
+              <div class="rule-title"><游戏目标></div>
+              <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
+            </div>
+
+            <!-- 基本操作 -->
+            <div class="rule-section">
+              <div class="rule-title"><基本操作></div>
+              <div class="operation-list">
+                <div class="operation-item">
+                  <span class="operation-text">点击屏幕左右区域切换泳道</span>
+                </div>
+                <div class="operation-item">
+                  <span class="operation-text">长按能量按钮加速冲刺</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 游戏规则 -->
+            <div class="rule-section">
+              <div class="rule-title"><游戏规则></div>
+              <ul class="rule-list">
+                <li>每位玩家有3次生命机会</li>
+                <li>碰到障碍物将损失一次生命</li>
+                <li>失去所有生命后游戏结束</li>
+              </ul>
+            </div>
+
+            <!-- 特殊道具 -->
+            <div class="rule-section">
+              <div class="rule-title"><特殊道具></div>
+              <div class="items-list">
+                <div class="item">
+                  <span class="item-text">呼吸管：进入无敌状态</span>
+                </div>
+                <div class="item">
+                  <span class="item-text">星星：唯一加分途径</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 排行榜规则 -->
+            <div class="rule-section">
+              <div class="rule-title"><排行榜规则></div>
+              <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
+            </div>
+            
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -77,6 +140,10 @@ export default {
     isVisible: {
       type: Boolean,
       default: false
+    },
+    initialView: {
+      type: String,
+      default: 'leaderboard'
     }
   },
   emits: ['close'],
@@ -89,6 +156,9 @@ export default {
     const isLoading = ref(false)
     const hasError = ref(false)
     const bestRank = ref(null)
+    
+    // 视图状态
+    const currentView = ref(props.initialView)
     
     // 获取排行榜数据
     const fetchLeaderboardData = async () => {
@@ -210,7 +280,12 @@ export default {
     // 监听visible变化，当显示时获取数据
     watch(() => props.isVisible, (newValue) => {
       if (newValue) {
-        fetchLeaderboardData()
+        // 设置为传入的初始视图
+        currentView.value = props.initialView
+        // 只有在排行榜视图时才获取排行榜数据
+        if (props.initialView === 'leaderboard') {
+          fetchLeaderboardData()
+        }
       }
     }, { immediate: true })
     
@@ -222,7 +297,8 @@ export default {
       currentPlayerName,
       currentPlayerDistance,
       currentPlayerScore,
-      hideLeaderboard
+      hideLeaderboard,
+      currentView,
     }
   }
 }
@@ -550,6 +626,197 @@ export default {
   line-height: 1.4;
 }
 
+/* 规则内容区域 */
+.rules-content {
+  flex: 1;
+  overflow-y: auto;
+  background: rgb(217, 181, 149);
+  margin: 0 3.2vw;
+  padding: 1.28vh 2.67vw;
+  border: 1px solid rgb(182, 157, 134);
+  border-radius: 1.33vw;
+  /* 隐藏滚动条 - Firefox */
+  scrollbar-width: none;
+  /* 隐藏滚动条 - IE/Edge */
+  -ms-overflow-style: none;
+}
+
+/* 如果支持dvh和dvw,则使用dvh和dvw覆盖上面的vh和vw值 */
+@supports (height: 100dvh) and (width: 100dvw) {
+  .rules-content {
+    margin: 0 3.2dvw;
+    padding: 1.28dvh 2.67dvw;
+    border-radius: 1.33dvw;
+  }
+}
+
+/* 隐藏滚动条 - Webkit浏览器 */
+.rules-content::-webkit-scrollbar {
+  display: none;
+}
+
+.rules-scroll-content {
+  padding: 1.28vh 0; /* 10px / 779px * 100 vertical, 0 horizontal */
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rules-scroll-content {
+    padding: 1.28dvh 0;
+  }
+}
+
+/* 规则区块 */
+.rule-section {
+  margin-bottom: 1.92vh; /* 15px / 779px * 100 */
+}
+
+.rule-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-section {
+    margin-bottom: 1.92dvh;
+  }
+}
+
+/* 规则标题 */
+.rule-section .rule-title {
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  margin-bottom: 0.64vh;
+  text-align: left;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-section .rule-title {
+    margin-bottom: 0.64dvh;
+  }
+}
+
+/* 规则描述 */
+.rule-section .rule-description {
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  line-height: 1.4;
+  text-align: left;
+  margin-bottom: 1.28vh;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-section .rule-description {
+    margin-bottom: 1.28dvh;
+  }
+}
+
+/* 操作列表 */
+.rule-section .operation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.64vh;
+  margin-bottom: 1.28vh;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-section .operation-list {
+    gap: 0.64dvh;
+    margin-bottom: 1.28dvh;
+  }
+}
+
+.operation-item {
+  display: flex;
+  align-items: center;
+  gap: 1.07vw;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  text-align: left;
+}
+
+.operation-text {
+  flex: 1;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  text-align: left;
+}
+
+/* 游戏规则列表 */
+.rule-section .rule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  line-height: 1.4;
+}
+
+.rule-list li {
+  margin-bottom: 0.64vh;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  text-align: left;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-list li {
+    margin-bottom: 0.64dvh;
+  }
+}
+
+/* 特殊道具列表 */
+.rule-section .items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.64vh;
+  margin-bottom: 1.28vh;
+}
+
+/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
+@supports (height: 100dvh) {
+  .rule-section .items-list {
+    gap: 0.64dvh;
+    margin-bottom: 1.28dvh;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1.07vw;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  text-align: left;
+}
+
+.item-text {
+  flex: 1;
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  text-align: left;
+}
+
 /* 响应式设计 */
 @media (max-width: 480px) {
   .leaderboard-panel {
@@ -569,8 +836,52 @@ export default {
   .player-name,
   .player-distance,
   .player-score,
-  .my-rank-label {
-    font-size: 3vw;
+  .my-rank-label,
+  .rule-title,
+  .rule-description,
+  .operation-item,
+  .operation-text,
+  .rule-list li,
+  .item,
+  .item-text {
+    font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  }
+}
+
+/* 如果支持dvw,则使用dvw覆盖上面的vw值 */
+@supports (width: 100dvw) {
+  .rule-section .rule-title {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .rule-section .rule-description {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .operation-item {
+    gap: 1.07dvw;
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .operation-text {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .rule-section .rule-list {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .rule-list li {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .item {
+    gap: 1.07dvw;
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
+  }
+  
+  .item-text {
+    font-size: 3.5dvw; /* 统一字体大小为3.5dvw */
   }
 }
 </style>

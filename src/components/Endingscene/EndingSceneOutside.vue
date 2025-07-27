@@ -370,7 +370,16 @@ const handleRestartGame = () => {
 
 const handleOpenApp = () => {
   clickReport({ id: 'open_app' })
-  openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim')
+  
+  try {
+    // 优先跳转到端内游戏URL
+    window.open('https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1', '_blank')
+    console.log('[EndingSceneOutside] 优先跳转到端内游戏URL')
+  } catch (error) {
+    console.error('[EndingSceneOutside] 端内游戏URL跳转失败，使用降级方案:', error)
+    // 降级方案：使用原来的native scheme
+    openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim')
+  }
 }
 
 // 在handleShareToFriendClick函数中，修改定时器逻辑
@@ -832,11 +841,11 @@ const handleVisibilityChange = () => {
 /* 分享提示 */
 .share-tips {
   position: fixed; /* 改为固定定位 */
-  bottom: 9vh; /* 相对于视窗底部定位 */
+  bottom: 15vh; /* 从9vh调整为15vh，确保在按钮上方 */
   left: 5.07vw; /* 19px at 375px width */
   width: 53.87vw; /* 202px at 375px width */
   height: 4.5vh; /* 调整高度 */
-  z-index: 2; /* 确保分享提示在遮罩层之上 */
+  z-index: 3; /* 提高z-index确保在按钮之上 */
 }
 
 .tips-background {
