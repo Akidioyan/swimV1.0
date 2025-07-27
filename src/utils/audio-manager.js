@@ -49,6 +49,10 @@ class AudioManager {
     setTimeout(() => {
       this.initVibrationSync()
     }, 100)
+    
+    // 页面可见性状态
+    this.wasPlayingBeforeHidden = false
+    this.visibilityChangeHandler = null
   }
   
   /**
@@ -71,11 +75,70 @@ class AudioManager {
       // 设置音频事件监听器
       this.setupAudioEventListeners()
       
+      // 添加页面可见性监听
+      this.setupVisibilityChangeListener()
+      
       this.isInitialized = true
       console.log('音频管理器初始化完成')
     } catch (error) {
       console.error('音频初始化失败:', error)
     }
+  }
+  
+  /**
+   * 设置页面可见性变化监听器
+   */
+  setupVisibilityChangeListener() {
+    this.visibilityChangeHandler = () => {
+      if (document.hidden) {
+        // 页面切换到后台，暂停所有音频
+        this.handlePageHidden()
+      } else {
+        // 页面重新可见，恢复音频播放
+        this.handlePageVisible()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler)
+    console.log('页面可见性监听器已设置')
+  }
+
+  /**
+   * 处理页面切换到后台
+   */
+  handlePageHidden() {
+    console.log('页面切换到后台，暂停所有音频')
+    
+    // 记录背景音乐是否正在播放
+    this.wasPlayingBeforeHidden = this.isMusicPlaying
+    
+    // 暂停背景音乐
+    this.pauseBackgroundMusic()
+    
+    // 停止游泳音效
+    this.stopSwimmingSound()
+    
+    // 停止所有音效
+    Object.values(this.soundEffects).forEach(audio => {
+      if (!audio.paused) {
+        audio.pause()
+      }
+    })
+  }
+
+  /**
+   * 处理页面重新可见
+   */
+  handlePageVisible() {
+    console.log('页面重新可见，恢复音频播放')
+    
+    // 如果之前背景音乐在播放且当前音乐开关是开启的，则恢复播放
+    if (this.wasPlayingBeforeHidden && this.musicEnabled && !this.musicPaused) {
+      this.playBackgroundMusic()
+    }
+    
+    // 重置状态
+    this.wasPlayingBeforeHidden = false
   }
   
   /**
@@ -350,6 +413,12 @@ class AudioManager {
    */
   destroy() {
     this.reset()
+    
+    // 移除页面可见性监听器
+    if (this.visibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityChangeHandler)
+      this.visibilityChangeHandler = null
+    }
     
     // 移除事件监听器
     if (this.backgroundMusic) {

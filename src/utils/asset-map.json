@@ -1,6 +1,6 @@
 {
   "/bg-menu.png": "https://inews.gtimg.com/newsapp_bt/0/0717104622283_2897/0",
-  "/intro.png": "https://inews.gtimg.com/newsapp_bt/0/072511375417_4650/0",
+  "/intro.png": "https://inews.gtimg.com/newsapp_bt/0/0727104941906_3784/0",
   "/swimer.png": "https://inews.gtimg.com/newsapp_bt/0/0717200431967_7062/0",
 
   "/vector/heart.svg": "https://mat1.gtimg.com/rain/apub2019/337dac63a947.heart.svg",
@@ -24,7 +24,7 @@
   "/Sound/BackgroundSound.mp3": "https://mat1.gtimg.com/rain/apub2019/b98dc04c4992.BackgroundSound.mp3",
   "/video/OpeningVideo.mp4": "https://mat1.gtimg.com/rain/apub2019/cacc06418809.OpeningVideo.mp4",
   
-  "/loading/loading.png": "https://inews.gtimg.com/newsapp_bt/0/0717201228919_9972/0",
+  "/loading/loading.png": "https://inews.gtimg.com/newsapp_bt/0/0727105007285_8990/0",
   
   
   "/obs/obs.png": "https://inews.gtimg.com/newsapp_bt/0/0717201254324_5118/0",
@@ -47,17 +47,21 @@
   "/favicon_io/favicon-32x32.png": "https://inews.gtimg.com/newsapp_bt/0/071721335992_8435/0",
 
   "/favicon.ico": "https://mat1.gtimg.com/rain/apub2019/d4a9f8e09b1a.favicon.ico",
-  "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0723223807904_4167/0",
-  "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0723223820401_6578/0",
-  "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0723223822464_8640/0",
+  "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0727105207467_8139/0",
+  "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0727105033204_4650/0",
+  "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0727105220652_1152/0",
   "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0",
   "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0723223830687_6778/0",
-  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0724103013474_5440/0",
-  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0723223816180_2357/0",
+  "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0727105326592_6576/0",
+  "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0727105312740_2811/0",
   "/shareArrow.png": "https://inews.gtimg.com/newsapp_bt/0/0723223826583_2673/0",
+  "/go.png": "https://inews.gtimg.com/newsapp_bt/0/0727104817533_98/0",
+  "/logo.png": "https://inews.gtimg.com/newsapp_bt/0/072710512544_6060/0",
+  "/rank.png": "https://inews.gtimg.com/newsapp_bt/0/0727105228829_9330/0",
+  "/rule.png": "https://inews.gtimg.com/newsapp_bt/0/0727105303623_3779/0",
 
-  "/vector/RankingList.svg": "https://mat1.gtimg.com/rain/apub2019/914ff914e2e3.RankingList.svg",
-  "/vector/MeRankingList.svg": "https://mat1.gtimg.com/rain/apub2019/cb44ca045f55.MeRankingList.svg",
+  "/vector/RankingList.svg": "https://mat1.gtimg.com/rain/apub2019/5ea052373f91.RankingList.svg", 
+  "/vector/MeRankingList.svg": "https://mat1.gtimg.com/rain/apub2019/3d011522274a.MeRankingList.svg",
   "/vector/RankIcon.svg": "https://mat1.gtimg.com/rain/apub2019/d1fc9e02acb3.RankIcon.svg",
   
   "/font/MFYuanHei.ttf": "https://mat1.gtimg.com/rain/apub2019/5c04ebcd0e51.MFYuanHei.ttf",

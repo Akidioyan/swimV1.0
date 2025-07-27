@@ -38,69 +38,101 @@
       </div>
     </div>
 
-    <!-- 背景图片 -->
-    <div class="background-image">
-      <img src="/intro.png" alt="背景图片" class="bg-img" />
+    <!-- 背景容器 -->
+    <div class="background-container">
+      <img src="/intro.png" alt="背景图片" class="background-image" />
     </div>
 
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-
-      <!-- 右侧垂直按钮组 -->
-      <div class="side-buttons">
-        <button class="side-button" @click="handleShowRuleModal">
-          <span class="side-button-text">游戏规则</span>
-        </button>
-        <button class="side-button" @click="handleShowRanking">
-          <span class="side-button-text">排行榜</span>
-        </button>
+    <!-- 主要UI层 -->
+    <div class="ui-layer">
+      
+      <!-- Logo区域 (顶部中央) -->
+      <div class="logo-container">
+        <img src="/logo.png" alt="游戏Logo" class="logo-image" />
       </div>
 
-      <!-- 主挑战按钮 -->
-      <div class="challenge-section">
-        <button class="challenge-button" @click="handleStartGame">
-          <span class="challenge-text">立即挑战</span>
-          <p class="participant-count" v-if="!participantData.isLoading">
-            {{ participantText }}
-          </p>
-          <p class="participant-count loading" v-else>
-            —— 正在获取参与人数... ——
-          </p>
+      <!-- 导航和挑战容器 -->
+      <div class="nav-challenge-container">
+        <!-- 左侧导航按钮 - 排行榜 -->
+        <div class="nav-button-left">
+          <img 
+            src="/rank.png" 
+            alt="排行榜" 
+            class="nav-button-image" 
+            @click="handleShowRanking"
+          />
+        </div>
+
+        <!-- 中央挑战按钮区域 -->
+        <div class="challenge-area">
+          <img 
+            src="/go.png" 
+            alt="立即挑战" 
+            class="challenge-button-image" 
+            @click="handleStartGame"
+          />
+        </div>
+
+        <!-- 右侧导航按钮 - 游戏规则 -->
+        <div class="nav-button-right">
+          <img 
+            src="/rule.png" 
+            alt="游戏规则" 
+            class="nav-button-image" 
+            @click="handleShowRuleModal"
+          />
+        </div>
+      </div>
+
+      <!-- 参与人数信息 - 独立容器 -->
+      <div class="participant-container">
+        <div class="participant-info" v-if="!participantData.isLoading">
+          {{ participantText }}
+        </div>
+        <div class="participant-info loading" v-else>
+          正在获取参与人数...
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 底部提示层 -->
+    <div class="bottom-prompts">
+      <!-- 登录提示：APP内未登录时显示 -->
+      <div v-if="shouldShowLoginPrompt" class="login-prompt" @click="handleLogin">
+        <img src="/login.png" alt="点击登录" class="prompt-image">
+      </div>
+
+      <!-- 打开APP提示：APP外时显示 -->
+      <div v-if="!userStore.isInQQNewsApp" class="open-app-prompt" @click="handleOpenApp">
+        <img src="/openAppAtIntro.png" alt="点击打开APP" class="prompt-image">
+      </div>
+    </div>
+
+    <!-- 调试控制 (F1键控制) -->
+    <div v-if="showDebugLayer" class="debug-layer">
+      <!-- 调试登录提示 -->
+      <div v-if="showDebugLogin" class="debug-login-prompt" @click="handleDebugLogin">
+        <img src="/login.png" alt="调试登录" class="prompt-image">
+        <div class="debug-label">调试登录</div>
+      </div>
+
+      <!-- 调试控制面板 -->
+      <div class="debug-controls">
+        <h4 class="debug-title">调试控制 (U键切换)</h4>
+        <button @click="toggleAppEnvironment" class="debug-btn">
+          {{ userStore.isInQQNewsApp ? '模拟非APP环境' : '模拟APP环境' }}
         </button>
+        <button @click="toggleLoginStatus" class="debug-btn">
+          {{ userStore.hasLogin ? '模拟未登录' : '模拟已登录' }}
+        </button>
+        <div class="debug-status">
+          <div>初始化: {{ userStore.isInitialized ? '✅' : '❌' }}</div>
+          <div>APP环境: {{ userStore.isInQQNewsApp ? '✅' : '❌' }}</div>
+          <div>登录状态: {{ userStore.hasLogin ? '✅' : '❌' }}</div>
+          <div>显示登录提示: {{ shouldShowLoginPrompt ? '✅' : '❌' }}</div>
+        </div>
       </div>
-
-    </div>
-
-    <!-- 登录提示区域：APP内未登录时显示 -->
-    <div v-if="shouldShowLoginPrompt" class="login-prompt-container" @click="handleLogin">
-      <img src="/login.png" alt="点击登录" class="login-prompt-image">
-    </div>
-
-    <!-- 调试：临时显示登录提示用于测试 (开发环境) -->
-    <div v-if="isDev && showDebugLogin" class="login-prompt-container debug-login" @click="handleDebugLogin">
-      <img src="/login.png" alt="调试登录" class="login-prompt-image">
-      <div class="debug-label">调试登录提示</div>
-    </div>
-
-    <!-- 调试：APP环境切换按钮 (开发环境) -->
-    <div v-if="isDev" class="debug-controls">
-      <button @click="toggleAppEnvironment" class="debug-btn">
-        {{ userStore.isInQQNewsApp ? '模拟非APP环境' : '模拟APP环境' }}
-      </button>
-      <button @click="toggleLoginStatus" class="debug-btn">
-        {{ userStore.hasLogin ? '模拟未登录' : '模拟已登录' }}
-      </button>
-      <div class="debug-info">
-        <div>初始化: {{ userStore.isInitialized ? '✅' : '❌' }}</div>
-        <div>APP环境: {{ userStore.isInQQNewsApp ? '✅' : '❌' }}</div>
-        <div>登录状态: {{ userStore.hasLogin ? '✅' : '❌' }}</div>
-        <div>显示登录提示: {{ shouldShowLoginPrompt ? '✅' : '❌' }}</div>
-      </div>
-    </div>
-
-    <!-- 打开APP提示：APP外时显示 -->
-    <div v-if="!userStore.isInQQNewsApp" class="open-app-prompt-container" @click="handleOpenApp">
-      <img src="/openAppAtIntro.png" alt="点击打开APP" class="open-app-prompt-image">
     </div>
 
     <!-- 规则说明浮层 -->
@@ -253,6 +285,18 @@ const isLoggingIn = ref(false);
 // 调试功能：在开发环境显示登录提示
 const showDebugLogin = ref(import.meta.env.DEV && true); // 开发环境默认显示
 const isDev = import.meta.env.DEV; // 环境检测变量
+
+// 调试控制层显示状态 (U键控制)
+const showDebugLayer = ref(false);
+
+// U键切换调试层
+const handleKeyDown = (event) => {
+  if (event.key === 'u' || event.key === 'U') {
+    event.preventDefault(); // 阻止浏览器默认行为
+    showDebugLayer.value = !showDebugLayer.value;
+    console.log('[IntroView] U键切换调试层:', showDebugLayer.value);
+  }
+};
 
 // 格式化参与人数显示 - 显示精确数字
 const formattedParticipants = computed(() => {
@@ -456,6 +500,10 @@ onMounted(async () => {
   setTimeout(() => {
     prepareVideo()
   }, 1000)
+  
+  // 添加键盘事件监听器
+  document.addEventListener('keydown', handleKeyDown);
+  console.log('[IntroView] ✅ 键盘事件监听器已添加 (U切换调试层)');
 })
 
 // 清理函数
@@ -467,6 +515,10 @@ onUnmounted(() => {
     preparedVideoElement.value.src = ''
     preparedVideoElement.value = null
   }
+  
+  // 移除键盘事件监听器
+  document.removeEventListener('keydown', handleKeyDown);
+  console.log('[IntroView] 🧹 键盘事件监听器已移除');
 })
 
 const handleStartGame = async () => {
@@ -587,7 +639,7 @@ const handleOpenApp = () => {
   clickReport({
     id: 'open_app', // 使用更具体的ID来标识此操作
   });
-  openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim');
+  openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swim');
 }
 
 // 设备检测弹窗事件处理
@@ -610,7 +662,9 @@ const handleDeviceModalAction = () => {
 </script>
 
 <style scoped>
-/* 自定义字体 */
+/* ============================================
+   字体定义
+   ============================================ */
 @font-face {
   font-family: 'FZLTCH';
   src: url('/font/FZLTCH.ttf') format('truetype');
@@ -618,29 +672,31 @@ const handleDeviceModalAction = () => {
   font-style: normal;
 }
 
-/* 主场景容器 */
+/* ============================================
+   主场景容器 - Flexbox布局
+   ============================================ */
 .intro-scene {
-  width: 100%;
-  height: 100vh; /* modern browsers */
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   position: relative;
   background: linear-gradient(180deg, #a4d0f5 0%, #7bb3e0 50%, #5a9bd4 100%);
   font-family: 'FZLTCH', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
 
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .intro-scene {
-    height: 100dvh;
-  }
-}
-
-/* 设备检测弹窗 */
+/* ============================================
+   设备检测弹窗 - 居中显示
+   ============================================ */
 .device-detection-modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
@@ -651,17 +707,10 @@ const handleDeviceModalAction = () => {
   -webkit-backdrop-filter: blur(5px);
 }
 
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .device-detection-modal {
-    height: 100dvh;
-  }
-}
-
 .modal-container {
-  width: min(336px, 90vw);
+  width: min(360px, 85vw);
   height: auto;
-  min-height: 226px;
+  min-height: 240px;
   position: relative;
 }
 
@@ -679,17 +728,10 @@ const handleDeviceModalAction = () => {
 }
 
 @keyframes modalFadeIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-/* 顶部横幅 - 改为倒梯形并居中 */
 .modal-header {
   position: relative;
   height: 25.83px;
@@ -705,15 +747,7 @@ const handleDeviceModalAction = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 倒梯形：上边较宽，下边较窄 */
-  clip-path: polygon(
-    0% 0%, 
-    100% 0%, 
-    calc(90% + 8px) calc(100% - 8px),
-    90% 100%, 
-    10% 100%, 
-    calc(10% - 8px) calc(100% - 8px)
-  );
+  clip-path: polygon(0% 0%, 100% 0%, calc(90% + 8px) calc(100% - 8px), 90% 100%, 10% 100%, calc(10% - 8px) calc(100% - 8px));
 }
 
 .header-text {
@@ -725,7 +759,6 @@ const handleDeviceModalAction = () => {
   text-align: center;
 }
 
-/* 内容区域 */
 .modal-body {
   flex: 1;
   padding: 24px 21px 16px 21px;
@@ -744,7 +777,6 @@ const handleDeviceModalAction = () => {
   text-align: center;
 }
 
-/* suggestion-text字体减一号：从14px改为13px */
 .suggestion-text {
   color: rgb(218, 218, 218);
   font-family: "PingFang SC", "PingFang-SC-Regular", sans-serif;
@@ -754,7 +786,6 @@ const handleDeviceModalAction = () => {
   text-align: center;
 }
 
-/* 底部按钮 */
 .modal-footer {
   padding: 0 21px 20px 21px;
 }
@@ -798,221 +829,304 @@ const handleDeviceModalAction = () => {
   transition: transform 0.2s ease;
 }
 
-/* 设备检测弹窗响应式设计 */
-@media (max-width: 480px) {
-  .modal-container {
-    width: 90%;
-    max-width: 336px;
-    margin: 0 20px;
-  }
-
-  .modal-content {
-    height: auto;
-    min-height: 226px;
-  }
-
-  .warning-text {
-    font-size: 14px;
-    line-height: 24px;
-  }
-
-  .suggestion-text {
-    font-size: 11px;
-    line-height: 17px;
-  }
-
-  .button-text {
-    font-size: 14px;
-  }
-}
-
-/* 设备检测弹窗辅助功能支持 */
-.action-button:focus {
-  outline: 2px solid rgb(11, 106, 234);
-  outline-offset: 2px;
-}
-
 .action-button:hover .button-icon {
   transform: translateX(2px);
-  transition: transform 0.2s ease;
 }
 
-/* === 主要内容布局 - 基于Figma精确位置 === */
-
-/* 背景图片 */
-.background-image {
+/* ============================================
+   背景层 - 全屏背景，垂直填满，水平居中
+   ============================================ */
+.background-container {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.bg-img {
+.background-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 添加兼容性处理 */
-  font-family: 'object-fit: cover;'; /* IE polyfill */
+  object-position: center;
 }
 
-/* 主要内容 */
-.main-content {
+/* ============================================
+   主要UI层 - 相对定位，为子元素提供定位上下文
+   ============================================ */
+.ui-layer {
   position: relative;
   width: 100%;
   height: 100%;
   z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
 
-/* 右侧垂直按钮组 - 基于Figma位置数据 */
-.side-buttons {
+/* ============================================
+   Logo区域 - 顶部中央绝对定位
+   ============================================ */
+.logo-container {
   position: absolute;
-  right: 0;
-  top: 14.7vh; /* 游戏规则按钮开始位置: (3247-3132)/779*100 */
-  display: flex;
-  flex-direction: column;
-  gap: 3.8vh; /* 两个按钮之间的间距: (3377-3247-116)/779*100 */
+  top: 94vh;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
 }
 
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .side-buttons {
-    top: 14.7dvh; /* 游戏规则按钮开始位置: (3247-3132)/779*100 */
-    gap: 3.8dvh; /* 两个按钮之间的间距: (3377-3247-116)/779*100 */
-  }
+.logo-image {
+  height: auto;
+  width: 25vw;
+  object-fit: contain;
 }
 
-.side-button {
-  width: 13.9vw; /* 52/375*100 - 基于设计稿宽度 */
-  height: 14.9vh; /* 116/779*100 - 基于设计稿高度 */
-  background: #FDDE38; /* 基于设计稿颜色 rgb(253, 222, 56) */
-  border: none;
-  border-radius: 2.7vw 0 0 2.7vw; /* 10px圆角，右侧贴边 */
+/* ============================================
+   合并的导航和挑战容器 - 绝对定位
+   ============================================ */
+.nav-challenge-container {
+  position: absolute;
+  top: 68%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  padding: 0;
+  z-index: 10;
+}
+
+/* ============================================
+   导航按钮 - 相对定位，贴边显示
+   ============================================ */
+.nav-button-left {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+.nav-button-right {
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 0;
+}
+
+.nav-button-image {
+  width: 6.5vw;
+  height: auto;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  object-fit: contain;
 }
 
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .side-button {
-    height: 14.9dvh; /* 116/779*100 - 基于设计稿高度 */
-  }
+.nav-button-image:hover {
+  transform: scale(1.05);
 }
 
-.side-button:hover {
-  opacity: 0.8;
-  transform: scale(1.02);
-}
-
-.side-button:active {
+.nav-button-image:active {
   transform: scale(0.95);
 }
 
-.side-button-text {
-  color: white;
-  font-size: 5.3vw; /* 20px/375*100 - 基于设计稿字体大小 */
-  font-weight: 600;
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  letter-spacing: 0px;
-  line-height: 7.2vw; /* 28px/375*100 - 基于设计稿行高 */
-}
-
-/* 主挑战按钮区域 - 基于Figma精确位置 */
-.challenge-section {
-  position: absolute;
-  left: 50%;
-  top: 65.8vh; /* (3651-3132)/779*100 - 基于设计稿Y位置 */
-  transform: translate(-50%);
+/* ============================================
+   中央挑战按钮区域 - 相对定位
+   ============================================ */
+.challenge-area {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
+  max-width: 350px;
+  margin: 0 20px;
+}
+
+.challenge-button-image {
+  height: auto;
+  width: 50dvw;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  object-fit: contain;
+}
+
+.challenge-button-image:hover {
+  transform: scale(1.05);
+}
+
+.challenge-button-image:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   参与人数信息容器 - 独立定位
+   ============================================ */
+.participant-container {
+  position: absolute;
+  top: 76%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  display: flex;
+  justify-content: center;
   z-index: 10;
 }
 
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .challenge-section {
-    top: 65.8dvh; /* (3651-3132)/779*100 - 基于设计稿Y位置 */
-  }
-}
-
-.challenge-button {
-  width: 65.9vw; /* 247/375*100 - 基于设计稿宽度 */
-  height: 12.2vh; /* 95/779*100 - 基于设计稿高度 */
-  background: #0D71ED; /* 基于设计稿颜色 rgb(13, 113, 237) */
-  border: none;
-  border-radius: 2.7vw; /* 10px/375*100 - 基于设计稿圆角 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1vw 3vw rgba(13, 113, 237, 0.3);
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .challenge-button {
-    height: 12.2dvh; /* 95/779*100 - 基于设计稿高度 */
-  }
-}
-
-.challenge-button:hover {
-  transform: translateY(-0.5vw);
-  box-shadow: 0 1.5vw 4vw rgba(13, 113, 237, 0.4);
-}
-
-.challenge-button:active {
-  transform: translateY(0);
-}
-
-.challenge-text {
-  color: white;
-  font-size: 12vw; /* 45px/375*100 - 基于设计稿字体大小 */
-  font-weight: 600;
-  line-height: 16.8vw; /* 63px/375*100 - 基于设计稿行高 */
-  margin: 0;
-}
-
-.participant-count {
-  color: white;
-  font-size: 3.2vw; /* 12px/375*100 - 基于设计稿字体大小 */
-  font-weight: 400;
-  line-height: 4.5vw; /* 16.8px/375*100 - 基于设计稿行高 */
+.participant-info {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
   margin: 0;
   text-align: center;
-  width: 60.3vw; /* 226px/375*100 - 基于设计稿宽度 */
   transition: opacity 0.3s ease;
 }
 
-.participant-count.loading {
+.participant-info.loading {
   opacity: 0.7;
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-/* 游戏规则弹窗 - 基于Figma设计稿 */
+/* ============================================
+   底部提示层 - 固定定位
+   ============================================ */
+.bottom-prompts {
+  position: fixed;
+  top: 83vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  z-index: 100;
+}
+
+.login-prompt,
+.open-app-prompt {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+.prompt-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.prompt-image:hover {
+  transform: scale(1.02);
+}
+
+.prompt-image:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
+   调试控制 (开发环境)
+   ============================================ */
+/* ============================================
+   调试控制 (U键控制) - 固定在左上角
+   ============================================ */
+.debug-layer {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  z-index: 10002;
+  max-width: 280px;
+}
+
+.debug-login-prompt {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.debug-label {
+  font-size: 12px;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.debug-controls {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 15px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.debug-title {
+  font-size: 14px;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.debug-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 2px;
+  transition: all 0.2s ease;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.debug-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+
+.debug-btn:active {
+  transform: translateY(0);
+}
+
+.debug-status {
+  font-size: 11px;
+  color: #cccccc;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #555;
+  line-height: 1.4;
+}
+
+.debug-status div {
+  margin: 2px 0;
+}
+
+/* ============================================
+   游戏规则弹窗 - 居中显示
+   ============================================ */
 .game-rules-modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
@@ -1021,187 +1135,158 @@ const handleDeviceModalAction = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5vw;
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .game-rules-modal {
-    height: 100dvh;
-  }
+  padding: 30px;
 }
 
 .game-rules-panel {
-  width: 88.21vw; /* 330.8px / 375px * 100 */
-  height: 76.26vh; /* 594.06px / 779px * 100 */
-  background: rgb(255, 235, 210); /* 基于设计稿 */
-  border: 0.53vw solid rgb(114, 51, 46); /* 2px / 375px * 100 */
-  border-radius: 5.33vw; /* 20px / 375px * 100 */
+  width: 380px;
+  max-width: 90%;
+  height: 550px;
+  max-height: 85%;
+  background: rgb(255, 235, 210);
+  border: 2px solid rgb(114, 51, 46);
+  border-radius: 25px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 5vw 16vw rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.3s ease-out;
 }
 
 @keyframes modalSlideIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-/* 标题栏 */
 .rules-header {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: -2.13vw; /* -8px / 375px * 100 */
   position: relative;
-  height: 15vw;
-  padding: 0 4vw; /* 15px / 375px * 100 */
-  border-bottom: 0.17vh solid rgb(182, 157, 134);
+  height: 60px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgb(182, 157, 134);
   background: rgb(255, 235, 210);
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  .rules-header {
-    border-bottom: 0.17dvh solid rgb(182, 157, 134);
-  }
 }
 
 .rules-title {
   display: flex;
   align-items: center;
-  gap: 2.13vw;
+  gap: 8px;
   color: rgb(114, 51, 46);
-  font-size: 5.33vw; /* 20px / 375px * 100 */
+  font-size: 20px;
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 600; /* 改为与排行榜标题一致 */
-  margin-left: -1.07vw; /* -4px / 375px * 100 */
+  font-weight: 600;
 }
 
 .title-icon {
-  width: 6.24vw; /* 23.43px / 375px * 100 */
-  height: 6.24vw;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
-/* 关闭按钮 */
-.rules-header .close-btn {
+.close-btn {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 8.53vw;
-  height: 8.53vw;
+  width: 32px;
+  height: 32px;
   background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: auto; /* 统一添加事件处理 */
-  z-index: 10; /* 统一添加层级 */
+  z-index: 10;
 }
 
-.rules-header .close-x {
+.close-x {
   position: relative;
-  width: 6.4vw; /* 统一为6.4vw */
-  height: 6.4vw;
+  width: 24px;
+  height: 24px;
 }
 
-.rules-header .close-x::before,
-.rules-header .close-x::after {
+.close-x::before,
+.close-x::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6.4vw; /* 统一为6.4vw */
-  height: 0.8vw; /* 统一为0.8vw */
+  width: 24px;
+  height: 3px;
   background: rgb(114, 51, 46);
-  border-radius: 0.4vw; /* 统一为0.4vw */
+  border-radius: 2px;
 }
 
-.rules-header .close-x::before {
+.close-x::before {
   transform: translate(-50%, -50%) rotate(45deg);
 }
 
-.rules-header .close-x::after {
+.close-x::after {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-/* 内容区域 */
 .rules-content-area {
   flex: 1;
-  background: rgb(217, 181, 149); /* 基于设计稿 */
-  border-radius: 2.67vw; /* 10px / 375px * 100 */
-  margin: 2.13vw 3.73vw; /* 8px 14px */
+  background: rgb(217, 181, 149);
+  border-radius: 8px;
+  margin: 8px 12px;
   overflow: hidden;
 }
 
 .rules-scroll-content {
-  padding: 4vw;
+  padding: 16px;
   height: 100%;
   overflow-y: auto;
-  /* 隐藏滚动条 - Firefox */
   scrollbar-width: none;
-  /* 隐藏滚动条 - IE/Edge */
   -ms-overflow-style: none;
 }
 
-/* 隐藏滚动条 - Webkit浏览器 */
 .rules-scroll-content::-webkit-scrollbar {
   display: none;
 }
 
-/* 规则章节 */
 .rule-section {
-  margin-bottom: 4vw;
+  margin-bottom: 16px;
 }
 
 .rule-section:last-child {
-  margin-bottom: 2vw;
+  margin-bottom: 8px;
 }
 
 .rule-title {
-  font-size: 3.73vw; /* 14px / 375px * 100 */
-  font-weight: 400; /* 改为与排行榜正文一致 */
+  font-size: 14px;
+  font-weight: 600;
   color: rgb(114, 51, 46);
-  margin-bottom: 2.13vw;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 1.6vw;
+  gap: 6px;
 }
 
 .rule-description {
-  font-size: 3.2vw; /* 12px / 375px * 100 */
+  font-size: 12px;
   color: rgb(114, 51, 46);
-  font-weight: 400; /* 添加字体权重与排行榜正文一致 */
+  font-weight: 400;
   line-height: 1.5;
   margin: 0;
-  margin-top: 1.33vw;
+  margin-top: 4px;
 }
 
-/* 规则列表 */
 .rule-list {
   list-style: none;
   padding: 0;
-  margin: 1.33vw 0 0 0;
+  margin: 4px 0 0 0;
 }
 
 .rule-list li {
-  padding: 1.07vw 0;
-  padding-left: 4.27vw;
+  padding: 4px 0;
+  padding-left: 16px;
   position: relative;
-  font-size: 3.2vw;
+  font-size: 12px;
   color: rgb(114, 51, 46);
-  font-weight: 400; /* 添加字体权重与排行榜正文一致 */
+  font-weight: 400;
   line-height: 1.4;
 }
 
@@ -1211,44 +1296,46 @@ const handleDeviceModalAction = () => {
   font-weight: bold;
   position: absolute;
   left: 0;
-  top: 1.07vw;
+  top: 4px;
 }
 
-/* 操作和道具列表 */
 .operation-list,
 .items-list {
   display: flex;
   flex-direction: column;
-  gap: 1.6vw;
-  margin-top: 1.33vw;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .operation-item,
 .item {
   display: flex;
   align-items: center;
-  gap: 2.13vw;
-  padding: 1.6vw 2.67vw;
+  gap: 8px;
+  padding: 6px 10px;
   background: rgba(255, 235, 207, 0.8);
-  border: 0.27vw solid rgba(114, 51, 46, 0.2);
-  border-radius: 1.6vw;
-  font-size: 3.2vw;
+  border: 1px solid rgba(114, 51, 46, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
 }
 
 .operation-icon,
 .item-icon {
-  font-size: 3.73vw;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
 .operation-text,
 .item-text {
-  font-size: 3.2vw;
+  font-size: 12px;
   color: rgb(114, 51, 46);
   line-height: 1.3;
+  font-weight: 400;
 }
 
-/* 过渡动画 */
+/* ============================================
+   过渡动画
+   ============================================ */
 .slide-up-enter-active,
 .slide-up-leave-active {
   transition: all 0.3s ease-out;
@@ -1260,191 +1347,22 @@ const handleDeviceModalAction = () => {
   transform: scale(0.9);
 }
 
-/* 游戏规则弹窗 - 基于Figma设计稿 */
-.game-rules-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5vw;
-}
-
-/* 登录提示样式 - 基于IntroScene.vue */
-.login-prompt-container {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0); /* 考虑刘海屏的安全区域 */
-  z-index: 100; /* 确保在其他intro内容之上但可能在模态框之下 */
-  background-color: rgba(0,0,0,0.3); /* 可选：略微变暗提示区域背景以提高可见性 */
-}
-
-.login-prompt-image {
-  width: 100%; /* 使图像占据其容器的全宽 */
-  height: auto;
-  display: block; /* 移除图像下方的额外空间 */
-  cursor: pointer;
-}
-
-/* 调试：临时显示登录提示用于测试 (开发环境) */
-.debug-login {
-  background-color: rgba(255, 255, 255, 0.9); /* 白色背景，便于调试 */
-  border: 1px solid #ccc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  padding: 10px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 10001; /* 确保在其他内容之上 */
-}
-
-.debug-label {
-  font-size: 14px;
-  color: #333;
-  font-weight: bold;
-}
-
-/* 调试控制样式 */
-.debug-controls {
-  position: fixed;
-  top: 10px; /* 调整位置，避免与模态框重叠 */
-  left: 10px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  padding: 10px;
-  z-index: 10002; /* 确保在其他内容之上 */
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.debug-btn {
-  background-color: #4CAF50; /* 绿色按钮 */
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.debug-btn:hover {
-  background-color: #388E3C; /* 深绿色 */
-}
-
-.debug-btn:active {
-  background-color: #388E3C;
-}
-
-.debug-info {
-  font-size: 12px;
-  color: #ccc;
-  text-align: left;
-  padding-top: 5px;
-  border-top: 1px solid #555;
-}
-
-/* 打开APP提示样式 - 基于IntroScene.vue */
-.open-app-prompt-container {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  max-width: 400px; /* 与登录提示保持一致 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  z-index: 100; /* 与登录提示相同的z-index，它们不会因为v-if条件而重叠 */
-  background-color: rgba(0,0,0,0.3); /* 与登录提示保持一致 */
-}
-
-.open-app-prompt-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  cursor: pointer;
-}
-
-/* 响应式适配 - 基于原设计保持比例 */
-@media (max-width: 480px) {
-  .challenge-text {
-    font-size: 10vw;
-  }
-  
-  .participant-count {
-    font-size: 2.8vw;
-  }
-  
-  .side-button-text {
-    font-size: 4.8vw;
-    line-height: 6.5vw;
-  }
-}
-
-/* 响应式适配 - 基于原设计保持比例 */
-@media (max-height: 600px) {
-  .side-buttons {
-    top: 12vh;
-    gap: 3vh;
-  }
-  
-  .challenge-section {
-    top: 60vh;
-  }
-  
-  .side-button {
-    height: 12vh;
-  }
-  
-  .challenge-button {
-    height: 10vh;
-  }
-}
-
-/* 如果支持dvh,则使用dvh覆盖上面的vh值 */
-@supports (height: 100dvh) {
-  @media (max-height: 600px) {
-    .side-buttons {
-      top: 12dvh;
-      gap: 3dvh;
-    }
-    
-    .challenge-section {
-      top: 60dvh;
-    }
-    
-    .side-button {
-      height: 12dvh;
-    }
-    
-    .challenge-button {
-      height: 10dvh;
-    }
-  }
-}
-
-/* 向下兼容：不支持dvh的浏览器 */
+/* ============================================
+   兼容性回退
+   ============================================ */
 @supports not (height: 100dvh) {
   .intro-scene,
   .device-detection-modal,
   .game-rules-modal {
     height: 100vh !important;
+  }
+}
+
+@supports not (width: 100dvw) {
+  .intro-scene,
+  .device-detection-modal,
+  .game-rules-modal {
+    width: 100vw !important;
   }
 }
 </style>

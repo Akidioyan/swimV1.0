@@ -56,7 +56,7 @@
       <!-- 排行榜标题 -->
       <div class="leaderboard-title">
         <img src="/vector/RankIcon.svg" class="rank-icon" alt="排行榜图标">
-        <span class="title-text">指尖游泳排行榜</span>
+        <span class="leaderboard-title-text">指尖游泳排行榜</span>
       </div>
       
       <!-- 排行榜容器 -->
@@ -487,7 +487,7 @@ const handleVisibilityChange = () => {
 .ending-scene-outside {
   width: 100%;
   height: 100vh;
-  background-color: #171717;
+  background-color: rgb(127, 228, 255); /* 设计稿背景色：天蓝色 */
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
@@ -520,7 +520,7 @@ const handleVisibilityChange = () => {
   font-weight: 600;
   font-size: 4vw; /* 15px at 375px width */
   line-height: 1.4;
-  color: #E7E7E7;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
   /* 预估高度: 4vw * 1.4 ≈ 5.6vw ≈ 2.1vh */
 }
 
@@ -547,14 +547,14 @@ const handleVisibilityChange = () => {
   justify-content: center; /* 居中显示 */
   /* 移除背景色和背景渐变 */
   border-radius: 8px;
+  -webkit-text-stroke: 0.7px #72332E; /* 添加0.7px描边 */
 }
 
 .title-text {
   font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
   font-size: 22vw; /* 放大文字 */
   font-weight: bold;
-  color: #5CBBF9; /* 设计稿中的蓝色 */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: rgb(255, 121, 121); /* 设计稿称号色：橙红色 */
   
   /* 使用flex布局分散字符 */
   width: 100%;
@@ -573,8 +573,8 @@ const handleVisibilityChange = () => {
   display: inline-block;
   line-height: 0.8;
   font-size: 22vw !important; /* 强制设置固定字体大小 */
-  color: #5CBBF9;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: rgb(255, 121, 121); /* 设计稿称号色：橙红色 */
+  -webkit-text-stroke: inherit; /* 继承父元素的描边样式 */
   flex-shrink: 0;
   font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
   font-weight: bold;
@@ -590,7 +590,7 @@ const handleVisibilityChange = () => {
   font-weight: 600; /* 加粗字体 */
   font-size: 4.5vw; /* 加大字号 */
   line-height: 1.4;
-  color: #E7E7E7;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
   /* 预估高度: 4.5vw * 1.4 * 2行 ≈ 12.6vw ≈ 4.7vh */
 }
 
@@ -602,7 +602,7 @@ const handleVisibilityChange = () => {
 .number-text {
   font-family: 'RadikalW01Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #5CBBF9;
+  color: rgb(255, 121, 121); /* 设计稿强调色：橙红色 */
 }
 
 .open-app-container {
@@ -632,10 +632,9 @@ const handleVisibilityChange = () => {
 .leaderboard-title {
   position: relative; /* 从absolute改为relative */
   margin-top: 1vh; /* 统一改为1vh间距 */
-  left: 0; /* 移除left定位 */
   display: flex;
   align-items: center;
-  justify-content: center; /* 居中对齐 */
+  justify-content: flex-start; /* 改为靠左对齐 */
   gap: 2.13vw; /* 8px at 375px width */
   /* 预估高度: 约3vh */
 }
@@ -645,12 +644,12 @@ const handleVisibilityChange = () => {
   height: 3.47vw; /* 13px at 375px width */
 }
 
-.leaderboard-title .title-text {
+.leaderboard-title .leaderboard-title-text {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 4vw; /* 15px at 375px width */
   line-height: 1.4;
-  color: #FFFFFF;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
 }
 
 /* 排行榜容器 */
@@ -673,7 +672,7 @@ const handleVisibilityChange = () => {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 3.2vw; /* 12px at 375px width */
-  color: #606060;
+  color: rgb(37, 96, 112); /* 设计稿表头色：深蓝绿色 */
 }
 
 .header-rank {
@@ -771,11 +770,11 @@ const handleVisibilityChange = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #0B0B0B;
+  color: rgb(11, 11, 11); /* 设计稿排名数字色：深色 */
 }
 
 .my-rank {
-  color: #0B0B0B;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-name {
@@ -784,14 +783,14 @@ const handleVisibilityChange = () => {
   padding-left: 5.33vw; /* 20px at 375px width */
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .my-name {
-  color: #99CCFF;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-distance {
@@ -799,11 +798,11 @@ const handleVisibilityChange = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
 }
 
 .my-distance {
-  color: #E7E7E7;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-score {
@@ -811,11 +810,11 @@ const handleVisibilityChange = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
 }
 
 .my-score {
-  color: #E7E7E7;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 /* 底部渐变 */
@@ -825,7 +824,7 @@ const handleVisibilityChange = () => {
   left: 0;
   width: 100%;
   height: 15vh; /* 调整高度 */
-  background: linear-gradient(180deg, transparent 0%, rgba(23, 23, 23, 0.9) 60%, rgba(23, 23, 23, 1) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(127, 228, 255, 0.9) 60%, rgba(127, 228, 255, 1) 100%); /* 使用设计稿背景色渐变 */
   pointer-events: none;
   z-index: 1;
 }
@@ -890,7 +889,7 @@ const handleVisibilityChange = () => {
   left: 0;
   width: 100%;
   height: 9.26vh; /* 67px at 723px height - 覆盖按钮区域 */
-  background: rgba(23, 23, 23, 0.95);
+  background: rgba(127, 228, 255, 0.95); /* 使用设计稿背景色 */
   z-index: 0;
 }
 

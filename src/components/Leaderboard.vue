@@ -100,15 +100,19 @@ export default {
       try {
         console.log('开始获取排行榜数据...')
         
-        // 根据用户是否在端内选择不同的接口
+        // 根据用户状态选择不同的接口
         let response
-        if (userStore.isInQQNewsApp) {
-          // 端内用户使用getRankingOnly（获取个人排名+排行榜）
-          console.log('[Leaderboard] 端内用户，使用getRankingOnly接口')
+        if (userStore.isInQQNewsApp && userStore.hasLogin) {
+          // 端内已登录用户使用getRankingOnly（获取个人排名+排行榜）
+          console.log('[Leaderboard] 端内已登录用户，使用getRankingOnly接口')
           response = await getRankingOnly()
         } else {
-          // 端外用户使用getRankingBoard（仅获取排行榜前50）
-          console.log('[Leaderboard] 端外用户，使用getRankingBoard接口')
+          // 端内未登录用户 或 端外用户 使用getRankingBoard（仅获取排行榜前50）
+          if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+            console.log('[Leaderboard] 端内未登录用户，使用getRankingBoard接口')
+          } else {
+            console.log('[Leaderboard] 端外用户，使用getRankingBoard接口')
+          }
           response = await getRankingBoard()
         }
         
@@ -135,17 +139,23 @@ export default {
             hasError.value = true
           }
           
-          // 处理用户最佳排名（仅端内用户有效）
-          if (userStore.isInQQNewsApp && apiData.best_rank) {
+          // 处理用户最佳排名（仅端内已登录用户有效）
+          if (userStore.isInQQNewsApp && userStore.hasLogin && apiData.best_rank) {
             const { stars, distance } = parseScoreToStarsAndDistance(apiData.best_rank.score)
             bestRank.value = {
               rank: apiData.best_rank.rank,
               stars: stars,
               distance: distance
             }
-          } else if (!userStore.isInQQNewsApp) {
-            // 端外用户没有个人排名数据
+            console.log('[Leaderboard] 端内已登录用户，显示个人排名:', bestRank.value)
+          } else {
+            // 端内未登录用户 或 端外用户 没有个人排名数据
             bestRank.value = null
+            if (userStore.isInQQNewsApp && !userStore.hasLogin) {
+              console.log('[Leaderboard] 端内未登录用户，不显示个人排名')
+            } else if (!userStore.isInQQNewsApp) {
+              console.log('[Leaderboard] 端外用户，不显示个人排名')
+            }
           }
           
           console.log('排行榜数据获取成功:', leaderboardData.value)

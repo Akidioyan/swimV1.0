@@ -418,11 +418,15 @@ export default {
 /* 冲刺能量条 - 环形进度按钮 */
 .sprint-energy-bar {
   position: absolute;
-  bottom: 25vh;
+  bottom: 15dvh; /* 距离底部20% */
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 120px;
+  width: 15dvw; /* 使用动态视口宽度 */
+  height: 15dvw; /* 保持正方形比例 */
+  min-width: 80px; /* 低端机型最小尺寸 */
+  min-height: 80px;
+  max-width: 15dvw; /* 大屏幕最大尺寸 */
+  max-height: 15dvw;
   z-index: 1000;
   pointer-events: auto;
   cursor: pointer;
@@ -486,8 +490,8 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 70px;
-  height: 70px;
+  width: 80%; /* 相对于父容器的百分比 */
+  height: 80%;
   border-radius: 50%;
   background: #FFEBCF;
   border: 0px solid #72332E;
@@ -496,7 +500,7 @@ export default {
   justify-content: center;
   flex-direction: column;
   color: #72332E;
-  font-size: 12px;
+  font-size: clamp(10px, 2.5dvw, 14px); /* 动态字体大小 */
   font-weight: 700;
   font-family: 'FZLTCH', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   text-shadow: 
@@ -510,7 +514,7 @@ export default {
 /* 闪电图标 */
 .energy-percentage::before {
   content: '⚡';
-  font-size: 28px;
+  font-size: clamp(20px, 5dvw, 32px); /* 动态图标大小 */
   margin-bottom: 2px;
   opacity: 0.9;
 }
@@ -528,7 +532,7 @@ export default {
 /* 主动冲刺状态指示器 */
 .active-sprint-indicator {
   position: absolute;
-  top: 150px;
+  top: calc(20dvh + 18dvw); /* 相对于能量条位置 */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -539,11 +543,11 @@ export default {
   border: 2px solid rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   color: #fff;
-  padding: 10px 18px;
+  padding: clamp(8px, 2dvh, 12px) clamp(12px, 4dvw, 20px);
   border-radius: 25px;
   font-weight: 600;
   font-family: 'FZLTCH', Arial, sans-serif;
-  font-size: 14px;
+  font-size: clamp(12px, 3dvw, 16px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   animation: gentleGlow 1.5s ease-in-out infinite;
   pointer-events: none;
@@ -552,14 +556,16 @@ export default {
 }
 
 .sprint-icon {
-  font-size: 18px;
+  font-size: clamp(14px, 3.5dvw, 20px);
   opacity: 0.95;
 }
 
 .sprint-text {
-  font-size: 14px;
+  font-size: clamp(12px, 3dvw, 16px);
   font-weight: 500;
 }
+
+
 
 /* 等待提示 */
 .waiting-hint {
@@ -608,207 +614,4 @@ export default {
   cursor: pointer;
 }
 
-/* Play图标样式 */
-/* 删除以下 CSS 样式 */
-.pause-play-icon {
-  width: 80px;
-  height: 80px;
-  opacity: 0.9;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  animation: pauseIconPulse 2s ease-in-out infinite;
-  transition: transform 0.2s ease;
-}
-
-.pause-play-icon:hover {
-  transform: scale(1.1);
-}
-
-/* 删除相关动画 */
-@keyframes pauseIconPulse {
-  0%, 100% { 
-    opacity: 0.9; 
-    transform: scale(1); 
-  }
-  50% { 
-    opacity: 1; 
-    transform: scale(1.05); 
-  }
-}
-
-@keyframes gentlePulse {
-  0%, 100% {
-    transform: translateX(-50%) scale(1);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translateX(-50%) scale(1.05);
-    opacity: 1;
-  }
-}
-
-@keyframes gentleGlow {
-  0%, 100% {
-    opacity: 0.8;
-    transform: translateX(-50%) scale(1);
-    border-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  }
-  50% {
-    opacity: 1;
-    transform: translateX(-50%) scale(1.02);
-    border-color: rgba(255, 255, 255, 1);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
-  }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes sparkle {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.2); }
-}
-
-@keyframes energyActivePulse {
-  0%, 100% { 
-    transform: translate(-50%, -50%) scale(1);
-    filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.6));
-  }
-  50% { 
-    transform: translate(-50%, -50%) scale(1.05);
-    filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.8));
-  }
-}
-
-@keyframes noEnergyFlash {
-  0%, 100% { 
-    opacity: 1;
-    color: #e74c3c;
-    background: #ffecec;
-  }
-  50% { 
-    opacity: 0.6;
-    color: #c0392b;
-    background: #FFEBCF;
-  }
-}
-
-@keyframes sprintPulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.05); }
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .rush-indicator {
-    padding: 10px 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 1.5px;
-  }
-  
-  .rush-icon {
-    font-size: 18px;
-  }
-  
-  .rush-time {
-    font-size: 12px;
-  }
-  
-  .active-sprint-indicator {
-    font-size: 12px;
-    padding: 8px 14px;
-    border-width: 1.5px;
-  }
-  
-  .sprint-icon {
-    font-size: 16px;
-  }
-  
-  .sprint-text {
-    font-size: 12px;
-  }
-  
-  .waiting-text {
-    font-size: 24px;
-  }
-  
-  .waiting-subtext {
-    font-size: 14px;
-  }
-  
-  .sprint-energy-bar {
-    width: 35vw;
-    height: 35vw;
-    bottom: calc(15vh + 20px);
-  }
-
-  /* 如果支持dvw,则使用dvw覆盖上面的vw值 */
-  @supports (width: 100dvw) {
-    .sprint-energy-bar {
-      width: 35dvw;
-      height: 35dvw;
-    }
-  }
-
-}
-
-@media (max-width: 480px) {
-  .rush-indicator {
-    font-size: 12px;
-    padding: 8px 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 1px;
-  }
-  
-  .rush-icon {
-    font-size: 16px;
-  }
-  
-  .rush-time {
-    font-size: 11px;
-  }
-  
-  .active-sprint-indicator {
-    font-size: 11px;
-    padding: 6px 12px;
-    border-width: 1px;
-  }
-  
-  .sprint-icon {
-    font-size: 14px;
-  }
-  
-  .sprint-text {
-    font-size: 11px;
-  }
-  
-  .waiting-content {
-    padding: 20px 25px;
-    margin: 0 20px;
-  }
-  
-  .waiting-text {
-    font-size: 20px;
-  }
-  
-  .waiting-subtext {
-    font-size: 12px;
-  }
-  
-  .sprint-energy-bar {
-    width: 85px;
-    height: 85px;
-    bottom: calc(12vh + 15px);
-  }
-  
-  .energy-label {
-    font-size: 11px;
-    top: -25px;
-  }
-
-}
 </style>

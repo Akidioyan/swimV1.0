@@ -5,7 +5,7 @@
       
       <!-- 恭喜文字 -->
       <div class="congratulation-text">
-        {{ userName ? `恭喜${userName}获得` : '恭喜您获得' }}
+        {{ getUserDisplayText() }}
       </div>
       
       <!-- 称号区域 -->
@@ -30,10 +30,7 @@
         </template>
         <template v-else>
           <div class="score-line">
-            你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，
-            <span v-if="currentUserData?.rank > 50">{{ getRandomRankingText() }}</span>
-            <span v-else-if="currentUserData?.rank === '未上榜'">{{ getRandomEncouragementText() }}</span>
-            <span v-else>排名第 <span class="number-text">{{ currentUserData?.rank }}</span> 名！</span>
+            你得到了 <span class="number-text">{{ gameData.stars }}</span> 分，{{ getRandomEncouragement() }}
           </div>
           <div class="distance-line">
             你游了 <span class="number-text">{{ gameData.currentDistance }}</span> 米，
@@ -45,7 +42,7 @@
       <!-- 排行榜标题 -->
       <div class="leaderboard-title">
         <img src="/vector/RankIcon.svg" class="rank-icon" alt="排行榜图标">
-        <span class="title-text">指尖游泳排行榜</span>
+        <span class="leaderboard-title-text">指尖游泳排行榜</span>
       </div>
       
       <!-- 排行榜容器 -->
@@ -67,9 +64,9 @@
             </div>
             <div class="ranking-content">
               <span class="rank-number my-rank">{{ currentUserData.rank || '未上榜' }}</span>
-              <span class="player-name my-name">{{ displayNick }}</span>
-              <span class="player-distance my-distance">{{ currentUserData.distance || gameData.currentDistance }}</span>
-              <span class="player-score my-score">{{ currentUserData.stars || gameData.stars }}</span>
+              <span class="player-name my-name">{{ currentUserData.nick }}</span>
+              <span class="player-distance my-distance">{{ currentUserData.distance }}</span>
+              <span class="player-score my-score">{{ currentUserData.stars }}</span>
             </div>
           </div>
           
@@ -86,7 +83,7 @@
               <span class="rank-number">{{ player.rank }}</span>
               <span class="player-name">{{ player.nick }}</span>
               <span class="player-distance">{{ player.distance }}</span>
-              <span class="player-score">{{ player.stars || player.score }}</span>
+              <span class="player-score">{{ player.score }}</span>
             </div>
           </div>
         </div>
@@ -140,39 +137,11 @@ const isLoadingApi = ref(false);
 const apiError = ref(null);
 const userName = ref(''); // 用户名
 
-// 游戏次数限制相关状态
-const showPlayLimitOverlay = ref(false);
-const isTryAgainDisabled = ref(false);
-const tipsImageRef = ref(null);
-
 // 游戏数据
 const gameData = computed(() => ({
   currentDistance: gameStateStore.finalDistance || gameStore.distance || 0,
   stars: gameStateStore.score || gameStore.stars || 0
 }))
-
-// 解析score为星星数和距离的函数
-const parseScoreToStarsAndDistance = (score) => {
-  const stars = Math.floor(score / 100000)
-  const distance = score % 100000
-  return { stars, distance }
-}
-
-// 计算击败百分比的函数
-const calculateDefeatPercentage = (userRank, lessScoreCount, rankingSize) => {
-  if (userRank && typeof userRank === 'number' && userRank > 0) {
-    if (userRank === 1) {
-      return 100;
-    } else {
-      const totalParticipants = Math.max(rankingSize || 50, userRank * 2);
-      const defeatedCount = totalParticipants - userRank;
-      return Math.min(Math.round((defeatedCount / totalParticipants) * 100), 99);
-    }
-  }
-  
-  if (!rankingSize || rankingSize === 0) return 0;
-  return Math.min(Math.round((lessScoreCount / rankingSize) * 100), 99);
-}
 
 // 根据距离获取称号
 const getTitleByDistance = (distance) => {
@@ -187,26 +156,36 @@ const getTitleByDistance = (distance) => {
   return '初出茅庐'
 }
 
-// 未上榜提示词数组
-const getRandomEncouragementText = () => {
-  const encouragementTexts = [
-    '继续挑战！',
+
+
+// 随机鼓励词函数
+const getRandomEncouragement = () => {
+  const encouragements = [
+    '加油！',
+    '很棒！',
+    '继续努力！',
     '再接再厉！',
-    '突破极限！',
     '勇敢前行！',
+    '坚持不懈！',
+    '越来越强！',
+    '挑战极限！',
+    '永不放弃！',
+
   ]
-  return encouragementTexts[Math.floor(Math.random() * encouragementTexts.length)]
+  return encouragements[Math.floor(Math.random() * encouragements.length)]
 }
 
-// 排名不佳提示词数组
-const getRandomRankingText = () => {
-  const rankingTexts = [
-    '继续挑战冲击排行！',
-    '再接再厉！',
-    '向更高名次进发！',
-    '排行榜在等你！',
-  ]
-  return rankingTexts[Math.floor(Math.random() * rankingTexts.length)]
+// 获取用户显示文本
+const getUserDisplayText = () => {
+  console.log('[EndingSceneApp] getUserDisplayText调用，当前userName值:', userName.value);
+  if (userName.value && userName.value.trim() !== '') {
+    const displayText = `恭喜${userName.value}获得`;
+    console.log('[EndingSceneApp] 显示用户名文本:', displayText);
+    return displayText;
+  } else {
+    console.log('[EndingSceneApp] 显示默认文本: 恭喜您获得');
+    return '恭喜您获得';
+  }
 }
 
 // 显示的排行榜数据（前50名）
@@ -235,20 +214,32 @@ const displayNick = computed(() => {
 // 获取用户名
 const getUserName = async () => {
   try {
+    // 只有真正获取到有效用户名时才跳过
+    if (userName.value && userName.value.trim() !== '' && userName.value.trim().length > 0) {
+      console.log('[EndingSceneApp] 已从游戏API获取到有效用户名:', userName.value);
+      return;
+    }
+    
+    console.log('[EndingSceneApp] 当前userName为空或无效，尝试从腾讯新闻API获取:', userName.value);
+    
     if (userStore.isInQQNewsApp && userStore.hasLogin) {
       const qqnewsApi = await import('@tencent/qqnews-jsapi');
       const { getUserInfo } = qqnewsApi.default || qqnewsApi;
       
       const userInfo = await getUserInfo();
-      userName.value = userInfo?.nickname || userInfo?.name || '';
-      console.log('[EndingSceneApp] 获取到用户名:', userName.value);
+      const fetchedName = userInfo?.nickname || userInfo?.name || '';
+      
+      if (fetchedName && fetchedName.trim() !== '') {
+        userName.value = fetchedName.trim();
+        console.log('[EndingSceneApp] 从腾讯新闻API获取到有效用户名:', userName.value);
+      } else {
+        console.log('[EndingSceneApp] 腾讯新闻API也未返回有效用户名');
+      }
     } else {
-      userName.value = '';
-      console.log('[EndingSceneApp] 使用空用户名');
+      console.log('[EndingSceneApp] 不在腾讯新闻APP内或未登录，无法获取用户名');
     }
   } catch (error) {
-    console.warn('[EndingSceneApp] 获取用户名失败，使用空值:', error);
-    userName.value = '';
+    console.warn('[EndingSceneApp] 获取用户名失败:', error);
   }
 }
 
@@ -257,9 +248,6 @@ onMounted(async () => {
   console.log('[EndingSceneApp] Component mounted.');
   userStore.logCurrentPlayStats('[EndingSceneApp] Stats onMount');
 
-  // 获取用户名
-  await getUserName();
-  
   console.log('[EndingSceneApp] Attempting to fetch swimming game leaderboard data...');
   isLoadingApi.value = true;
   apiError.value = null;
@@ -302,40 +290,104 @@ onMounted(async () => {
     if (realDataResponse && realDataResponse.code === 0 && realDataResponse.data) {
       const apiData = realDataResponse.data;
 
-      // 计算击败百分比
-      const userRank = apiData.best_rank?.rank;
-      const defeatPercentage = calculateDefeatPercentage(
-        userRank,
-        apiData.less_score_count || 0,
-        apiData.ranking_size || 50
-      )
+      // ✅ 修改1：简化击败百分比计算 - 直接使用API返回的数据
+      const lessScoreCount = apiData.less_score_count || 0;
+      const rankingSize = apiData.ranking_size || 50;
+      const defeatPercentage = Math.max(0, Math.min(99, Math.floor(lessScoreCount / rankingSize * 100)));
       
-      console.log(`[EndingSceneApp] 战胜比例计算: 排名${userRank}, less_score_count=${apiData.less_score_count}, ranking_size=${apiData.ranking_size} -> 战胜${defeatPercentage}%`);
+      console.log(`[EndingSceneApp] 简化击败比例计算: less_score_count=${lessScoreCount}, ranking_size=${rankingSize} -> 战胜${defeatPercentage}%`);
 
-      // 设置当前用户数据
-      if (apiData.best_rank) {
-        const { stars, distance } = parseScoreToStarsAndDistance(apiData.best_rank.score)
-        currentUserData.value = {
-          rank: apiData.best_rank.rank,
-          nick: displayNick.value,
-          distance: distance,
-          stars: stars,
-          rankPercent: defeatPercentage
-        }
+      // ✅ 修改2：从API返回的用户信息中获取昵称
+      let userNickFromAPI = '';
+      
+      // 打印API返回的用户信息结构，用于调试
+      console.log('[EndingSceneApp] API返回的用户信息调试:', {
+        hasUserInfo: !!apiData.user_info,
+        userInfo: apiData.user_info,
+        nick: apiData.user_info?.nick,
+        nickType: typeof apiData.user_info?.nick,
+        nickLength: apiData.user_info?.nick?.length
+      });
+      
+      if (apiData.user_info && apiData.user_info.nick && apiData.user_info.nick.trim() !== '') {
+        userNickFromAPI = apiData.user_info.nick.trim();
+        userName.value = userNickFromAPI;
+        console.log('[EndingSceneApp] 从API获取到用户昵称:', userNickFromAPI);
       } else {
-        currentUserData.value = {
-          rank: '未上榜',
-          nick: displayNick.value,
-          distance: gameData.value.currentDistance,
-          stars: gameData.value.stars,
-          rankPercent: defeatPercentage
+        console.log('[EndingSceneApp] API未返回有效的用户昵称，userName保持原值:', userName.value);
+      }
+
+      // ✅ 修改3：直接使用API返回的排名数据
+      let currentRank = '未上榜';
+      
+      // 检查多种可能的排名数据来源
+      if (apiData.ranking && apiData.ranking.rank) {
+        currentRank = apiData.ranking.rank;
+        console.log('[EndingSceneApp] 从API获取到排名 (apiData.ranking.rank):', currentRank);
+      } else if (apiData.best_rank && apiData.best_rank.rank) {
+        currentRank = apiData.best_rank.rank;
+        console.log('[EndingSceneApp] 从API获取到排名 (apiData.best_rank.rank):', currentRank);
+      } else if (apiData.current_rank) {
+        currentRank = apiData.current_rank;
+        console.log('[EndingSceneApp] 从API获取到排名 (apiData.current_rank):', currentRank);
+      } else {
+        console.log('[EndingSceneApp] 未找到排名数据，使用默认值: 未上榜');
+        console.log('[EndingSceneApp] API数据调试:', {
+          hasRanking: !!apiData.ranking,
+          rankingRank: apiData.ranking?.rank,
+          hasBestRank: !!apiData.best_rank,
+          bestRankRank: apiData.best_rank?.rank,
+          hasCurrentRank: !!apiData.current_rank,
+          currentRank: apiData.current_rank
+        });
+      }
+      
+      // 确保排名是有效的数字或字符串
+      if (currentRank && currentRank !== '未上榜') {
+        // 如果是数字，确保它是正整数
+        if (typeof currentRank === 'number' && currentRank > 0) {
+          currentRank = currentRank;
+        } else if (typeof currentRank === 'string' && !isNaN(parseInt(currentRank)) && parseInt(currentRank) > 0) {
+          currentRank = parseInt(currentRank);
+        } else {
+          console.warn('[EndingSceneApp] 排名数据无效:', currentRank, '，使用默认值');
+          currentRank = '未上榜';
         }
+      }
+      
+      console.log('[EndingSceneApp] 最终确定的排名:', currentRank);
+
+      // ✅ 获取历史最佳成绩数据
+      let bestDistance = gameData.value.currentDistance;  // 默认使用当次成绩
+      let bestStars = gameData.value.stars;              // 默认使用当次得分
+      
+      // 如果API返回了历史最佳成绩，则使用历史最佳
+      if (apiData.best_rank && apiData.best_rank.score) {
+        const bestScore = apiData.best_rank.score;
+        bestStars = Math.floor(bestScore / 100000);
+        bestDistance = bestScore % 100000;
+        console.log('[EndingSceneApp] 使用历史最佳成绩: 得分=' + bestStars + ', 距离=' + bestDistance);
+      } else {
+        console.log('[EndingSceneApp] 未找到历史最佳成绩，使用当次游戏成绩');
+      }
+
+      // 设置当前用户数据（使用API返回的数据）
+      currentUserData.value = {
+        rank: currentRank,                                 // 使用API返回的排名
+        nick: userName.value || displayNick.value,        // ✅ 修改1：优先使用从API获取的用户名
+        distance: bestDistance,                           // ✅ 修改2：使用历史最佳距离
+        stars: bestStars,                                 // ✅ 修改2：使用历史最佳得分
+        rankPercent: defeatPercentage                     // 使用简化计算的击败百分比
       }
 
       // 设置排行榜数据
       if (apiData.ranking_board && Array.isArray(apiData.ranking_board)) {
         leaderboardData.value = apiData.ranking_board.map(entry => {
-          const { stars, distance } = parseScoreToStarsAndDistance(entry.ranking.score)
+          // 从score中解析出stars和distance（score = stars * 100000 + distance）
+          const totalScore = entry.ranking.score || 0;
+          const stars = Math.floor(totalScore / 100000);
+          const distance = totalScore % 100000;
+          
           return {
             rank: entry.ranking.rank,
             nick: (entry.user_info.nick && entry.user_info.nick.trim() !== '') ? entry.user_info.nick : "游泳挑战者",
@@ -383,6 +435,9 @@ onMounted(async () => {
   } finally {
     isLoadingApi.value = false;
   }
+  
+  // 在API数据处理完成后，如果还没有用户名，则尝试从腾讯新闻API获取
+  await getUserName();
 })
 
 const handleRestartGame = async () => {
@@ -472,7 +527,7 @@ const handleShareInApp = () => {
 .ending-scene-app {
   width: 100%;
   height: 100vh;
-  background-color: #171717;
+  background-color: rgb(127, 228, 255); /* 设计稿背景色：天蓝色 */
   position: relative;
   overflow-y: hidden;
   overflow-x: hidden;
@@ -505,7 +560,7 @@ const handleShareInApp = () => {
   font-weight: 600;
   font-size: 4vw;
   line-height: 1.4;
-  color: #E7E7E7;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
 }
 
 /* 称号区域 */
@@ -514,7 +569,7 @@ const handleShareInApp = () => {
   margin-top: 1vh;
   left: 0;
   width: 89.6vw;
-  height: 10.5vh;
+  height: 11vh; /* 从10.5vh改为11vh */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -530,14 +585,14 @@ const handleShareInApp = () => {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+  -webkit-text-stroke: 0.7px #72332E; /* 修改描边为0.7px */
 }
 
 .title-text {
   font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
-  font-size: 20vw;
+  font-size: 22vw; /* 从20vw改为22vw */
   font-weight: bold;
-  color: #5CBBF9;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: rgb(255, 121, 121);
   width: 100%;
   height: 100%;
   display: flex;
@@ -551,10 +606,12 @@ const handleShareInApp = () => {
 .title-char {
   display: inline-block;
   line-height: 0.8;
-  font-size: inherit;
+  font-size: 22vw !important; /* 从inherit改为22vw !important */
   color: inherit;
-  text-shadow: inherit;
+  -webkit-text-stroke: inherit;
   flex-shrink: 0;
+  font-family: 'MFYuanHei', 'PingFang SC', sans-serif;
+  font-weight: bold;
 }
 
 /* 结果描述 */
@@ -565,9 +622,9 @@ const handleShareInApp = () => {
   width: 89.07vw;
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
-  font-size: 5.33vw;
+  font-size: 4.5vw; /* 从5.33vw改为4.5vw */
   line-height: 1.4;
-  color: #E7E7E7;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
 }
 
 .score-line,
@@ -578,17 +635,16 @@ const handleShareInApp = () => {
 .number-text {
   font-family: 'RadikalW01Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #5CBBF9;
+  color: rgb(255, 121, 121); /* 设计稿强调色：橙红色 */
 }
 
 /* 排行榜标题 */
 .leaderboard-title {
   position: relative;
   margin-top: 1vh;
-  left: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 改为靠左对齐 */
   gap: 2.13vw;
 }
 
@@ -597,12 +653,12 @@ const handleShareInApp = () => {
   height: 3.47vw;
 }
 
-.leaderboard-title .title-text {
+.leaderboard-title .leaderboard-title-text {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 4vw;
   line-height: 1.4;
-  color: #FFFFFF;
+  color: rgb(37, 96, 112); /* 设计稿文字色：深蓝绿色 */
 }
 
 /* 排行榜容器 */
@@ -625,7 +681,7 @@ const handleShareInApp = () => {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
   font-size: 3.2vw;
-  color: #606060;
+  color: rgb(37, 96, 112); /* 设计稿表头色：深蓝绿色 */
 }
 
 .header-rank {
@@ -717,11 +773,11 @@ const handleShareInApp = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #0B0B0B;
+  color: rgb(11, 11, 11); /* 设计稿排名数字色：深色 */
 }
 
 .my-rank {
-  color: #0B0B0B;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-name {
@@ -730,14 +786,14 @@ const handleShareInApp = () => {
   padding-left: 5.33vw;
   font-family: 'PingFang SC', sans-serif;
   font-weight: 600;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .my-name {
-  color: #99CCFF;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-distance {
@@ -745,11 +801,11 @@ const handleShareInApp = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
 }
 
 .my-distance {
-  color: #E7E7E7;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 .player-score {
@@ -757,11 +813,11 @@ const handleShareInApp = () => {
   text-align: center;
   font-family: 'RadikalW01-Bold', 'PingFang SC', sans-serif;
   font-weight: bold;
-  color: #E7E7E7;
+  color: rgb(11, 11, 11); /* 设计稿一般行文字色：深色 */
 }
 
 .my-score {
-  color: #E7E7E7;
+  color: rgb(255, 253, 223); /* 设计稿我的成绩文字色：淡黄色 */
 }
 
 /* 底部渐变 */
@@ -771,7 +827,7 @@ const handleShareInApp = () => {
   left: 0;
   width: 100%;
   height: 15vh;
-  background: linear-gradient(180deg, transparent 0%, rgba(23, 23, 23, 0.9) 60%, rgba(23, 23, 23, 1) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(127, 228, 255, 0.9) 60%, rgba(127, 228, 255, 1) 100%); /* 使用设计稿背景色渐变 */
   pointer-events: none;
   z-index: 1;
 }
@@ -799,7 +855,7 @@ const handleShareInApp = () => {
   bottom: 3.5vh;
   left: 5.33vw;
   width: 89.6vw;
-  height: 5.5vh;
+  height: auto; /* 从5.5vh改为auto */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -809,7 +865,7 @@ const handleShareInApp = () => {
 .try-again-btn,
 .share-btn {
   width: 42.67vw;
-  height: 5.5vh;
+  height: auto; /* 从5.5vh改为auto */
   background: none;
   border: none;
   cursor: pointer;

@@ -16,12 +16,11 @@ const currentEndingScene = computed(() => {
 </script>
 
 <style scoped>
-/* 保留或移除原有样式，根据是否还需要全局样式决定 */
-/* 例如，如果两个子组件的根元素都有 .ending-scene 类并且样式一致，则可以保留 */
-/* 如果子组件各自管理全部样式，则这里的样式可以移除或简化 */
+/* 包装器样式，确保与设计稿配色一致 */
 .ending-scene-wrapper {
   width: 100%;
   height: 100%;
+  background-color: rgb(127, 228, 255); /* 设计稿背景色：天蓝色 */
   /* 根据需要添加其他包装样式 */
 }
 </style> 
