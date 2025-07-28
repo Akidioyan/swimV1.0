@@ -81,10 +81,15 @@ export const useGameStateStore = defineStore('gameState', {
       const currentLevel = getDifficultyLevelFromVw(distanceVw)
       const levelMovementSpeed = getMovementSpeed(currentLevel) // vw/s
       
-      // 获取视窗宽度，转换vw/s为像素/帧
+      // 基于时间的速度计算，而不是基于帧数
+      // 将vw/s转换为像素/秒，然后转换为相对于baseSpeed的倍数
       const viewportWidth = window.innerWidth
-      const targetSpeedPerFrame = (levelMovementSpeed * viewportWidth / 100) / 60 // 转换为每帧像素(60fps)
-      const baseSpeedMultiplier = targetSpeedPerFrame / state.baseSpeed
+      const targetSpeedPerSecond = (levelMovementSpeed * viewportWidth) / 100 // 像素/秒
+      
+      // 转换为相对于baseSpeed的倍数
+      // 假设baseSpeed是以60fps基准设计的像素/帧值
+      const baseSpeedPerSecond = state.baseSpeed * 60 // 将baseSpeed转换为像素/秒
+      const baseSpeedMultiplier = targetSpeedPerSecond / baseSpeedPerSecond
       
       // 开发者测试模式：检查是否有开发者冲刺状态
       if (state.devSprintActive) {
@@ -220,6 +225,9 @@ export const useGameStateStore = defineStore('gameState', {
       
       // 停止背景音乐
       audioManager.pauseBackgroundMusic()
+      
+      // 播放游戏结束音效
+      audioManager.playSoundEffect('gameover')
       
       // 更新最佳分数
       if (this.score > this.bestScore) {
@@ -361,6 +369,9 @@ export const useGameStateStore = defineStore('gameState', {
         console.log('✅ 障碍物提示事件已触发')
       }
       
+      // 播放障碍物碰撞音效
+      audioManager.playSoundEffect('obstacle')
+      
       // 碰撞障碍物时触发重度震动
       vibrationManager.heavyVibration()
       console.log('💥 碰撞障碍物，触发重度震动')
@@ -496,6 +507,9 @@ export const useGameStateStore = defineStore('gameState', {
     collectStar() {
       this.stars++
       this.score += 1 // 每个星星增加1分
+      
+      // 播放收集星星音效
+      audioManager.playSoundEffect('star')
     },
     
     // 同步音频状态到本地状态

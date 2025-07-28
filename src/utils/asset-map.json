@@ -1,5 +1,5 @@
 {
-  "/bg-menu.png": "https://inews.gtimg.com/newsapp_bt/0/0717104622283_2897/0",
+  "/bg-menu.png": "https://inews.gtimg.com/newsapp_bt/0/0728115432190_4195/0",
   "/intro.png": "https://inews.gtimg.com/newsapp_bt/0/0727104941906_3784/0",
   "/swimer.png": "https://inews.gtimg.com/newsapp_bt/0/0717200431967_7062/0",
 
@@ -22,6 +22,13 @@
   
   "/Sound/swimming.MP3": "https://mat1.gtimg.com/rain/apub2019/bb61bef70721.swimming.MP3",
   "/Sound/BackgroundSound.mp3": "https://mat1.gtimg.com/rain/apub2019/b98dc04c4992.BackgroundSound.mp3",
+  "/Sound/star.MP3": "https://mat1.gtimg.com/rain/apub2019/0ac743772ef9.star.MP3",
+  "/Sound/obs.MP3": "https://mat1.gtimg.com/rain/apub2019/ee9a7cd3dff4.obs.MP3",
+  "/Sound/next.MP3": "https://mat1.gtimg.com/rain/apub2019/97ee8270bbff.next.MP3",
+  "/Sound/btn.MP3": "https://mat1.gtimg.com/rain/apub2019/2c680ee4c182.btn.MP3",
+  "/Sound/props.MP3": "https://mat1.gtimg.com/rain/apub2019/0d3f70426598.props.MP3",
+  "/Sound/gameover.mp3": "https://mat1.gtimg.com/rain/apub2019/19fe5ea2ac09.gameover.mp3",
+  "/Sound/Accelerate.MP3": "https://mat1.gtimg.com/rain/apub2019/e8c61a6bb510.Accelerate.MP3",
   "/video/OpeningVideo.mp4": "https://mat1.gtimg.com/rain/apub2019/cacc06418809.OpeningVideo.mp4",
   
   "/loading/loading.png": "https://inews.gtimg.com/newsapp_bt/0/0727105007285_8990/0",
@@ -50,7 +57,7 @@
   "/openApp.png": "https://inews.gtimg.com/newsapp_bt/0/0727105207467_8139/0",
   "/login.png": "https://inews.gtimg.com/newsapp_bt/0/0727105033204_4650/0",
   "/openAppAtIntro.png": "https://inews.gtimg.com/newsapp_bt/0/0727105220652_1152/0",
-  "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0",
+  "/shareimg.png": "https://inews.gtimg.com/newsapp_bt/0/0728165827428_3945/0",
   "/needShareToPlayTips.png": "https://inews.gtimg.com/newsapp_bt/0/0723223830687_6778/0",
   "/tryAgain.png": "https://inews.gtimg.com/newsapp_bt/0/0727105326592_6576/0",
   "/shareToFriend.png": "https://inews.gtimg.com/newsapp_bt/0/0727105312740_2811/0",

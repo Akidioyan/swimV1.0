@@ -40,9 +40,39 @@ export default {
     let starEffects = null
     let backgroundImage = null
     
+    // 帧率监控和调试信息
+    let frameCount = 0
+    let fpsCheckTime = 0
+    let currentFPS = 0
+    let avgDeltaTime = 0
+    let deltaTimeSum = 0
+    
     onMounted(async () => {
       await nextTick()
       initGame()
+      
+      // 输出设备和浏览器信息
+      console.log('🎮 [GameCanvas] 设备兼容性信息:')
+      console.log(`  📱 用户代理: ${navigator.userAgent}`)
+      console.log(`  📺 屏幕尺寸: ${window.screen.width}x${window.screen.height}`)
+      console.log(`  🖼️ 视窗尺寸: ${window.innerWidth}x${window.innerHeight}`)
+      console.log(`  ⚡ 硬件并发: ${navigator.hardwareConcurrency || 'unknown'}`)
+      console.log(`  🎯 像素比: ${window.devicePixelRatio}`)
+      
+      // 检测刷新率
+      let rafCount = 0
+      const startTime = performance.now()
+      const detectRefreshRate = () => {
+        rafCount++
+        if (performance.now() - startTime < 1000) {
+          requestAnimationFrame(detectRefreshRate)
+        } else {
+          const estimatedFPS = rafCount
+          console.log(`  🔄 估算刷新率: ${estimatedFPS}Hz`)
+          console.log(`  ✅ 时间标准化: 已启用 (基准60fps)`)
+        }
+      }
+      requestAnimationFrame(detectRefreshRate)
       
       // 添加键盘事件监听
       document.addEventListener('keydown', handleKeyDown)
@@ -152,25 +182,52 @@ export default {
       const deltaTime = currentTime - lastTime
       lastTime = currentTime
       
-      if (gameStateStore.gameState === 'playing') {
-        updateGame(deltaTime)
+      // 帧率监控和调试信息更新
+      frameCount++
+      deltaTimeSum += deltaTime
+      
+      if (currentTime - fpsCheckTime >= 1000) { // 每秒更新一次
+        currentFPS = frameCount
+        avgDeltaTime = deltaTimeSum / frameCount
+        
+        // 每5秒输出一次性能监控信息（避免控制台刷屏）
+        if (frameCount % (currentFPS * 5) < currentFPS) {
+          console.log(`🔧 [性能监控] FPS: ${currentFPS}, 平均帧时间: ${avgDeltaTime.toFixed(2)}ms, 标准化倍数: ${(avgDeltaTime / (1000/60)).toFixed(3)}`)
+        }
+        
+        frameCount = 0
+        deltaTimeSum = 0
+        fpsCheckTime = currentTime
       }
       
-      drawGame(deltaTime)
+      // 标准化deltaTime - 基于60fps作为基准，确保跨设备一致性
+      const targetFrameTime = 1000 / 60 // 60fps的理想帧时间(16.67ms)
+      const normalizedDeltaTime = Math.min(deltaTime, targetFrameTime * 2) // 限制最大deltaTime防止跳跃
+      const frameSpeedMultiplier = normalizedDeltaTime / targetFrameTime // 时间标准化倍数
+      
+      if (gameStateStore.gameState === 'playing') {
+        updateGame(normalizedDeltaTime, frameSpeedMultiplier)
+      }
+      
+      drawGame(normalizedDeltaTime)
       
       animationId = requestAnimationFrame(gameLoop)
     }
     
-    const updateGame = (deltaTime) => {
+    const updateGame = (deltaTime, frameSpeedMultiplier = 1) => {
       gameObjectsStore.animationFrame++
-      gameObjectsStore.waterOffset += gameStateStore.gameSpeed
-      gameObjectsStore.backgroundOffset -= gameStateStore.gameSpeed
       
-      // 更新游戏速度和距离
+      // 使用时间标准化的移动速度
+      const timeBasedSpeed = gameStateStore.gameSpeed * frameSpeedMultiplier
+      
+      gameObjectsStore.waterOffset += timeBasedSpeed
+      gameObjectsStore.backgroundOffset -= timeBasedSpeed
+      
+      // 更新游戏速度和距离 - 传入frameSpeedMultiplier用于距离计算
       gameStateStore.gameSpeed = gameStateStore.baseSpeed * gameStateStore.currentSpeedMultiplier
       
-      // 更新游戏状态和距离
-      gameStateStore.updateDistanceAndScore(gameStateStore.gameSpeed)
+      // 更新游戏状态和距离 - 使用时间标准化的速度
+      gameStateStore.updateDistanceAndScore(timeBasedSpeed)
       gameStateStore.updateGameState()
       
       // 更新游泳者动画
@@ -180,7 +237,7 @@ export default {
       
       // 更新星星特效
       if (starEffects) {
-        starEffects.update(gameStateStore.gameSpeed)
+        starEffects.update(timeBasedSpeed)
       }
       
       // 更新玩家状态
@@ -189,15 +246,15 @@ export default {
       // 更新玩家位置
       gameLayoutStore.updatePlayerPosition(gameStateStore.isActiveSprinting)
       
-      // 更新障碍物系统（使用性能优化版本）
+      // 更新障碍物系统（使用性能优化版本）- 传入时间标准化的速度
       const currentTime = performance.now()
-      gameObjectsStore.updateObstacleSystemOptimized(gameStateStore.gameSpeed, gameLayoutStore, gameStateStore, currentTime)
+      gameObjectsStore.updateObstacleSystemOptimized(timeBasedSpeed, gameLayoutStore, gameStateStore, currentTime)
       
-      // 更新道具位置
-      updatePowerUps()
+      // 更新道具位置 - 使用时间标准化的速度
+      updatePowerUps(timeBasedSpeed)
       
-      // 更新粒子效果
-      updateParticles()
+      // 更新粒子效果 - 使用时间标准化的速度
+      updateParticles(timeBasedSpeed)
       
       // 检查碰撞
       checkCollisions()
@@ -226,10 +283,10 @@ export default {
       }
     }
     
-    const updatePowerUps = () => {
+    const updatePowerUps = (timeBasedSpeed) => {
       gameObjectsStore.powerUps = gameObjectsStore.powerUps.filter(powerUp => {
         // 更新道具位置
-        powerUp.y += gameStateStore.gameSpeed
+        powerUp.y += timeBasedSpeed
         powerUp.glowPhase += 0.2
         
         // 道具的X坐标在创建时已确定，不需要每帧重新计算
@@ -253,14 +310,14 @@ export default {
       })
     }
     
-    const updateParticles = () => {
+    const updateParticles = (timeBasedSpeed) => {
       gameObjectsStore.particles = gameObjectsStore.particles.filter(particle => {
         // 粒子自身的移动
         particle.x += particle.vx
         particle.y += particle.vy
         
         // 与游戏速度保持一致的向下移动
-        particle.y += gameStateStore.gameSpeed
+        particle.y += timeBasedSpeed
         
         particle.life--
         particle.vy += 0.2 // 重力

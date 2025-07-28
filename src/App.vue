@@ -1,8 +1,8 @@
 <template>
   <div id="app" class="app">
     <!-- 设备检测弹窗 - 全局显示 -->
-    <div v-if="showDeviceModal" class="device-detection-modal" @click="handleDeviceModalBackdrop">
-      <div class="modal-container" @click.stop>
+    <div v-if="showDeviceModal" class="device-detection-modal">
+      <div class="modal-container">
         <!-- 主要弹窗内容 -->
         <div class="modal-content">
           <!-- 顶部提示头部 -->
@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useGameStore } from './stores/gameStore'
 import { useGameStateStore } from './stores/gamestore/gameState'
 import { usePlayerControlStore } from './stores/gamestore/playerControl'
@@ -68,6 +68,11 @@ import GameView from './components/GameView.vue'
 import EndingScene from './components/Endingscene/EndingScene.vue'
 import { isQQNews } from './utils/ua'
 import { clickReport } from './utils/report'
+import { 
+  checkDeviceCompatibility, 
+  initDeviceDetectionListener, 
+  registerDeviceDetectionCallbacks 
+} from './utils/deviceDetection'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
@@ -76,32 +81,65 @@ const userStore = useUserStore()
 
 // 设备检测弹窗状态
 const showDeviceModal = ref(false)
+// 记录游戏暂停前的状态
+const wasGamePaused = ref(false)
 
-// 检测设备兼容性
-const checkDeviceCompatibility = () => {
-  const width = window.innerWidth
-  const height = window.innerHeight
-  const aspectRatio = width / height
-  
-  // 检测条件：横屏 或 长宽比 > 10/16 (0.625)
-  const isLandscape = width > height
-  const isWideAspectRatio = aspectRatio > (10 / 16)
-  
-  console.log('设备检测:', {
-    width,
-    height,
-    aspectRatio: aspectRatio.toFixed(3),
-    isLandscape,
-    isWideAspectRatio,
-    shouldShowModal: isLandscape || isWideAspectRatio
+// 注册设备检测回调函数
+const registerDeviceCallbacks = () => {
+  registerDeviceDetectionCallbacks({
+    onShowModal: () => {
+      console.log('[App] 收到设备检测显示弹窗回调')
+      // 记录当前游戏是否已暂停
+      wasGamePaused.value = gameStateStore.isPaused
+      
+      // 暂停游戏（如果在游戏界面且游戏正在运行）
+      if (gameStateStore.currentView === 'game' && !gameStateStore.isPaused) {
+        gameStateStore.togglePause()
+        console.log('[App] 因设备检测暂停游戏')
+      }
+      
+      showDeviceModal.value = true
+    },
+    
+    onHideModal: () => {
+      console.log('[App] 收到设备检测隐藏弹窗回调')
+      showDeviceModal.value = false
+      
+      // 恢复游戏（如果在游戏界面且游戏当前已暂停且之前没有暂停）
+      if (gameStateStore.currentView === 'game' && gameStateStore.isPaused && !wasGamePaused.value) {
+        gameStateStore.togglePause()
+        console.log('[App] 因设备检测恢复游戏')
+      }
+    },
+    
+    onAction: () => {
+      console.log('[App] 收到设备检测按钮点击回调')
+      handleDeviceModalAction()
+    }
   })
-  
-  if (isLandscape || isWideAspectRatio) {
-    showDeviceModal.value = true
-  } else {
-    showDeviceModal.value = false
-  }
 }
+
+// 监听弹窗状态变化，处理游戏暂停和恢复
+watch(showDeviceModal, (newValue, oldValue) => {
+  console.log('设备检测弹窗状态变化:', { from: oldValue, to: newValue })
+  
+  if (newValue && !oldValue) {
+    // 弹窗显示时暂停游戏
+    if (gameStateStore.currentView === 'game' && !gameStateStore.isPaused) {
+      wasGamePaused.value = false
+      gameStateStore.togglePause()
+      console.log('因设备检测弹窗显示而暂停游戏')
+    } else {
+      wasGamePaused.value = gameStateStore.isPaused
+    }
+  } else if (!newValue && oldValue) {
+    // 弹窗隐藏时恢复游戏
+    if (gameStateStore.currentView === 'game' && gameStateStore.isPaused && !wasGamePaused.value) {
+      gameStateStore.togglePause()
+      console.log('因设备检测弹窗隐藏而恢复游戏')
+    }
+  }
+})
 
 onMounted(async () => {
   // 上报页面访问
@@ -109,6 +147,15 @@ onMounted(async () => {
   
   // 移除加载动画
   document.querySelector('.loading-container')?.classList.add('hide')
+  
+  // 注册设备检测回调函数
+  registerDeviceCallbacks()
+  
+  // 初始化设备检测监听器
+  initDeviceDetectionListener()
+  
+  // 初始检测设备兼容性
+  checkDeviceCompatibility()
   
   // 初始化分享信息
   if (isQQNews()) {
@@ -156,16 +203,9 @@ onMounted(async () => {
   // 启用全屏模式
   enableFullscreen()
   
-  // 初始检测设备兼容性
-  checkDeviceCompatibility()
-  
   // 添加全局键盘事件监听
   document.addEventListener('keydown', handleKeyDown)
   document.addEventListener('keyup', handleKeyUp)
-  
-  // 添加窗口大小变化监听（包含设备检测）
-  window.addEventListener('resize', handleResize)
-  window.addEventListener('orientationchange', handleOrientationChange)
   
   // 阻止移动端的缩放手势（移除touchmove阻止）
   document.addEventListener('gesturestart', preventZoom, { passive: false })
@@ -192,8 +232,6 @@ onUnmounted(() => {
   // 移除事件监听器
   document.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('keyup', handleKeyUp)
-  window.removeEventListener('resize', handleResize)
-  window.removeEventListener('orientationchange', handleOrientationChange)
   document.removeEventListener('gesturestart', preventZoom)
   document.removeEventListener('gesturechange', preventZoom)
   document.removeEventListener('gestureend', preventZoom)
@@ -220,24 +258,16 @@ const handleKeyUp = (event) => {
   playerControlStore.handleKeyUp(event.key)
 }
 
-// 处理窗口大小变化
-const handleResize = () => {
-  // 重新检测设备兼容性
-  checkDeviceCompatibility()
-}
-
-// 处理设备方向变化
-const handleOrientationChange = () => {
-  // 延迟一下再检测，因为方向变化后尺寸可能还没更新
-  setTimeout(() => {
-    checkDeviceCompatibility()
-  }, 300)
+const closeDeviceModal = () => {
+  console.log('用户手动关闭设备检测弹窗')
+  showDeviceModal.value = false
 }
 
 // 设备检测弹窗事件处理
 const handleDeviceModalBackdrop = () => {
-  // 由于设备不兼容，通常不允许关闭
-  console.log('用户尝试关闭设备检测弹窗')
+  // 点击背景可以关闭弹窗
+  console.log('用户点击弹窗背景，关闭弹窗')
+  closeDeviceModal()
 }
 
 const handleDeviceModalAction = () => {

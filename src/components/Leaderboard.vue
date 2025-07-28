@@ -506,6 +506,7 @@ export default {
   margin: 0 3.2vw;
   padding: 1.28vh 0;
   border: 1px solid rgb(182, 157, 134);
+  border-radius: 1.33vw; /* 添加与my-rank-section相同的圆角 */
   /* 隐藏滚动条 - Firefox */
   scrollbar-width: none;
   /* 隐藏滚动条 - IE/Edge */

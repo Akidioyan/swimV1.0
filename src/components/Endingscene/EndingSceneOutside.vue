@@ -106,7 +106,7 @@
       <!-- 底部渐变遮罩 -->
       <div class="bottom-gradient"></div>
       
-      <!-- 分享提示（当无法继续游戏时显示） -->
+      <!-- 分享提示（当需要时显示） -->
       <div v-if="showNeedShareTipsImage" class="share-tips">
         <img src="/needShareToPlayTips.png" alt="分享给好友，获得3次挑战机会" class="tips-background">
       </div>
@@ -116,8 +116,7 @@
         <img 
           src="/tryAgain.png" 
           @click="handleRestartGame" 
-          class="try-again-btn" 
-          :class="{ 'disabled': isTryAgainDisabled }" 
+          class="try-again-btn"
           alt="再次挑战"
         >
         <img 
@@ -139,13 +138,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useGameStore } from '../../stores/gameStore'
 import { useGameStateStore } from '../../stores/gamestore/gameState'
 import { useUserStore } from '../../stores/userStore'
 import { openNativeScheme } from '../../utils/appDownload'
 import { clickReport } from '../../utils/report'
 import { getRankingBoard } from '../../utils/request'
+import audioManager from '../../utils/audio-manager'
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
@@ -156,7 +156,6 @@ const shareArrowOverlayIsVisible = ref(false)
 const leaderboardData = ref([])
 const currentUserEntry = ref(null)
 const showNeedShareTipsImage = ref(false)
-const isTryAgainDisabled = ref(false)
 
 // 分享相关状态
 const shareActionInitiated = ref(false)
@@ -181,36 +180,76 @@ const getTitleByDistance = (distance) => {
   return '初出茅庐'
 }
 
+// 游戏操作科普文字（得分 < 6分）
+const getGameTutorialText = () => {
+  const tutorialTexts = [
+    '点击左屏左移，点击右屏右移！',
+    '收集星星获得高分！',
+    '长按冲刺按钮可以加速前进！',
+    '潜水镜道具让你无敌冲刺！',
+    '多练习操作，熟能生巧！',
+    '保持节奏，稳定操作是关键！',
+    '观察前方障碍，提前做出反应！',
+    '合理使用冲刺，节约能量很重要！',
+    '星星越多分数越高，勇敢去收集！',
+    '练好左右移动，是游戏的基础！'
+  ]
+  return tutorialTexts[Math.floor(Math.random() * tutorialTexts.length)]
+}
+
+// 鼓励话语（6分 ≤ 得分 < 50分）
+const getEncouragementText = () => {
+  const encouragements = [
+    '很不错的开始！',
+    '继续努力，你会更强！',
+    '加油，再接再厉！',
+    '勇敢前行，突破自我！',
+    '坚持不懈，成功在望！',
+    '挑战极限，永不放弃！',
+    '稳步提升，再创佳绩！',
+    '技术不错，继续精进！',
+    '有潜力成为高手！',
+    '距离目标越来越近了！'
+  ]
+  return encouragements[Math.floor(Math.random() * encouragements.length)]
+}
+
+// 夸奖话语（得分 ≥ 50分）
+const getPraiseText = () => {
+  const praiseTexts = [
+    '太厉害了，真正的高手！',
+    'amazing！技术超群！',
+    '完美表现，堪称大师！',
+    '惊人的技术，令人佩服！',
+    '卓越成就，当之无愧！',
+    '顶级水准，无人能及！',
+    '传奇级别的表现！',
+    '完美操作，技惊四座！',
+    '大神级别，膜拜！',
+    '超凡脱俗的技艺！',
+    '王者风范，所向披靡！',
+    '登峰造极，举世无双！'
+  ]
+  return praiseTexts[Math.floor(Math.random() * praiseTexts.length)]
+}
+
+// 根据得分获取对应的文字内容
+const getScoreBasedText = () => {
+  const score = gameData.value.stars
+  
+  if (score < 6) {
+    return getGameTutorialText()
+  } else if (score >= 6 && score < 50) {
+    return getEncouragementText()
+  } else {
+    return getPraiseText()
+  }
+}
+
 // 未上榜提示词数组 - 根据游戏规则和游泳主题设计
 const getRandomEncouragementText = () => {
-  const encouragementTexts = [
-    '继续挑战，冲击排行榜！',
-    '再接再厉，向高分进发！',
-    '加油，突破极限！',
-    '勇敢前行，下次必上榜！',
-    '练好技巧，排行榜等你！',
-    '收集更多星星，冲击高分！',
-    '掌握节奏，再创佳绩！',
-    '继续训练，成为达人！',
-    '排行榜在向你招手！',
-    '提升技能，下回称王！',
-    '点左屏左移，点右屏右移！',
-    '星星是关键，多收集冲高分！',
-    '坚持，总有上榜的一天！',
-    '挑战极限，超越更多网友！',
-    '高手就是你，再来一局！',
-    '水中冲浪，再创奇迹！',
-    '样样精通才能上榜！',
-    '姿势很重要，练好再来！',
-    '呼吸管是神器，不怕障碍就是冲！',
-    '游出风采，游出精彩人生！',
-    '水花四溅，梦想在前方等你！',
-    '每一次划水都是进步的开始！',
-    '世上无捷径，只有肯攀登！',
-    '乘风破浪，游向更远！'
-  ]
-  
-  return encouragementTexts[Math.floor(Math.random() * encouragementTexts.length)]
+  // 现在直接调用基于得分的文字函数
+  return getScoreBasedText()
 }
 
 // 登录提示词数组 - 针对端外用户
@@ -235,14 +274,6 @@ const extendedLeaderboard = computed(() => {
   // 直接返回真实的API数据，不生成虚拟数据填充
   return leaderboardData.value
 })
-
-// 监听游戏次数变化
-watch(() => userStore.canPlay, (canStillPlay) => {
-  console.log(`[EndingSceneOutside] userStore.canPlay changed to: ${canStillPlay}`)
-  isTryAgainDisabled.value = !canStillPlay
-  showNeedShareTipsImage.value = !canStillPlay
-  userStore.logCurrentPlayStats('[EndingSceneOutside] Stats after canPlay changed')
-}, { immediate: true })
 
 // 在script setup部分，修改数据处理逻辑
 
@@ -339,7 +370,11 @@ onUnmounted(() => {
 // 删除模拟排行榜数据生成函数
 
 const handleRestartGame = () => {
-  userStore.logCurrentPlayStats('[EndingSceneOutside] handleRestartGame clicked')
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
+  // 删除次数统计日志
+  // userStore.logCurrentPlayStats('[EndingSceneOutside] handleRestartGame clicked')
   
   // 检查端内APP用户是否已登录
   if (userStore.isInQQNewsApp && !userStore.hasLogin) {
@@ -353,10 +388,10 @@ const handleRestartGame = () => {
     return; // 阻止重新开始游戏
   }
   
-  // 检查剩余游戏次数
-  if (!userStore.canPlay) {
-    return
-  }
+  // 删除剩余游戏次数检查
+  // if (!userStore.canPlay) {
+  //   return
+  // }
   
   console.log('✅ 用户验证通过，重新开始游戏');
   
@@ -369,21 +404,21 @@ const handleRestartGame = () => {
 }
 
 const handleOpenApp = () => {
-  clickReport({ id: 'open_app' })
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
   
-  try {
-    // 优先跳转到端内游戏URL
-    window.open('https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1', '_blank')
-    console.log('[EndingSceneOutside] 优先跳转到端内游戏URL')
-  } catch (error) {
-    console.error('[EndingSceneOutside] 端内游戏URL跳转失败，使用降级方案:', error)
-    // 降级方案：使用原来的native scheme
-    openNativeScheme('qqnews://article_9527?nm=LNK2025052211684300', 'swim')
-  }
+  clickReport({
+    id: 'open_app',
+  })
+  openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swimming')
 }
 
-// 在handleShareToFriendClick函数中，修改定时器逻辑
+
+// 分享按钮点击处理
 const handleShareToFriendClick = () => {
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
   console.log('[EndingSceneOutside] handleShareToFriendClick called! 分享按钮被点击了');
   
   try {
@@ -393,63 +428,53 @@ const handleShareToFriendClick = () => {
     console.error('[EndingSceneOutside] clickReport error:', error);
   }
   
-  userStore.logCurrentPlayStats('[EndingSceneOutside] handleShareToFriendClick clicked')
-  
-  // 记录分享操作开始
+  // 记录分享操作开始，显示分享箭头遮罩
   shareActionInitiated.value = true
   shareTimestamp.value = Date.now()
   shareArrowOverlayIsVisible.value = true
   console.log('[EndingSceneOutside] shareArrowOverlayIsVisible set to true');
-
-  console.log('[EndingSceneOutside] Share action initiated (showing arrow). Starting timer for bonus plays.')
-  
-  // 减少延迟时间到2秒，作为备用机制
-  setTimeout(() => {
-    if (shareActionInitiated.value) {
-      console.log('[EndingSceneOutside] 2s timer elapsed. Granting bonus plays for outside-app share.')
-      const granted = userStore.grantBonusPlays(3)
-      if (granted) {
-        console.log('[EndingSceneOutside] 奖励次数授予成功，更新UI状态')
-        shareActionInitiated.value = false
-        userStore.logCurrentPlayStats('[EndingSceneOutside] After granting bonus plays')
-        
-        // 强制UI更新 - 确保按钮状态立即更新
-        nextTick(() => {
-          console.log('[EndingSceneOutside] 定时器奖励后UI更新完成，当前canPlay状态:', userStore.canPlay)
-          // 强制触发响应式更新
-          isTryAgainDisabled.value = !userStore.canPlay
-          showNeedShareTipsImage.value = !userStore.canPlay
-        })
-      }
-    }
-  }, 2000)
 }
 
 const handleOverlayClick = () => {
-  console.log('[EndingSceneOutside] shareArrowOverlay clicked, closing overlay and granting bonus plays')
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
+  console.log('[EndingSceneOutside] shareArrowOverlay clicked, closing overlay')
   shareArrowOverlayIsVisible.value = false
   
-  // 用户点击关闭分享遮罩时立即授予奖励次数
+  // 重置分享状态
   if (shareActionInitiated.value) {
-    const granted = userStore.grantBonusPlays(3)
-    if (granted) {
-      console.log('[EndingSceneOutside] 分享完成！奖励次数授予成功')
-      shareActionInitiated.value = false
-      userStore.logCurrentPlayStats('[EndingSceneOutside] After manual granting bonus plays')
-      
-      // 强制UI更新 - 确保按钮状态立即更新
-      nextTick(() => {
-        console.log('[EndingSceneOutside] UI更新完成，当前canPlay状态:', userStore.canPlay)
-        // 强制触发响应式更新
-        isTryAgainDisabled.value = !userStore.canPlay
-        showNeedShareTipsImage.value = !userStore.canPlay
-      })
-    } else {
-      console.log('[EndingSceneOutside] 今日已授予过奖励次数')
-      shareActionInitiated.value = false
-    }
+    console.log('[EndingSceneOutside] 分享完成，重置分享状态')
+    shareActionInitiated.value = false
   }
 }
+
+// 删除不再需要的函数
+// const handleOverlayClick = () => {
+//   console.log('[EndingSceneOutside] shareArrowOverlay clicked, closing overlay and granting bonus plays')
+//   // shareArrowOverlayIsVisible.value = false
+//   
+//   // 用户点击关闭分享遮罩时立即授予奖励次数
+//   // if (shareActionInitiated.value) {
+//   //   const granted = userStore.grantBonusPlays(3)
+//   //   if (granted) {
+//   //     console.log('[EndingSceneOutside] 分享完成！奖励次数授予成功')
+//   //     shareActionInitiated.value = false
+//   //     userStore.logCurrentPlayStats('[EndingSceneOutside] After manual granting bonus plays')
+             
+//   //     // 强制UI更新 - 确保按钮状态立即更新
+//   //     nextTick(() => {
+//   //       console.log('[EndingSceneOutside] UI更新完成，当前canPlay状态:', userStore.canPlay)
+//   //       // 强制触发响应式更新
+//   //       isTryAgainDisabled.value = !userStore.canPlay
+//   //       showNeedShareTipsImage.value = !userStore.canPlay
+//   //     })
+//   //   } else {
+//   //     console.log('[EndingSceneOutside] 今日已授予过奖励次数')
+//   //     shareActionInitiated.value = false
+//   //   }
+//   // }
+// }
 
 // 页面可见性变化监听 - 用户从分享返回时的处理
 const handleVisibilityChange = () => {
@@ -461,27 +486,9 @@ const handleVisibilityChange = () => {
     if (timeSinceShare > 1000) { // 如果分享操作超过1秒，认为用户完成了分享
       setTimeout(() => {
         if (shareActionInitiated.value) {
-          console.log('[EndingSceneOutside] 检测到从分享返回，授予奖励次数')
-          const granted = userStore.grantBonusPlays(3)
-          if (granted) {
-            console.log('[EndingSceneOutside] 分享返回奖励次数授予成功')
-            shareActionInitiated.value = false
-            shareArrowOverlayIsVisible.value = false
-            userStore.logCurrentPlayStats('[EndingSceneOutside] After visibility change bonus grant')
-            
-            // 强制UI更新 - 确保按钮状态立即更新
-            nextTick(() => {
-              console.log('[EndingSceneOutside] 可见性变化后UI更新完成，当前canPlay状态:', userStore.canPlay)
-              // 强制触发响应式更新
-              isTryAgainDisabled.value = !userStore.canPlay
-              showNeedShareTipsImage.value = !userStore.canPlay
-            })
-          } else {
-            // 即使没有授予奖励次数，也要重置分享状态
-            console.log('[EndingSceneOutside] 今日已授予过奖励次数，重置分享状态')
-            shareActionInitiated.value = false
-            shareArrowOverlayIsVisible.value = false
-          }
+          console.log('[EndingSceneOutside] 检测到从分享返回，重置分享状态')
+          shareActionInitiated.value = false
+          shareArrowOverlayIsVisible.value = false
         }
       }, 500) // 稍微延迟一下确保状态稳定
     }
@@ -882,14 +889,15 @@ const handleVisibilityChange = () => {
   transform: scale(1.05);
 }
 
-.try-again-btn.disabled {
+/* 删除按钮禁用状态的样式 */
+/* .try-again-btn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .try-again-btn.disabled:hover {
   transform: none;
-}
+} */
 
 /* 底部按钮遮罩 */
 .bottom-overlay {

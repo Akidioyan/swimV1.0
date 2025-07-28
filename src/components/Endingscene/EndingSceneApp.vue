@@ -126,6 +126,7 @@ import { useUserStore } from '../../stores/userStore';
 import { setShareInfo, showShareMenu } from '@tencent/qqnews-jsapi'
 import { reportSwimmingGameResult, getActivityPV } from '../../utils/request';
 import { clickReport } from '../../utils/report';
+import audioManager from '../../utils/audio-manager';
 
 const gameStore = useGameStore()
 const gameStateStore = useGameStateStore()
@@ -156,23 +157,76 @@ const getTitleByDistance = (distance) => {
   return '初出茅庐'
 }
 
+// 游戏操作科普文字（得分 < 6分）
+const getGameTutorialText = () => {
+  const tutorialTexts = [
+    '点击左屏左移，点击右屏右移！',
+    '收集星星获得高分！',
+    '长按冲刺按钮可以加速前进！',
+    '潜水镜道具让你无敌冲刺！',
+    '多练习操作，熟能生巧！',
+    '保持节奏，稳定操作是关键！',
+    '观察前方障碍，提前做出反应！',
+    '合理使用冲刺，节约能量很重要！',
+    '星星越多分数越高，勇敢去收集！',
+    '练好左右移动，是游戏的基础！'
+  ]
+  return tutorialTexts[Math.floor(Math.random() * tutorialTexts.length)]
+}
 
-
-// 随机鼓励词函数
-const getRandomEncouragement = () => {
+// 鼓励话语（6分 ≤ 得分 < 50分）
+const getEncouragementText = () => {
   const encouragements = [
-    '加油！',
-    '很棒！',
-    '继续努力！',
-    '再接再厉！',
-    '勇敢前行！',
-    '坚持不懈！',
-    '越来越强！',
-    '挑战极限！',
-    '永不放弃！',
-
+    '很不错的开始！',
+    '继续努力，你会更强！',
+    '加油，再接再厉！',
+    '勇敢前行，突破自我！',
+    '坚持不懈，成功在望！',
+    '挑战极限，永不放弃！',
+    '稳步提升，再创佳绩！',
+    '技术不错，继续精进！',
+    '有潜力成为高手！',
+    '距离目标越来越近了！'
   ]
   return encouragements[Math.floor(Math.random() * encouragements.length)]
+}
+
+// 夸奖话语（得分 ≥ 50分）
+const getPraiseText = () => {
+  const praiseTexts = [
+    '太厉害了，真正的高手！',
+    'amazing！技术超群！',
+    '完美表现，堪称大师！',
+    '惊人的技术，令人佩服！',
+    '卓越成就，当之无愧！',
+    '顶级水准，无人能及！',
+    '传奇级别的表现！',
+    '完美操作，技惊四座！',
+    '大神级别，膜拜！',
+    '超凡脱俗的技艺！',
+    '王者风范，所向披靡！',
+    '登峰造极，举世无双！'
+  ]
+  return praiseTexts[Math.floor(Math.random() * praiseTexts.length)]
+}
+
+// 根据得分获取对应的文字内容
+const getScoreBasedText = () => {
+  const score = gameData.value.stars
+  
+  if (score < 6) {
+    return getGameTutorialText()
+  } else if (score >= 6 && score < 50) {
+    return getEncouragementText()
+  } else {
+    return getPraiseText()
+  }
+}
+
+// 随机鼓励词函数（保留原函数以防其他地方使用）
+const getRandomEncouragement = () => {
+  // 现在直接调用基于得分的文字函数
+  return getScoreBasedText()
 }
 
 // 获取用户显示文本
@@ -441,6 +495,9 @@ onMounted(async () => {
 })
 
 const handleRestartGame = async () => {
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
   userStore.logCurrentPlayStats('[EndingSceneApp] handleRestartGame clicked');
   
   // 检查端内APP用户是否已登录
@@ -462,6 +519,9 @@ const handleRestartGame = async () => {
 }
 
 const handleShareInApp = () => {
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
   userStore.logCurrentPlayStats('[EndingSceneApp] handleShareInApp clicked');
   console.log('[EndingSceneApp] Initiating in-app share...');
   

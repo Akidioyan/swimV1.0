@@ -339,6 +339,9 @@ export const useGameObjectsStore = defineStore('gameObjects', {
     // 收集道具
     collectPowerUp(powerUp, gameStateStore, playerControlStore) {
       if (powerUp.type === 'snorkel') {
+        // 播放道具收集音效
+        audioManager.playSoundEffect('props')
+        
         // 重置snorkel加速效果，以最新获得的为准
         playerControlStore.isRushing = true
         playerControlStore.invulnerable = true
@@ -356,6 +359,7 @@ export const useGameObjectsStore = defineStore('gameObjects', {
         console.log('🏊‍♀️ 收集呼吸管道具，触发中等震动')
       } else if (powerUp.type === 'star') {
         // 调用gameStateStore的collectStar方法，同时增加stars和score
+        // collectStar方法中已经包含了星星音效播放
         gameStateStore.collectStar()
         
         // 检查是否达到新的最佳分数

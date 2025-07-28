@@ -1,34 +1,26 @@
 /**
  * 设备检测工具
  * 用于检测用户设备屏幕宽高比并控制游戏访问权限
- * 要求：竖屏模式且宽高比在3:4以下
+ * 要求：宽高比在10:16以下
  */
 
 /**
  * 检测设备是否符合游戏要求
- * @returns {boolean} 是否为支持的设备（竖屏且宽高比3:4以下）
+ * @returns {boolean} 是否为支持的设备（竖屏且宽高比10/16以下）
  */
 export function isValidDevice() {
   const width = window.innerWidth;
   const height = window.innerHeight;
   
-  // 必须是竖屏：宽度小于高度
-  const isPortrait = width < height;
-  
-  if (!isPortrait) {
-    console.log(`[设备检测] 屏幕方向不符合要求: ${width}×${height} (需要竖屏)`);
-    return false;
-  }
-  
-  // 计算宽高比（宽度/高度，因为已确保是竖屏）
+  // 计算宽高比（宽度/高度）
   const aspectRatio = width / height;
   
-  // 3:4 = 0.75，宽高比必须小于等于0.75
-  const maxAspectRatio = 3 / 4; // 0.75
+  // 10/16 = 0.625，宽高比必须小于等于0.625
+  const maxAspectRatio = 10 / 16; // 0.625
   
   const isValidRatio = aspectRatio <= maxAspectRatio;
   
-  console.log(`[设备检测] 屏幕尺寸: ${width}×${height}, 竖屏: ${isPortrait}, 宽高比: ${aspectRatio.toFixed(3)}, 最大允许: ${maxAspectRatio}, 符合要求: ${isValidRatio}`);
+  console.log(`[设备检测] 屏幕尺寸: ${width}×${height}, 宽高比: ${aspectRatio.toFixed(3)}, 最大允许: ${maxAspectRatio.toFixed(3)}, 符合要求: ${isValidRatio}`);
   
   return isValidRatio;
 }
@@ -86,7 +78,7 @@ export function handleDeviceDetectionAction() {
 
 /**
  * 检查设备兼容性并处理不兼容情况
- * @returns {boolean} 是否为支持的设备（竖屏且宽高比3:4以下）
+ * @returns {boolean} 是否为支持的设备（宽高比10:16以下）
  */
 export function checkDeviceCompatibility() {
   const isValid = isValidDevice();
@@ -97,7 +89,7 @@ export function checkDeviceCompatibility() {
     return false;
   }
   
-  console.log('[设备检测] 设备兼容性检查通过 - 竖屏且宽高比符合要求');
+  console.log('[设备检测] 设备兼容性检查通过 - 宽高比符合要求');
   hideDeviceDetectionMessage();
   return true;
 }

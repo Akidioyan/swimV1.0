@@ -38,6 +38,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStateStore } from '../stores/gamestore/gameState'
+import audioManager from '../utils/audio-manager'
 
 const gameStateStore = useGameStateStore()
 const videoElement = ref(null)
@@ -76,6 +77,10 @@ const handleVideoPlaying = () => {
 
 onMounted(() => {
   console.log('🎬 VideoView 组件挂载')
+  
+  // 开始播放背景音乐
+  console.log('🎵 VideoView: 开始播放背景音乐')
+  audioManager.playBackgroundMusic()
   
   // 初始显示占位图
   showPlaceholder.value = true

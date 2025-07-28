@@ -207,6 +207,9 @@ export default {
       // 设置延时启动，避免意外短按
       energyBarHoldTimer.value = setTimeout(() => {
         if (gameStateStore.gameState === 'playing' && gameStateStore.sprintEnergy > 5) {
+          // 播放加速音效
+          audioManager.playSoundEffect('accelerate')
+          
           gameStateStore.startActiveSprint()
         }
         energyBarHoldTimer.value = null
@@ -236,6 +239,9 @@ export default {
       
       // 立即响应：先预测加速状态，然后立即启动冲刺
       if (gameStateStore.gameState === 'playing' && gameStateStore.sprintEnergy > 5) {
+        // 播放加速音效
+        audioManager.playSoundEffect('accelerate')
+        
         // 预测加速后的状态
         const predictedSprintState = {
           isActiveSprinting: true,
@@ -360,30 +366,26 @@ export default {
   z-index: 10;
 }
 
-/* 冲刺状态指示器 */
+/* 加速倒计时指示器 - 居中显示 */
 .rush-indicator {
   position: absolute;
-  top: 15vh;
+  top: 20%;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  color: #fff;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 215, 0, 0.9); /* 金黄色背景，体现加速效果 */
+  color: #000;
   padding: 12px 20px;
-  border-radius: 30px;
+  border-radius: 25px;
   font-family: 'FZLTCH', Arial, sans-serif;
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: bold;
+  font-size: 18px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  animation: gentlePulse 2s ease-in-out infinite;
+  gap: 10px;
+  animation: pulse 0.8s infinite alternate;
   pointer-events: none;
-  z-index: 20;
-  white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 25; /* 高于无敌状态指示器 */
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
 }
 
 .rush-icon {
@@ -432,20 +434,31 @@ export default {
   height: 15vw; /* 保持正方形比例 */
   min-width: 80px; /* 低端机型最小尺寸 */
   min-height: 80px;
-  max-width: 15vw; /* 使用vw作为基础值 */
-  max-height: 15vw;
+  max-width: 120px; /* 添加最大尺寸限制 */
+  max-height: 120px;
   z-index: 1000;
   pointer-events: auto;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-/* 如果支持dvh/dvw,则使用动态视口单位覆盖上面的vh/vw值 */
-@supports (height: 100dvh) and (width: 100dvw) {
+/* 分别处理dvh和dvw支持，避免复合查询失败 */
+@supports (height: 100dvh) {
   .sprint-energy-bar {
     bottom: 15dvh;
+  }
+}
+
+@supports (width: 100dvw) {
+  .sprint-energy-bar {
     width: 15dvw;
     height: 15dvw;
+  }
+}
+
+/* 只有在同时支持时才应用最大尺寸限制 */
+@supports (height: 100dvh) and (width: 100dvw) {
+  .sprint-energy-bar {
     max-width: 15dvw;
     max-height: 15dvw;
   }
@@ -458,8 +471,6 @@ export default {
 .sprint-energy-bar:active {
   transform: translateX(-50%) scale(0.95);
 }
-
-
 
 /* 外层能量槽容器 */
 .energy-bg {
@@ -474,7 +485,7 @@ export default {
     inset 0 0px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* 环形进度条 */
+/* 环形进度条 - 提供多级兼容性支持 */
 .energy-fill {
   position: absolute;
   top: 50%;
@@ -483,22 +494,75 @@ export default {
   height: 100%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
+  
+  /* 低端设备fallback：使用简单的linear-gradient */
+  background: linear-gradient(
+    45deg,
+    #FF9E5D 0%,
+    #FF9E5D 25%,
+    transparent 25%,
+    transparent 100%
+  );
+  
+  /* 现代浏览器：使用conic-gradient */
   background: conic-gradient(
     from 0deg,
     #FF9E5D 0% var(--energy-percentage, 0%),
     transparent var(--energy-percentage, 0%) 100%
   );
+  
   transition: all 0.3s ease;
+  
+  /* 创建环形效果的多种方案 */
+  /* 方案1：使用mask（现代浏览器） */
   mask: radial-gradient(circle, transparent 45%, black 46%);
   -webkit-mask: radial-gradient(circle, transparent 45%, black 46%);
+  
+  /* 方案2：使用伪元素创建内圈（兼容性fallback） */
+}
+
+/* 为不支持mask的设备提供伪元素fallback */
+.energy-fill::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45%;
+  height: 45%;
+  background: white;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* 当支持mask时隐藏伪元素 */
+@supports (mask: radial-gradient(circle, transparent 45%, black 46%)) {
+  .energy-fill::before {
+    display: none;
+  }
+}
+
+@supports (-webkit-mask: radial-gradient(circle, transparent 45%, black 46%)) {
+  .energy-fill::before {
+    display: none;
+  }
 }
 
 .energy-fill.energy-active {
+  background: linear-gradient(
+    45deg,
+    #FF6B35 0%,
+    #FF6B35 25%,
+    transparent 25%,
+    transparent 100%
+  );
+  
   background: conic-gradient(
     from 0deg,
     #FF6B35 0% var(--energy-percentage, 0%),
     transparent var(--energy-percentage, 0%) 100%
   );
+  
   animation: energyActivePulse 0.8s ease-in-out infinite;
 }
 
@@ -561,62 +625,99 @@ export default {
   opacity: 0.9; 
 }
 
-/* 主动冲刺状态指示器 */
-.active-sprint-indicator {
-  position: absolute;
-  top: calc(20vh + 18vw); /* 使用vh/vw作为基础值 */
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  color: #fff;
-  padding: clamp(8px, 2vh, 12px) clamp(12px, 4vw, 20px); /* 使用vh/vw作为基础值 */
-  border-radius: 25px;
-  font-weight: 600;
-  font-family: 'FZLTCH', Arial, sans-serif;
-  font-size: clamp(12px, 3vw, 16px); /* 使用vw作为基础值 */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  animation: gentleGlow 1.5s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1000;
-  white-space: nowrap;
-}
-
-/* 如果支持dvh/dvw,则使用动态视口单位覆盖上面的vh/vw值 */
-@supports (height: 100dvh) and (width: 100dvw) {
-  .active-sprint-indicator {
-    top: calc(20dvh + 18dvw);
-    padding: clamp(8px, 2dvh, 12px) clamp(12px, 4dvw, 20px);
-    font-size: clamp(12px, 3dvw, 16px);
+/* 添加缺失的动画定义 */
+@keyframes energyActivePulse {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
-.sprint-icon {
-  font-size: clamp(14px, 3.5vw, 20px); /* 使用vw作为基础值 */
-  opacity: 0.95;
-}
-
-/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
-@supports (width: 100dvw) {
-  .sprint-icon {
-    font-size: clamp(14px, 3.5dvw, 20px);
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
-.sprint-text {
-  font-size: clamp(12px, 3vw, 16px); /* 使用vw作为基础值 */
-  font-weight: 500;
+@keyframes sparkle {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(90deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+  75% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(270deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(360deg);
+  }
 }
 
-/* 如果支持dvw,则使用dvw覆盖clamp中的vw值 */
-@supports (width: 100dvw) {
-  .sprint-text {
-    font-size: clamp(12px, 3dvw, 16px);
+@keyframes noEnergyFlash {
+  0% {
+    background: #FFEBCF;
+    border-color: #72332E;
+  }
+  50% {
+    background: #FFD6D6;
+    border-color: #CC4444;
+  }
+  100% {
+    background: #FFEBCF;
+    border-color: #72332E;
+  }
+}
+
+/* 低端设备兼容性增强 */
+@media screen and (max-device-width: 768px) {
+  .sprint-energy-bar {
+    /* 确保在低端设备上有合理的最小尺寸 */
+    min-width: 70px;
+    min-height: 70px;
+  }
+  
+  .energy-percentage::before {
+    /* 在小屏设备上适当减小图标尺寸 */
+    font-size: clamp(18px, 4vw, 28px);
+  }
+}
+
+/* 为非常老的浏览器提供基础样式 */
+@supports not (transform: translate(-50%, -50%)) {
+  .energy-percentage {
+    /* 使用margin作为fallback */
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    margin: 0;
   }
 }
 

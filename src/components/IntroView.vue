@@ -1,43 +1,5 @@
 <template>
   <div class="intro-scene">
-    <!-- 设备检测弹窗 -->
-    <div v-if="showDeviceModal" class="device-detection-modal" @click="handleDeviceModalBackdrop">
-      <div class="modal-container" @click.stop>
-        <!-- 主要弹窗内容 -->
-        <div class="modal-content">
-          <!-- 顶部提示头部 -->
-          <div class="modal-header">
-            <div class="header-banner">
-              <span class="header-text">温馨提示</span>
-            </div>
-          </div>
-
-          <!-- 内容区域 -->
-          <div class="modal-body">
-            <div class="warning-text">
-              检测到当前设备不符合游戏要求，<br>
-              请切换到竖屏模式或更换设备。
-            </div>
-            <div class="suggestion-text">
-              腾讯体育游泳世锦赛专题有更多精彩内容：
-            </div>
-          </div>
-
-          <!-- 底部按钮 -->
-          <div class="modal-footer">
-            <button class="action-button" @click="handleDeviceModalAction">
-              <span class="button-text">进入体育频道 世锦赛专题</span>
-              <img 
-                src="/assets/device-detection-modal/Rectangle 14-x1.svg" 
-                alt="箭头" 
-                class="button-icon"
-              />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- 背景容器 -->
     <div class="background-container">
       <img src="/intro.png" alt="背景图片" class="background-image" />
@@ -104,7 +66,7 @@
       </div>
 
       <!-- 打开APP提示：APP外时显示 -->
-      <div v-if="!userStore.isInQQNewsApp" class="open-app-prompt" @click="handleOpenApp">
+      <div v-if="!userStore.isInQQNewsApp" class="open-app-prompt" @click="handleOpenAppInIntro">
         <img src="/openAppAtIntro.png" alt="点击打开APP" class="prompt-image">
       </div>
     </div>
@@ -154,11 +116,7 @@ import { useUserStore } from '../stores/userStore'
 import { setShareInfo, showShareMenu, login } from '@tencent/qqnews-jsapi'
 import { openNativeScheme } from '../utils/appDownload'
 import { clickReport } from '../utils/report'
-import { 
-  checkDeviceCompatibility, 
-  registerDeviceDetectionCallbacks,
-  initDeviceDetectionListener 
-} from '../utils/deviceDetection'
+import audioManager from '../utils/audio-manager'
 import Leaderboard from './Leaderboard.vue'
 
 const gameStore = useGameStore()
@@ -166,9 +124,6 @@ const gameStateStore = useGameStateStore()
 const userStore = useUserStore()
 const isLeaderboardVisible = ref(false)
 const initialView = ref('leaderboard') // 控制Leaderboard初始显示的视图
-
-// 设备检测弹窗状态
-const showDeviceModal = ref(false)
 
 // 添加视频预准备相关状态
 const videoPrepared = ref(false)
@@ -396,25 +351,6 @@ onMounted(async () => {
     });
   }, { immediate: true });
   
-  // 注册设备检测回调
-  registerDeviceDetectionCallbacks({
-    onShowModal: () => {
-      showDeviceModal.value = true
-    },
-    onHideModal: () => {
-      showDeviceModal.value = false
-    },
-    onAction: () => {
-      handleDeviceModalAction()
-    }
-  })
-  
-  // 初始化设备检测监听
-  initDeviceDetectionListener()
-  
-  // 检查设备兼容性
-  checkDeviceCompatibility()
-  
   // 获取活动参与人数
   try {
     await fetchActivityPV()
@@ -451,15 +387,34 @@ onUnmounted(() => {
 const handleStartGame = async () => {
   // 检查端内APP用户是否已登录
   if (userStore.isInQQNewsApp && !userStore.hasLogin) {
-    console.log('🚫 端内APP用户未登录，无法开始游戏，请先登录');
+    console.log('🔐 端内APP用户未登录，自动弹出登录组件');
     
-    // 上报点击事件，但不自动触发登录
+    // 防止重复调用
+    if (isLoggingIn.value) {
+      console.log('[IntroView] 登录请求正在处理中，请稍候...');
+      return;
+    }
+    
+    isLoggingIn.value = true;
+    
+    try {
+      console.log('[IntroView] 通过挑战按钮触发登录...');
     clickReport({
       id: 'game_start_login_required',
     });
     
-    // 不开始游戏，让用户点击登录提示来手动登录
-    return;
+      // 调用腾讯新闻JSAPI的登录方法
+      await login();
+      console.log('[IntroView] Login process initiated by JSAPI, reloading page.');
+      location.reload(); // 登录完成后刷新页面
+    } catch (error) {
+      console.error('[IntroView] Failed to invoke login or login was cancelled:', error);
+      // 可选择性地向用户显示登录失败的消息
+    } finally {
+      isLoggingIn.value = false;
+    }
+    
+    return; // 登录流程完成后退出，不继续开始游戏
   }
   
   console.log('✅ 用户验证通过，开始游戏');
@@ -562,39 +517,12 @@ const toggleLoginStatus = () => {
   console.log('[IntroView] 🐛 切换登录状态到:', userStore.hasLogin);
 };
 
-const handleOpenApp = () => {
+const handleOpenAppInIntro = () => {
   clickReport({
-    id: 'open_app', // 使用更具体的ID来标识此操作
+    id: 'open_app', // Using a more specific ID for this action
   });
-  
-  try {
-    // 优先跳转到端内游戏URL
-    window.open('https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1', '_blank')
-    console.log('[IntroView] 优先跳转到端内游戏URL')
-  } catch (error) {
-    console.error('[IntroView] 端内游戏URL跳转失败，使用降级方案:', error)
-    // 降级方案：使用原来的native scheme
-    openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swim')
-  }
-}
-
-// 设备检测弹窗事件处理
-const handleDeviceModalBackdrop = () => {
-  // 由于设备不兼容，通常不允许关闭
-  console.log('用户尝试关闭设备检测弹窗')
-}
-
-const handleDeviceModalAction = () => {
-  // 处理用户点击"进入体育频道"按钮
-  try {
-    // 跳转到腾讯体育世锦赛专题页面
-    window.open('https://sports.qq.com/swim2024/', '_blank')
-  } catch (error) {
-    console.error('跳转失败:', error)
-    // 降级方案
-    window.open('https://sports.qq.com/', '_blank')
-  }
-}
+  openNativeScheme('qqnews://article_9527?nm=LNK2025072504936600', 'swimming');
+};
 </script>
 
 <style scoped>
@@ -629,151 +557,7 @@ const handleDeviceModalAction = () => {
 @supports (height: 100dvh) {
   .intro-scene {
     height: 100dvh;
-  }
 }
-
-/* ============================================
-   设备检测弹窗 - 居中显示
-   ============================================ */
-.device-detection-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.modal-container {
-  width: min(360px, 85vw);
-  height: auto;
-  min-height: 240px;
-  position: relative;
-}
-
-.modal-content {
-  width: 100%;
-  height: 100%;
-  background: rgb(32, 32, 32);
-  border: 2px solid rgb(13, 113, 237);
-  border-radius: 11px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-@keyframes modalFadeIn {
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.modal-header {
-  position: relative;
-  height: 25.83px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.header-banner {
-  width: 229.5px;
-  height: 25.83px;
-  background: rgb(11, 106, 234);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  clip-path: polygon(0% 0%, 100% 0%, calc(90% + 8px) calc(100% - 8px), 90% 100%, 10% 100%, calc(10% - 8px) calc(100% - 8px));
-}
-
-.header-text {
-  color: rgb(255, 255, 255);
-  font-family: "PingFang SC", "PingFang-SC-Regular", sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 12px;
-  text-align: center;
-}
-
-.modal-body {
-  flex: 1;
-  padding: 24px 21px 16px 21px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-}
-
-.warning-text {
-  color: rgb(231, 231, 231);
-  font-family: "PingFang SC", "PingFangSC-Semibold", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 28px;
-  text-align: center;
-}
-
-.suggestion-text {
-  color: rgb(218, 218, 218);
-  font-family: "PingFang SC", "PingFang-SC-Regular", sans-serif;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 19px;
-  text-align: center;
-}
-
-.modal-footer {
-  padding: 0 21px 20px 21px;
-}
-
-.action-button {
-  width: 100%;
-  height: 49.5px;
-  background: transparent;
-  border: 1.5px solid rgb(11, 106, 234);
-  border-radius: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.action-button:hover {
-  background: rgba(11, 106, 234, 0.1);
-  transform: scale(1.02);
-}
-
-.action-button:active {
-  transform: scale(0.98);
-}
-
-.button-text {
-  color: rgb(11, 106, 234);
-  font-family: "PingFang SC", "PingFangSC-Semibold", sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 25px;
-  text-align: center;
-}
-
-.button-icon {
-  width: 12.36px;
-  height: 12px;
-  transition: transform 0.2s ease;
-}
-
-.action-button:hover .button-icon {
-  transform: translateX(2px);
 }
 
 /* ============================================
@@ -1087,20 +871,62 @@ const handleDeviceModalAction = () => {
    兼容性回退 - 确保低端机型正常显示
    ============================================ */
 @supports not (height: 100dvh) {
-  .intro-scene,
-  .device-detection-modal {
+  .intro-scene {
     height: 100vh !important;
   }
 }
 
 @supports not (width: 100dvw) {
-  .intro-scene,
-  .device-detection-modal {
+  .intro-scene {
     width: 100vw !important;
   }
   
   .challenge-button-image {
     width: 50vw !important;
   }
+}
+
+.rush-indicator {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 215, 0, 0.9); /* 金黄色背景，体现加速效果 */
+  color: #000;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-family: 'FZLTCH', Arial, sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: pulse 0.8s infinite alternate;
+  pointer-events: none;
+  z-index: 25; /* 高于无敌状态指示器 */
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes sparkle {
+  0% { opacity: 1; transform: scale(1) rotate(0deg); }
+  25% { opacity: 0.8; transform: scale(1.1) rotate(90deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  75% { opacity: 0.8; transform: scale(1.1) rotate(270deg); }
+  100% { opacity: 1; transform: scale(1) rotate(360deg); }
 }
 </style>

@@ -84,33 +84,59 @@ export default {
     const isSoundOn = ref(audioManager.isSoundOn)
     
     const showSettings = () => {
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       isSettingsVisible.value = true
       if (gameStateStore.gameState === 'playing') gameStateStore.togglePause()
     }
-    const hideSettings = () => { isSettingsVisible.value = false }
+    const hideSettings = () => { 
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
+      isSettingsVisible.value = false 
+    }
     const continueGame = () => {
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       hideSettings()
       if (gameStateStore.gameState === 'paused') gameStateStore.togglePause()
     }
     const showLeaderboard = () => { 
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       hideSettings(); 
       leaderboardInitialView.value = 'leaderboard'
       isLeaderboardVisible.value = true 
     }
     const hideLeaderboard = () => { 
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       isLeaderboardVisible.value = false
       isSettingsVisible.value = true  // 添加这行，显示设置页面
     }
     const showGameRules = () => { 
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       hideSettings(); 
       leaderboardInitialView.value = 'rules'
       isLeaderboardVisible.value = true 
     }
     const goHome = () => { 
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       hideSettings(); 
       gameStateStore.backToMenu()  // 使用已有的方法
     }
     const restartGame = async () => {
+      // 播放按钮音效
+      audioManager.playSoundEffect('button')
+      
       hideSettings();
       
       // 检查端内APP用户是否已登录
@@ -167,6 +193,9 @@ export default {
       }
     };
     const toggleSound = () => {
+      // 播放按钮音效（在切换音效状态之前播放）
+      audioManager.playSoundEffect('button')
+      
       console.log('切换前音效状态:', audioManager.isSoundOn)
       
       // 先预测切换后的状态并立即更新UI

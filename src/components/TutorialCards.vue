@@ -135,6 +135,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { Vue3Lottie } from 'vue3-lottie'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { gsap } from 'gsap'
+import audioManager from '../utils/audio-manager'
 
 const gameStateStore = useGameStateStore()
 
@@ -402,10 +403,14 @@ const getSpriteClass = (index) => {
 const nextCard = () => {
   if (currentCardIndex.value < cards.value.length - 1) {
     currentCardIndex.value++
+    // 播放翻页音效
+    audioManager.playSoundEffect('next')
   } else {
     // 在最后一张卡片（第三张），隐藏教学卡片并显示暂停提示
     showTutorial.value = false
     showPauseHint.value = true
+    // 播放按钮音效
+    audioManager.playSoundEffect('button')
   }
 }
 
@@ -413,6 +418,8 @@ const nextCard = () => {
 const prevCard = () => {
   if (currentCardIndex.value > 0) {
     currentCardIndex.value--
+    // 播放翻页音效
+    audioManager.playSoundEffect('next')
   }
 }
 
@@ -423,6 +430,9 @@ const onReadyGoComplete = () => {
 
 // 修改开始游戏函数
 const startGame = () => {
+  // 播放按钮音效
+  audioManager.playSoundEffect('button')
+  
   showTutorial.value = false
   showReadyGo.value = false
   showPauseHint.value = false

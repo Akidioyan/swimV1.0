@@ -72,6 +72,9 @@ class AudioManager {
       this.swimmingSound.loop = false // 修改为不循环播放
       this.swimmingSound.volume = this.volumeConfig.swimmingSound * this.masterVolume
       
+      // 初始化游戏音效
+      this.initializeGameSoundEffects()
+      
       // 设置音频事件监听器
       this.setupAudioEventListeners()
       
@@ -83,6 +86,24 @@ class AudioManager {
     } catch (error) {
       console.error('音频初始化失败:', error)
     }
+  }
+  
+  /**
+   * 初始化游戏音效
+   */
+  initializeGameSoundEffects() {
+    // 游戏事件音效
+    this.addSoundEffect('obstacle', '/Sound/obs.MP3', 0.8)     // 碰撞障碍物音效
+    this.addSoundEffect('star', '/Sound/star.MP3', 0.7)        // 收集星星音效
+    this.addSoundEffect('gameover', '/Sound/gameover.mp3', 0.9) // 游戏结束音效
+    this.addSoundEffect('props', '/Sound/props.MP3', 0.6)      // 收集道具音效（snorkel等）
+    this.addSoundEffect('accelerate', '/Sound/Accelerate.MP3', 0.7) // 冲刺加速音效
+    
+    // UI按钮音效
+    this.addSoundEffect('button', '/Sound/btn.MP3', 0.6)       // 通用按钮点击音效
+    this.addSoundEffect('next', '/Sound/next.MP3', 0.7)        // 翻页音效
+    
+    console.log('游戏音效初始化完成')
   }
   
   /**
