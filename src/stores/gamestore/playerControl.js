@@ -125,29 +125,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
             break
           case 'ArrowUp':
             this.keys.up = true
-            // 开发者测试模式：按下上键开启无敌状态和3倍速度
-            this.invulnerable = true
-            this.invulnerableTime = 999999
-            // 通过gameState设置开发者冲刺状态
-            gameStateStore.devSprintActive = true
-            break
-          case 'i':
-          case 'I':
-            // 按I键切换无敌状态
-            if (this.invulnerable && this.invulnerableTime > 0) {
-              // 当前是无敌状态，取消无敌
-              this.invulnerable = false
-              this.invulnerableTime = 0
-              console.log('无敌模式已关闭 - 按I键触发')
-            } else {
-              // 当前不是无敌状态，开启无敌
-              this.invulnerable = true
-              this.invulnerableTime = 999999 // 设置一个很大的值，实现持续无敌
-              console.log('无敌模式已开启 - 按I键触发')
-            }
-            // 同步到gameState
-            gameStateStore.invulnerable = this.invulnerable
-            gameStateStore.invulnerableTime = this.invulnerableTime
             break
           case 'ArrowDown':
             this.keys.down = true
@@ -174,11 +151,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
           break
         case 'ArrowUp':
           this.keys.up = false
-          // 开发者测试模式：松开上键结束所有状态
-          this.invulnerable = false
-          this.invulnerableTime = 0
-          // 关闭开发者冲刺状态
-          gameStateStore.devSprintActive = false
           break
         case 'ArrowDown':
           this.keys.down = false
@@ -245,17 +217,16 @@ export const usePlayerControlStore = defineStore('playerControl', {
       }
     },
     
-    // 开始冲刺（开发者测试模式：不耗费能量，不限时长，无敌）
+    // 开始冲刺
     startSprint() {
       const gameStateStore = useGameStateStore()
       
-      // 开发者测试模式：移除所有限制条件
       this.isRushing = true
-      this.rushTime = 999999 // 设置一个很大的值，实现不限时长
+      this.rushTime = 180 // 3秒冲刺时间
       
       // 设置无敌状态
       this.invulnerable = true
-      this.invulnerableTime = 999999 // 设置一个很大的值，实现持续无敌
+      this.invulnerableTime = 180 // 3秒无敌时间
       
       // 同步到gameState（但不消耗能量）
       gameStateStore.rushActive = this.isRushing

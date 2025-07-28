@@ -19,7 +19,6 @@ import { ResourceManager } from '../../utils/ResourceManager'
 import { SpriteObstacleAssets } from '../../utils/obstacles/SpriteObstacleAssets'
 import { SwimmerAnimation } from '../../utils/spriteAnimation.js'
 import { ObstacleAssets, PowerUpAssets, StarEffects } from '../../utils/obstacles/AssetManager.js'
-import { collisionDebugger } from '../../utils/collisionDebugger.js'
 
 export default {
   name: 'GameCanvas',
@@ -355,8 +354,6 @@ export default {
         drawShield(ctx)
       }
       
-      // 绘制碰撞边界调试信息（只在按P键开启时显示）
-      collisionDebugger.drawAllCollisionBoxes(ctx, gameObjectsStore, gameLayoutStore)
     }
     
     const drawBackground = (ctx, canvas) => {

@@ -91,12 +91,8 @@ export const useGameStateStore = defineStore('gameState', {
       const baseSpeedPerSecond = state.baseSpeed * 60 // 将baseSpeed转换为像素/秒
       const baseSpeedMultiplier = targetSpeedPerSecond / baseSpeedPerSecond
       
-      // 开发者测试模式：检查是否有开发者冲刺状态
-      if (state.devSprintActive) {
-        return baseSpeedMultiplier * 5.0 // 开发者测试5倍速度
-      }
       // 道具冲刺状态处理（无敌冲刺）
-      else if (state.rushActive) {
+      if (state.rushActive) {
         const remainingTime = state.rushTime
         if (remainingTime > 60) { // 前2秒保持2.4倍速度
           return baseSpeedMultiplier * 2.4

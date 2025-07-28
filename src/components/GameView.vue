@@ -57,13 +57,6 @@
       v-if="gameStateStore.gameState === 'waiting' || gameStateStore.isFirstTimeGame || gameStateStore.gameState === 'paused'"
       ref="tutorialCards"
     />
-    
-    <!-- 开发者调试面板 -->
-    <DeveloperDebugPanel 
-      :visible="showDebugPanel"
-      @close="handleCloseDebugPanel"
-      @jumpToLevel="handleJumpToLevel"
-    />
   </div>
 </template>
 
@@ -72,7 +65,6 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import GameCanvas from './GameView/GameCanvas.vue'
 import UITop from './GameView/UI-top.vue'
 import TutorialCards from './TutorialCards.vue'
-import DeveloperDebugPanel from './DeveloperDebugPanel.vue'
 import { useGameStore } from '../stores/gameStore'
 import { useGameStateStore } from '../stores/gamestore/gameState'
 import { useGameLayoutStore } from '../stores/gamestore/gameLayout'
@@ -85,8 +77,7 @@ export default {
   components: {
     GameCanvas,
     UITop,
-    TutorialCards,
-    DeveloperDebugPanel
+    TutorialCards
   },
   setup() {
     const gameStore = useGameStore()
@@ -97,9 +88,6 @@ export default {
     
     // 能量条防误触定时器
     const energyBarHoldTimer = ref(null)
-    
-    // 开发者调试面板状态
-    const showDebugPanel = ref(false)
     
     onMounted(() => {
       // 在组件挂载时初始化音频 - 使用音频管理器
@@ -124,18 +112,6 @@ export default {
     
     // 全局键盘事件处理
     const handleGlobalKeyDown = (event) => {
-      // 开发者调试面板快捷键
-      if (event.key === 'l' || event.key === 'L') {
-        event.preventDefault()
-        toggleDebugPanel()
-        return
-      }
-      
-      // 如果调试面板已打开，阻止其他按键操作
-      if (showDebugPanel.value) {
-        return
-      }
-      
       // 防止页面滚动等默认行为
       if (['ArrowLeft', 'ArrowRight', ' ', 'Escape'].includes(event.key)) {
         event.preventDefault()
@@ -151,43 +127,7 @@ export default {
     }
     
     const handleGlobalKeyUp = (event) => {
-      // 如果调试面板已打开，阻止其他按键操作
-      if (showDebugPanel.value) {
-        return
-      }
-      
       playerControlStore.handleKeyUp(event.key)
-    }
-    
-    // 开发者调试面板相关函数
-    const toggleDebugPanel = () => {
-      showDebugPanel.value = !showDebugPanel.value
-      console.log('🛠️ 开发者调试面板:', showDebugPanel.value ? '打开' : '关闭')
-    }
-    
-    const handleCloseDebugPanel = () => {
-      showDebugPanel.value = false
-    }
-    
-    const handleJumpToLevel = (jumpData) => {
-      try {
-        // 重置相关状态
-        gameObjectsStore.resetGameObjectState()
-        
-        // 强制刷新难度系统
-        gameObjectsStore.forceNextSpawn = true
-        gameObjectsStore.currentDifficultyLevel = jumpData.level
-        
-        console.log(`🚀 开发者跳跃成功: 等级${jumpData.level}, 距离${Math.round(jumpData.distance)}m (${Math.round(jumpData.distanceVw)}vw)`)
-        
-        // 设置距离和其他状态
-        gameStateStore.distance = jumpData.distance
-        
-        // 关闭调试面板
-        showDebugPanel.value = false
-      } catch (error) {
-        console.error('❌ 开发者跳跃失败:', error)
-      }
     }
     
     // 处理点击暂停图标恢复游戏
@@ -310,10 +250,6 @@ export default {
       gameStateStore,
       gameLayoutStore,
       playerControlStore,
-      showDebugPanel,
-      toggleDebugPanel,
-      handleCloseDebugPanel,
-      handleJumpToLevel,
       handleResumeGame,
       handleEnergyBarMouseDown,
       handleEnergyBarMouseUp,

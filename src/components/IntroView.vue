@@ -71,32 +71,6 @@
       </div>
     </div>
 
-    <!-- 调试控制 (F1键控制) -->
-    <div v-if="showDebugLayer" class="debug-layer">
-      <!-- 调试登录提示 -->
-      <div v-if="showDebugLogin" class="debug-login-prompt" @click="handleDebugLogin">
-        <img src="/login.png" alt="调试登录" class="prompt-image">
-        <div class="debug-label">调试登录</div>
-      </div>
-
-      <!-- 调试控制面板 -->
-      <div class="debug-controls">
-        <h4 class="debug-title">调试控制 (U键切换)</h4>
-        <button @click="toggleAppEnvironment" class="debug-btn">
-          {{ userStore.isInQQNewsApp ? '模拟非APP环境' : '模拟APP环境' }}
-        </button>
-        <button @click="toggleLoginStatus" class="debug-btn">
-          {{ userStore.hasLogin ? '模拟未登录' : '模拟已登录' }}
-        </button>
-        <div class="debug-status">
-          <div>初始化: {{ userStore.isInitialized ? '✅' : '❌' }}</div>
-          <div>APP环境: {{ userStore.isInQQNewsApp ? '✅' : '❌' }}</div>
-          <div>登录状态: {{ userStore.hasLogin ? '✅' : '❌' }}</div>
-          <div>显示登录提示: {{ shouldShowLoginPrompt ? '✅' : '❌' }}</div>
-        </div>
-      </div>
-    </div>
-
     <!-- 排行榜浮层 -->
     <Transition name="slide-up">
       <Leaderboard 
@@ -163,22 +137,6 @@ const shouldShowLoginPrompt = computed(() => {
 
 // 添加登录状态防止重复调用
 const isLoggingIn = ref(false);
-
-// 调试功能：在开发环境显示登录提示
-const showDebugLogin = ref(import.meta.env.DEV && true); // 开发环境默认显示
-const isDev = import.meta.env.DEV; // 环境检测变量
-
-// 调试控制层显示状态 (U键控制)
-const showDebugLayer = ref(false);
-
-// U键切换调试层
-const handleKeyDown = (event) => {
-  if (event.key === 'u' || event.key === 'U') {
-    event.preventDefault(); // 阻止浏览器默认行为
-    showDebugLayer.value = !showDebugLayer.value;
-    console.log('[IntroView] U键切换调试层:', showDebugLayer.value);
-  }
-};
 
 // 格式化参与人数显示 - 显示精确数字
 const formattedParticipants = computed(() => {
@@ -363,10 +321,6 @@ onMounted(async () => {
   setTimeout(() => {
     prepareVideo()
   }, 1000)
-  
-  // 添加键盘事件监听器
-  document.addEventListener('keydown', handleKeyDown);
-  console.log('[IntroView] ✅ 键盘事件监听器已添加 (U切换调试层)');
 })
 
 // 清理函数
@@ -378,10 +332,6 @@ onUnmounted(() => {
     preparedVideoElement.value.src = ''
     preparedVideoElement.value = null
   }
-  
-  // 移除键盘事件监听器
-  document.removeEventListener('keydown', handleKeyDown);
-  console.log('[IntroView] 🧹 键盘事件监听器已移除');
 })
 
 const handleStartGame = async () => {
@@ -484,38 +434,6 @@ const handleLogin = async () => {
     }
   }
 }
-
-// 调试登录处理函数
-const handleDebugLogin = () => {
-  console.log('[IntroView] 🐛 调试登录点击');
-  console.log('[IntroView] 🐛 当前状态:', {
-    isInitialized: userStore.isInitialized,
-    isInQQNewsApp: userStore.isInQQNewsApp,
-    hasLogin: userStore.hasLogin,
-    isLoggingIn: isLoggingIn.value,
-    shouldShowLoginPrompt: shouldShowLoginPrompt.value
-  });
-  
-  // 临时切换登录状态用于测试
-  if (isDev) {
-    userStore.hasLogin = !userStore.hasLogin;
-    console.log('[IntroView] 🐛 切换登录状态:', userStore.hasLogin);
-  }
-}
-
-// 调试APP环境切换函数
-const toggleAppEnvironment = () => {
-  console.log('[IntroView] 🐛 调试APP环境切换');
-  userStore.isInQQNewsApp = !userStore.isInQQNewsApp;
-  console.log('[IntroView] 🐛 切换APP环境到:', userStore.isInQQNewsApp);
-};
-
-// 调试登录状态切换函数
-const toggleLoginStatus = () => {
-  console.log('[IntroView] 🐛 调试登录状态切换');
-  userStore.hasLogin = !userStore.hasLogin;
-  console.log('[IntroView] 🐛 切换登录状态到:', userStore.hasLogin);
-};
 
 const handleOpenAppInIntro = () => {
   clickReport({
@@ -766,91 +684,6 @@ const handleOpenAppInIntro = () => {
 
 .prompt-image:active {
   transform: scale(0.98);
-}
-
-/* ============================================
-   调试控制 (开发环境)
-   ============================================ */
-/* ============================================
-   调试控制 (U键控制) - 固定在左上角
-   ============================================ */
-.debug-layer {
-  position: fixed;
-  top: 30px;
-  left: 30px;
-  z-index: 10002;
-  max-width: 280px;
-}
-
-.debug-login-prompt {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #007bff;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.debug-label {
-  font-size: 12px;
-  color: #007bff;
-  font-weight: 600;
-}
-
-.debug-controls {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
-  padding: 15px;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.debug-title {
-  font-size: 14px;
-  color: #ffffff;
-  margin: 0 0 10px 0;
-  font-weight: 600;
-}
-
-.debug-btn {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  margin: 2px;
-  transition: all 0.2s ease;
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-
-.debug-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
-}
-
-.debug-btn:active {
-  transform: translateY(0);
-}
-
-.debug-status {
-  font-size: 11px;
-  color: #cccccc;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #555;
-  line-height: 1.4;
-}
-
-.debug-status div {
-  margin: 2px 0;
 }
 
 /* ============================================
