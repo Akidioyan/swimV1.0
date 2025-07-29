@@ -73,52 +73,45 @@
         <div class="rules-content">
           <div class="rules-scroll-content">
             
-            <!-- 游戏目标 -->
+            <!-- 活动介绍 -->
             <div class="rule-section">
-              <div class="rule-title"><游戏目标></div>
-              <p class="rule-description">控制游泳选手在不同泳道间灵活切换，尽可能游得更远，获得更高分数。</p>
+              <div class="rule-description">2025新加坡游泳世锦赛热血进行中，看比赛的你是不是有点心痒痒？腾讯新闻重磅推出《指尖游泳》挑战赛，邀你加入泳者行列，在手机上随时随地开始冲榜！</div>
             </div>
 
-            <!-- 基本操作 -->
+            <!-- 规则"怪谈" -->
             <div class="rule-section">
-              <div class="rule-title"><基本操作></div>
-              <div class="operation-list">
-                <div class="operation-item">
-                  <span class="operation-text">点击屏幕左右区域切换泳道</span>
-                </div>
-                <div class="operation-item">
-                  <span class="operation-text">长按能量按钮加速冲刺</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 游戏规则 -->
-            <div class="rule-section">
-              <div class="rule-title"><游戏规则></div>
+              <div class="rule-title"><strong>——————〈规则"怪谈"〉——————</strong></div>
               <ul class="rule-list">
-                <li>每位玩家有3次生命机会</li>
-                <li>碰到障碍物将损失一次生命</li>
-                <li>失去所有生命后游戏结束</li>
+                <li><strong>禁止滑动</strong>：只能点击屏幕左右区域切换泳道！长按能量按钮可加速冲刺</li>
+                <li><strong>远离障碍物</strong>：碰到石头、螃蟹、食人花等将消耗1次生命机会！珍惜仅有3次机会吧</li>
+                <li><strong>善用道具</strong>：抓住潜水镜可以秒变"潜水高手"，躲避一切障碍物！时间不长，但非常无敌</li>
+                <li><strong>注意观星</strong>：努力捡到更多星星！排行榜根据星星总数进行排名，总数相同时才考虑距离</li>
               </ul>
             </div>
 
-            <!-- 特殊道具 -->
+            <!-- 难度一览 -->
             <div class="rule-section">
-              <div class="rule-title"><特殊道具></div>
-              <div class="items-list">
-                <div class="item">
-                  <span class="item-text">呼吸管：进入无敌状态</span>
-                </div>
-                <div class="item">
-                  <span class="item-text">星星：唯一加分途径</span>
-                </div>
-              </div>
+              <div class="rule-title"><strong>——————〈难度一览〉——————</strong></div>
+              <ul class="rule-list">
+                <li><strong>前期（0-60米）</strong>：道具绝对充足，主要培养泳者的"游泳"习惯</li>
+                <li><strong>中期（60-240米）</strong>：挑战逐步增加，考验泳技的时刻到了</li>
+                <li><strong>后期（240米+）</strong>：冲刺不可能，技术？运气？或许都要必备才有可能突破……</li>
+              </ul>
             </div>
 
-            <!-- 排行榜规则 -->
+            <!-- 其他说明 -->
             <div class="rule-section">
-              <div class="rule-title"><排行榜规则></div>
-              <p class="rule-description">根据星星总数排名，星星相同时按游泳距离排序。</p>
+              <div class="rule-title"><strong>——————〈其他说明〉——————</strong></div>
+              <ul class="rule-list">
+                <li>我们会收集玩家头像和昵称，用于游戏内排名榜单展示，增加趣味性和竞技氛围，且会严格保护用户信息安全。</li>
+                <li>严禁使用外挂、作弊软件等非法手段，禁止恶意辱骂、攻击等行为，违者将受严厉处罚，确保游戏环境公平公正。</li>
+                <li>参与活动即视为认可规则，如遇不可抗力因素，我们将及时通知并调整规则。</li>
+              </ul>
+            </div>
+
+            <!-- 结语 -->
+            <div class="rule-section">
+              <div class="rule-description">现在打开游戏，看看你能在 500 米大关前坚持多久吧！是止步新手区，还是成为朋友圈里的 "游泳大神"？灵动指尖，答案马上揭晓！</div>
             </div>
             
           </div>
@@ -684,7 +677,7 @@ export default {
 }
 
 /* 规则标题 */
-.rule-section .rule-title {
+.rule-section  {
   color: rgb(114, 51, 46);
   font-size: 3.5vw; /* 统一字体大小为3.5vw */
   font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -692,7 +685,14 @@ export default {
   margin-bottom: 0.64vh;
   text-align: left;
 }
-
+.rule-title {
+  color: rgb(114, 51, 46);
+  font-size: 3.5vw; /* 统一字体大小为3.5vw */
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600; /* 统一字体粗细为600 */
+  margin-bottom: 0.64vh;
+  text-align: center;
+}
 /* 如果支持dvh,则使用dvh覆盖上面的vh值 */
 @supports (height: 100dvh) {
   .rule-section .rule-title {

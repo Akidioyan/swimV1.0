@@ -72,27 +72,31 @@ export const openNativeScheme = async (url, srcFrom) => {
   if (isQQNews()) {
     return openUrl({ url });
   }
+  
   // 创建下载APP对象
   const app = new DownloadApp(QQNewsAppDownloadInfo);
   const ua = window.navigator.userAgent;
   const isWorkWx = /wxwork/i.test(ua);
-  if (isWorkWx) {
+  const isWeixinEnv = isWeixin();
+  
+  // 企微和微信环境统一处理
+  if (isWorkWx || isWeixinEnv) {
     setTimeout(() => {
       console.log('openUrl', url);
-      location.href = `${DOWNLOAD_URL}&srcFrom=${srcFrom || 'swimming'}`
-    }, 1000)
+      location.href = `${DOWNLOAD_URL}&srcFrom=${srcFrom || 'swimming'}`;
+    }, 1000);
     app.downloadApp({ openUrl: url });
     return;
   }
-  // 如果在微信或QQ内，先检查APP是否安装
-  if (isWeixin() || isQQ()) {
+  
+  // QQ环境保持原有逻辑
+  if (isQQ()) {
     const isInstalled = await app.checkAppIsInstalled();
     if (!isInstalled) {
-      // 如果未安装，打开下载页面
       return window.open(`${DOWNLOAD_URL}&srcFrom=${srcFrom || 'swimming'}`);
     }
   }
   
   // 尝试拉起APP
   app.downloadApp({ openUrl: url });
-};  
+};

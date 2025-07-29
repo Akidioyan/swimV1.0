@@ -6,6 +6,36 @@ import { useUserStore } from '../stores/userStore';
 // 活动ID常量
 const activity_id = 'swim_game';
 
+// 生成 bkn 防 CSRF Token 的哈希函数
+function genHash(str) {
+  let hash = 5381;
+  for (let i = 0, len = str.length; i < len; ++i) {
+    hash += (hash << 5) + str.charCodeAt(i);
+  }
+  return hash & 0x7fffffff;
+}
+
+// 获取 Cookie 中的 news_token 值
+function getNewsTokenFromCookie() {
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'news_token') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+}
+
+// 生成 bkn_sign 签名
+function generateBknSign() {
+  const newsToken = getNewsTokenFromCookie();
+  if (newsToken) {
+    return genHash(newsToken);
+  }
+  return null;
+}
+
 // 基础请求函数
 export async function request(path, options = {}) {
   const u = useUserStore();
@@ -17,6 +47,24 @@ export async function request(path, options = {}) {
     'X-Has-Login': String(u.hasLogin),
     ...options.headers 
   };
+
+  // 如果请求体存在且是 POST 请求，自动添加 bkn_sign
+  let body = options.body;
+  if (options.method === 'POST' && body) {
+    try {
+      const bodyObj = JSON.parse(body);
+      const bknSign = generateBknSign();
+      if (bknSign) {
+        bodyObj.bkn_sign = bknSign;
+        body = JSON.stringify(bodyObj);
+        console.log('已添加 bkn_sign:', bknSign);
+      } else {
+        console.warn('无法获取 news_token，跳过 bkn_sign 签名');
+      }
+    } catch (e) {
+      console.warn('解析请求体失败，跳过 bkn_sign 签名:', e);
+    }
+  }
 
   const fetchOptions = {
     credentials: 'include',
