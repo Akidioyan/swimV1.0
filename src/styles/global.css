@@ -37,9 +37,9 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
-  /* 防止iOS双击和长按缩放 */
-  touch-action: manipulation;
-  -ms-touch-action: manipulation;
+  /* 防止iOS双击和长按缩放 - 修改为 none */
+  touch-action: none;
+  -ms-touch-action: none;
   -webkit-user-drag: none;
   -ms-content-zooming: none;
   /* 强制禁用iOS文本调整 */

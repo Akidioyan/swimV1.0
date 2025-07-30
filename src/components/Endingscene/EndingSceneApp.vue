@@ -541,9 +541,9 @@ const handleShareInApp = () => {
   let shareContent = '';
 
   if (distance === 0) {
-    shareContent = '用指尖与全网游泳高手对决，一起来游泳挑战！';
+    shareContent = '别怀疑，你也游不到500米！一起来游泳挑战！';
   } else {
-    shareContent = '成功挑战游了' + distance + 'm，超全网' + rankPercent + '%的网友，一起来游泳挑战！';
+    shareContent = '我成功游了' + distance + 'm，得了' + (currentUserData.value?.stars || gameStateStore.score || 0) + '分，超越' + rankPercent + '%的网友。夺冠有大奖！一起来游泳挑战！';
   }
 
   try {
@@ -554,7 +554,7 @@ const handleShareInApp = () => {
       longTitle: shareContent,
       content: shareContent,
       url: 'https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1',
-      imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0', 
+      imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/0728165827428_3945/0', 
     });
 
     console.log('[EndingSceneApp] Attempting to show share menu...');
@@ -587,7 +587,7 @@ const handleShareInApp = () => {
 .ending-scene-app {
   width: 100%;
   height: 100vh;
-  background-color: rgb(127, 228, 255); /* 设计稿背景色：天蓝色 */
+  background-color: rgb(127, 228, 255);
   position: relative;
   overflow-y: hidden;
   overflow-x: hidden;

@@ -217,6 +217,13 @@ class AudioManager {
    * 播放游泳音效（切换泳道时的专属音效）
    */
   playSwimmingSound() {
+    // 检测iOS设备，如果是iOS设备则禁用swimming.MP3音效
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (isIOS) {
+      console.log('iOS设备检测到，跳过swimming.MP3音效播放以避免卡顿')
+      return
+    }
+    
     if (!this.soundEnabled || !this.swimmingSound) return
     
     // 停止之前的播放，确保每次都是清晰的单次播放

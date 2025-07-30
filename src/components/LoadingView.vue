@@ -87,13 +87,6 @@ export default {
   background: transparent;
 }
 
-/* 音乐控制按钮 */
-.music-control {
-  position: absolute;
-  top: 44px;
-  right: 20px;
-  z-index: 10;
-}
 
 .music-circle {
   width: 35px;
@@ -114,7 +107,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 1vh; /* 从20px改为8px，大幅缩小间距 */
 }
 
 .loading-image {
@@ -129,7 +122,7 @@ export default {
   line-height: 24px;
   color: rgb(4, 4, 4);
   text-align: center;
-  width: 120px;
+  margin: 0; /* 确保没有额外的margin */
 }
 
 .progress-text {
@@ -138,6 +131,7 @@ export default {
   line-height: 24px;
   color: rgb(0, 0, 0);
   text-align: center;
+  margin: 0; /* 确保没有额外的margin */
 }
 
 /* 响应式设计 */

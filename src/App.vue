@@ -164,10 +164,10 @@ onMounted(async () => {
       const { setShareInfo } = await import('@tencent/qqnews-jsapi')
       setShareInfo({
         title: '指尖游泳挑战赛',
-        longTitle: '用指尖与全网游泳高手对决，一起来游泳挑战！',
-        content: '用指尖与全网游泳高手对决，一起来游泳挑战！',
+        longTitle: '别怀疑，你也游不到500米！一起来游泳挑战！',
+        content: '别怀疑，你也游不到500米！一起来游泳挑战！',
         url: 'https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1',
-        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0',
+        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/0728165827428_3945/0',
       })
     } catch (error) {
       console.log('腾讯新闻分享设置失败:', error)
@@ -179,8 +179,8 @@ onMounted(async () => {
       const instance = await JsBridge.default.readyAny()
       const shareInfo = {
         title: '指尖游泳挑战赛',
-        desc: '用指尖与全网游泳高手对决，一起来游泳挑战！',
-        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/072511375722_7655/0',
+        desc: '别怀疑，你也游不到500米！一起来游泳挑战！',
+        imgUrl: 'https://inews.gtimg.com/newsapp_bt/0/0728165827428_3945/0',
         link: 'https://view.inews.qq.com/a/LNK2025072504936600?no-redirect=1'
       }
       instance.setShareInfo(shareInfo)
@@ -214,8 +214,9 @@ onMounted(async () => {
   
   // 阻止双击缩放
   document.addEventListener('dblclick', preventDoubleClickZoom, { passive: false })
-  document.addEventListener('touchstart', handleTouchStart, { passive: false })
-  document.addEventListener('touchend', handleTouchEnd, { passive: false })
+  // 删除这两行
+  // document.addEventListener('touchstart', handleTouchStart, { passive: false })
+  // document.addEventListener('touchend', handleTouchEnd, { passive: false })
   
   // 阻止右键菜单和选择
   document.addEventListener('contextmenu', preventContextMenu, { passive: false })
@@ -236,8 +237,9 @@ onUnmounted(() => {
   document.removeEventListener('gesturechange', preventZoom)
   document.removeEventListener('gestureend', preventZoom)
   document.removeEventListener('dblclick', preventDoubleClickZoom)
-  document.removeEventListener('touchstart', handleTouchStart)
-  document.removeEventListener('touchend', handleTouchEnd)
+  // 删除这两行
+  // document.removeEventListener('touchstart', handleTouchStart)
+  // document.removeEventListener('touchend', handleTouchEnd)
   document.removeEventListener('contextmenu', preventContextMenu)
   document.removeEventListener('selectstart', preventSelect)
   document.removeEventListener('keydown', preventKeyboardZoom)
@@ -297,36 +299,37 @@ const preventDoubleClickZoom = (e) => {
 }
 
 // 触摸开始时间记录（用于检测双击）
-let lastTouchEnd = 0
-let touchStartTime = 0
-let touchCount = 0
+// 删除这些变量声明（第299-302行）
+// let lastTouchEnd = 0
+// let touchStartTime = 0
+// let touchCount = 0
 
-// 处理触摸开始
-const handleTouchStart = (e) => {
-  touchStartTime = Date.now()
-  touchCount = e.touches.length
-  
-  // 如果是多指触摸，阻止缩放
-  if (e.touches.length > 1) {
-    e.preventDefault()
-    e.stopPropagation()
-    return false
-  }
-}
+// 删除 handleTouchStart 函数（第304-314行）
+// const handleTouchStart = (e) => {
+//   touchStartTime = Date.now()
+//   touchCount = e.touches.length
+//   
+//   // 如果是多指触摸，阻止缩放
+//   if (e.touches.length > 1) {
+//     e.preventDefault()
+//     e.stopPropagation()
+//     return false
+//   }
+// }
 
-// 处理触摸结束
-const handleTouchEnd = (e) => {
-  const now = Date.now()
-  
-  // 检测快速双击（300ms内的两次点击）
-  if (now - lastTouchEnd <= 300) {
-    e.preventDefault()
-    e.stopPropagation()
-    return false
-  }
-  
-  lastTouchEnd = now
-}
+// 删除 handleTouchEnd 函数（第316-326行）
+// const handleTouchEnd = (e) => {
+//   const now = Date.now()
+//   
+//   // 检测快速双击（300ms内的两次点击）
+//   if (now - lastTouchEnd <= 300) {
+//     e.preventDefault()
+//     e.stopPropagation()
+//     return false
+//   }
+//   
+//   lastTouchEnd = now
+// }
 
 // 阻止右键菜单
 const preventContextMenu = (e) => {

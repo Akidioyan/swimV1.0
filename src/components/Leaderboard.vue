@@ -73,6 +73,11 @@
         <div class="rules-content">
           <div class="rules-scroll-content">
             
+            <!-- 奖品信息 -->
+            <div class="rule-section">
+              <div class="rule-description"><strong>冠军泳者将获得价值1300元的NBA ATELIER套装一份（卫衣+T恤+帽子），榜单截至2025年8月8日晚20:00。</strong></div>
+            </div>
+
             <!-- 活动介绍 -->
             <div class="rule-section">
               <div class="rule-description">2025新加坡游泳世锦赛热血进行中，看比赛的你是不是有点心痒痒？腾讯新闻重磅推出《指尖游泳》挑战赛，邀你加入泳者行列，在手机上随时随地开始冲榜！</div>

@@ -525,6 +525,7 @@ const handleVisibilityChange = () => {
   box-sizing: border-box;
   height: auto;
   padding-bottom: 25vh;
+  
 }
 
 /* 恭喜文字 */

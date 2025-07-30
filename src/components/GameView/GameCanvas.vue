@@ -657,6 +657,53 @@ export default {
   height: 100%;
   z-index: 1;
   cursor: pointer;
-  touch-action: none;
+  
+  /* 最强力的iOS防护 */
+  touch-action: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+  -webkit-user-modify: read-only !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none !important;
+  
+  /* 防止iOS长按拖动 */
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: none !important;
+  overscroll-behavior-x: none !important;
+  overscroll-behavior-y: none !important;
+  
+  /* 额外的iOS Safari防护 */
+  -webkit-text-size-adjust: none !important;
+  -ms-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  
+  /* 防止任何形式的滚动和拖拽 */
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  
+  /* 防止iOS长按选择和复制 */
+  -webkit-user-modify: read-only !important;
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  
+  /* 防止iOS Safari的弹性滚动 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* 强制硬件加速，可能有助于防止某些触摸问题 */
+  will-change: transform;
+}
+
+/* iOS设备特殊处理 */
+@supports (-webkit-touch-callout: none) {
+  .game-canvas {
+    /* iOS专用的额外防护 */
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -webkit-user-drag: none !important;
+    pointer-events: auto !important;
+  }
 }
 </style>

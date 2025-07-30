@@ -252,15 +252,24 @@ export async function submitGameResultAndGetRanking(gameData) {
     // 计算最终得分：得分*100000 + 距离*1
     const finalScore = (gameData.score || 0) * 100000 + (gameData.distance || 0);
     
+    // 生成 bkn_sign
+    const bknSign = generateBknSign();
+    
     const requestBody = {
       activity_id: activity_id,
       ranking_size: 50,
-      score: finalScore
+      score: finalScore,
+      bkn_sign: bknSign
       // user_id 不需要传，确保登录即可
     };
     
     console.log('排行榜提交数据:', requestBody);
     console.log(`得分计算: ${gameData.score || 0} * 100000 + ${gameData.distance || 0} = ${finalScore}`);
+    if (bknSign) {
+      console.log('已添加 bkn_sign:', bknSign);
+    } else {
+      console.warn('无法获取 news_token，bkn_sign 为空');
+    }
     
     // 修改API路径，将activity_id放在请求体中
     const response = await request('/activity/ranking', {

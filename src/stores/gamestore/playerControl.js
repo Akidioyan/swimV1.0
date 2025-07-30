@@ -33,7 +33,7 @@ export const usePlayerControlStore = defineStore('playerControl', {
     
     // 键盘控制防抖
     lastKeyPressTime: 0,
-    keyDebounceDelay: 100, // 100ms防抖延迟
+    keyDebounceDelay: 30, // 从100ms减少到50ms
   }),
   
   getters: {
@@ -193,6 +193,7 @@ export const usePlayerControlStore = defineStore('playerControl', {
     },
     
     // 切换到指定泳道
+    // 切换到指定泳道
     switchToLane(targetLane) {
       const gameStateStore = useGameStateStore()
       const gameLayoutStore = useGameLayoutStore()
@@ -208,9 +209,6 @@ export const usePlayerControlStore = defineStore('playerControl', {
       
       if (targetLane !== gameLayoutStore.player.currentLane) {
         gameLayoutStore.switchToLane(targetLane)
-        
-        // 添加水花效果
-        gameObjectsStore.addSplash(gameLayoutStore.player.x, gameLayoutStore.player.y, gameLayoutStore)
         
         // 播放游泳音效 - 使用音频管理器
         audioManager.playSwimmingSound()
